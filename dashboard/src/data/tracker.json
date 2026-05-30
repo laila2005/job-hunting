@@ -1,0 +1,58 @@
+{
+  "jobs": [
+    {
+      "id": "job-1",
+      "title": "Backend Engineer",
+      "company": "Instabug",
+      "companyLink": "https://instabug.com/careers",
+      "companySummary": "Instabug empowers mobile teams to monitor, identify, and resolve issues. The engineering team builds highly concurrent microservices handling billions of events.",
+      "companyLogo": "https://upload.wikimedia.org/wikipedia/commons/4/4e/Instabug_Logo.png",
+      "location": "Cairo",
+      "model": "Hybrid",
+      "fitScore": 95,
+      "atsMatch": 88,
+      "gapRisk": "Low",
+      "status": "Pending Review",
+      "appliedDate": null,
+      "salary": "25k-30k EGP",
+      "resumeVersion": "backend_resume.md",
+      "responsibilities": ["Develop REST APIs using Node.js", "Optimize database queries", "Integrate third-party services"]
+    },
+    {
+      "id": "job-2",
+      "title": "Junior Software Engineer (Backend)",
+      "company": "Paymob",
+      "companyLink": "https://paymob.com/careers",
+      "companySummary": "Paymob is an infrastructure technology enabler providing payment solutions across the MENA region. You will work on scalable fintech APIs.",
+      "companyLogo": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Paymob_logo.svg/512px-Paymob_logo.svg.png",
+      "location": "Cairo",
+      "model": "Hybrid",
+      "fitScore": 89,
+      "atsMatch": 82,
+      "gapRisk": "Low",
+      "status": "Applied",
+      "appliedDate": "2026-05-30",
+      "salary": "Unlisted",
+      "resumeVersion": "backend_resume.md",
+      "responsibilities": ["Build scalable fintech APIs", "Collaborate with frontend teams", "Ensure system security"]
+    },
+    {
+      "id": "job-3",
+      "title": "Software Engineer (C/C++)",
+      "company": "Valeo",
+      "companyLink": "https://www.valeo.com/en/careers/",
+      "companySummary": "Valeo is an automotive supplier and partner to automakers worldwide. The Cairo R&D center focuses on deep software tech for autonomous driving.",
+      "companyLogo": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Valeo_Logo.svg/512px-Valeo_Logo.svg.png",
+      "location": "Smart Village, Giza",
+      "model": "Hybrid",
+      "fitScore": 75,
+      "atsMatch": 60,
+      "gapRisk": "Medium",
+      "status": "Pending Review",
+      "appliedDate": null,
+      "salary": "Unlisted",
+      "resumeVersion": "swe_resume.md",
+      "responsibilities": ["Develop embedded C/C++ software", "Test and validate automotive systems"]
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "name": "Laila Mohamed Fikry",
+  "location": "Badr City, Cairo, Egypt",
+  "email": "laila.mohamed.fikry@gmail.com",
+  "phone": "+20 121 021 2792",
+  "linkedin": "https://www.linkedin.com/in/laila-mohamed23/",
+  "github": "https://github.com/laila2005",
+  "education": [
+    {
+      "degree": "Bachelor of Science in Computer Science",
+      "university": "El Sewedy University of Technology / Egyptian Russian University",
+      "expected_graduation": "2027",
+      "status": "Student"
+    }
+  ],
+  "preferences": {
+    "work_model": ["Remote", "Hybrid"],
+    "hybrid_max_commute_hours": 1.5,
+    "preferred_locations": ["New Cairo", "Nearby areas"],
+    "remote_rule": "Accepts candidates working from Egypt",
+    "job_families": ["Software Engineer", "Backend Developer", "Full Stack Developer"],
+    "salary_range_egp": {
+      "full_time_junior": [20000, 30000],
+      "internship": [8000, 12000]
+    },
+    "preferred_company_types": [
+      "International companies",
+      "AI-tool friendly",
+      "Modern engineering practices"
+    ],
+    "application_mode": "Review-Before-Submit"
+  },
+  "technical_skills": {
+    "languages": ["C#", "C", "C++", "Python", "Java", "JavaScript", "TypeScript", "SQL", "Bash"],
+    "backend": ["Node.js", "Express.js", "ASP.NET", "RESTful API Design", "Custom Windows Services"],
+    "frontend": ["React.js", "Next.js", "Tailwind CSS", "HTML5", "CSS3"],
+    "ai_ml": ["TensorFlow", "Keras", "CNN", "Transfer Learning", "Computer Vision", "Deep Learning"],
+    "testing": ["Playwright"],
+    "databases": ["SQL Server", "PostgreSQL", "MySQL", "MongoDB"],
+    "tools": ["Git", "Linux (Ubuntu)", "Bash Scripting", "Agile", "Scrum"]
+  },
+  "agent_rules": {
+    "cv_truth_constraint": "Do not add any bullet, metric, tool, project, or responsibility unless it already exists in my source materials or I explicitly confirm it.",
+    "student_positioning_rule": "Present me as a strong early-career engineer with substantial hands-on project depth, strong English communication, and readiness for international and remote collaboration.",
+    "preference_boost_rule": [
+      "remote and Egypt-friendly",
+      "hybrid near New Cairo",
+      "backend or full-stack oriented",
+      "international",
+      "AI-tool friendly",
+      "flexible enough for a student schedule"
+    ]
+  }
+}
