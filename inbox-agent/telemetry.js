@@ -21,24 +21,22 @@ async function botLog(emoji, message, level = 'info') {
   // Print locally
   console.log(`${emoji} ${message}`);
 
-  // Sync to Supabase (store logs as JSON in companySummary field)
+  // Sync to Supabase via update (upsert fails due to schema cache)
   try {
-    const statusEmoji = level === 'success' ? 'Applied' 
+    const statusLabel = level === 'success' ? 'Applied' 
       : level === 'error' ? 'Error' 
       : level === 'step' ? 'Applying' 
       : logBuffer.some(l => l.l === 'step') ? 'Applying' : 'Listening';
 
-    await supabase.from('jobs').upsert({
-      id: 'telemetry_bot_status',
-      company: statusEmoji,
+    const { error } = await supabase.from('jobs').update({
+      company: statusLabel,
       title: message,
-      location: new Date().toISOString(),
-      status: 'Hidden',
       companySummary: JSON.stringify(logBuffer),
-      recommended_action: 'telemetry'
-    });
+    }).eq('id', 'telemetry_bot_status');
+
+    if (error) console.error(`[Telemetry DB Error] ${error.message}`);
   } catch (err) {
-    // Silent fail — don't crash the bot over telemetry
+    // Silent fail
   }
 }
 
