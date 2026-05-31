@@ -13,7 +13,7 @@ async function callGemini(contents, maxRetries = 3) {
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
       const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-2.0-flash',
         contents: contents,
         config: { temperature: 0.1 }
       });
@@ -120,7 +120,14 @@ async function executeAction(page, action) {
         }
       }
       if (visibleLinks[action.index]) {
-        await visibleLinks[action.index].evaluate(el => el.click());
+        // Get the href and navigate directly (fixes popup-blocked links)
+        const href = await visibleLinks[action.index].evaluate(el => el.href || '');
+        if (href && href.startsWith('http') && !href.includes('javascript:')) {
+          console.log(`      → Navigating directly to: ${href.substring(0, 80)}`);
+          await page.goto(href, { waitUntil: 'domcontentloaded', timeout: 30000 });
+        } else {
+          await visibleLinks[action.index].evaluate(el => el.click());
+        }
         console.log(`      → Clicked link #${action.index}: "${action.reason}"`);
       }
       break;
