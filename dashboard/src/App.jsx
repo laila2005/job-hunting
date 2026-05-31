@@ -54,7 +54,7 @@ function App() {
       console.error('Error fetching jobs:', jobError);
       setJobs([]); 
     } else {
-      setJobs(jobData || []);
+      setJobs((jobData || []).filter(j => j.id !== 'telemetry_bot_status'));
     }
 
     const { data: contactData, error: contactError } = await supabase.from('networking_contacts').select('*');

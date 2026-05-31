@@ -16,12 +16,14 @@ const LiveTelemetry = () => {
 
     // 2. Subscribe to realtime changes
     const channel = supabase
-      .channel('public:bot_telemetry')
+      .channel('telemetry_listener')
       .on(
         'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'bot_telemetry', filter: `id=eq.${TELEMETRY_ID}` },
+        { event: '*', schema: 'public', table: 'jobs', filter: `id=eq.telemetry_bot_status` },
         (payload) => {
-          setTelemetry(payload.new);
+          if (payload.new) {
+            setTelemetry({ status: payload.new.company, current_task: payload.new.title });
+          }
         }
       )
       .subscribe();
@@ -32,9 +34,9 @@ const LiveTelemetry = () => {
   }, []);
 
   const fetchTelemetry = async () => {
-    const { data } = await supabase.from('bot_telemetry').select('*').eq('id', TELEMETRY_ID).single();
+    const { data } = await supabase.from('jobs').select('*').eq('id', 'telemetry_bot_status').single();
     if (data) {
-      setTelemetry(data);
+      setTelemetry({ status: data.company, current_task: data.title });
     }
   };
 

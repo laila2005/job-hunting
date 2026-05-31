@@ -6,14 +6,22 @@ const TELEMETRY_ID = '00000000-0000-0000-0000-000000000001';
 
 async function updateTelemetry(status, currentTask) {
   try {
-    await supabase
-      .from('bot_telemetry')
-      .update({
-        status: status,
-        current_task: currentTask,
-        last_ping: new Date().toISOString()
-      })
-      .eq('id', TELEMETRY_ID);
+    const { data } = await supabase.from('jobs').select('id').eq('id', 'telemetry_bot_status').single();
+    if (data) {
+      await supabase.from('jobs').update({
+        company: status,
+        title: currentTask,
+        location: new Date().toISOString()
+      }).eq('id', 'telemetry_bot_status');
+    } else {
+      await supabase.from('jobs').insert({
+        id: 'telemetry_bot_status',
+        company: status,
+        title: currentTask,
+        location: new Date().toISOString(),
+        status: 'Hidden'
+      });
+    }
     
     // Log locally as well
     console.log(`📡 [Telemetry] ${status} - ${currentTask}`);
