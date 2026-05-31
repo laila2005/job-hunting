@@ -4,6 +4,7 @@ const { syncToGoogleSheet } = require('./sheetsSync');
 const fs = require('fs');
 const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+const { handleUniversalApply } = require('./universalFiller');
 puppeteer.use(StealthPlugin());
 
 const supabase = createClient(
@@ -18,11 +19,10 @@ async function handleWuzzufApply(page) {
   const applyBtnXPath = "//button[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'apply for job')] | //a[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'apply for job')]";
   
   const applyBtn = await page.$x(applyBtnXPath);
-  
-  if (applyBtn.length > 0) {
+    if (applyBtn.length > 0) {
     console.log(`   [Wuzzuf] Found Apply button! Clicking...`);
     await applyBtn[0].click();
-    await page.waitForTimeout(3000); // Wait for modal or navigation
+    await new Promise(r => setTimeout(r, 3000)); // Wait for modal or navigation
     
     // Check if it asks to 'Submit Application' (internal Easy Apply)
     const submitBtnXPath = "//button[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'submit application')]";
@@ -31,7 +31,7 @@ async function handleWuzzufApply(page) {
     if (submitBtn.length > 0) {
       console.log(`   [Wuzzuf] Found Submit button! Clicking...`);
       await submitBtn[0].click();
-      await page.waitForTimeout(3000);
+      await new Promise(r => setTimeout(r, 3000));
       return { success: true, message: 'Applied natively via Wuzzuf' };
     }
     
@@ -51,7 +51,7 @@ async function handleLinkedInApply(page) {
   if (easyApplyBtn.length > 0) {
     console.log(`   [LinkedIn] Found Easy Apply! Clicking...`);
     await easyApplyBtn[0].click();
-    await page.waitForTimeout(2000);
+    await new Promise(r => setTimeout(r, 2000));
     
     // Loop clicking Next until Submit appears
     for (let i = 0; i < 5; i++) {
@@ -60,7 +60,7 @@ async function handleLinkedInApply(page) {
       
       if (nextBtn.length > 0) {
         await nextBtn[0].click();
-        await page.waitForTimeout(1500);
+        await new Promise(r => setTimeout(r, 1500));
       } else {
         break; // Either we reached Submit, or it failed
       }
@@ -72,7 +72,7 @@ async function handleLinkedInApply(page) {
     
     if (submitBtn.length > 0) {
       await submitBtn[0].click();
-      await page.waitForTimeout(3000);
+      await new Promise(r => setTimeout(r, 3000));
       return { success: true, message: 'Applied via LinkedIn Easy Apply' };
     }
   }
@@ -114,7 +114,7 @@ async function autoApply() {
     
     try {
       await page.goto(job.companyLink, { waitUntil: 'domcontentloaded' });
-      await page.waitForTimeout(3000); // Wait for React to mount
+      await new Promise(r => setTimeout(r, 3000)); // Wait for React to mount
       
       let result = { success: false, message: 'Unknown platform' };
 
@@ -123,8 +123,8 @@ async function autoApply() {
       } else if (job.companyLink.includes('linkedin.com')) {
         result = await handleLinkedInApply(page);
       } else {
-        console.log(`   [External] Skipping external portal. Marking for manual action.`);
-        result.message = 'External portal requires manual apply.';
+        console.log(`   [External] Detected custom portal. Routing to AI Universal Form Filler...`);
+        result = await handleUniversalApply(page, job.company);
       }
 
       const newStatus = result.success ? 'Applied' : 'Action Required';
