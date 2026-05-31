@@ -211,13 +211,26 @@ async function executeAction(page, action) {
             await el.evaluate((e, v) => { e.value = v; e.dispatchEvent(new Event('change', { bubbles: true })); }, fill.value);
           }
         } else {
-          await el.click({ clickCount: 3 });
-          await el.type(fill.value, { delay: 15 });
-          await el.evaluate(e => {
+          // Hybrid Approach: Set value programmatically first to ensure full text is present (bypasses autocomplete focus steal)
+          await el.evaluate((e, v) => {
+            e.value = v;
             e.dispatchEvent(new Event('input', { bubbles: true }));
             e.dispatchEvent(new Event('change', { bubbles: true }));
-            e.dispatchEvent(new Event('blur', { bubbles: true }));
-          });
+          }, fill.value);
+
+          try {
+            // Also click and type to fire physical key events for frameworks that rely strictly on them
+            await el.click({ clickCount: 3 });
+            await el.type(fill.value, { delay: 5 });
+            await el.evaluate(e => {
+              e.dispatchEvent(new Event('input', { bubbles: true }));
+              e.dispatchEvent(new Event('change', { bubbles: true }));
+              e.dispatchEvent(new Event('blur', { bubbles: true }));
+            });
+          } catch (err) {
+            // Fallback: make sure the value is absolutely set
+            await el.evaluate((e, v) => { e.value = v; }, fill.value);
+          }
         }
         console.log(`      → Filled field #${fill.index} ("${fill.label}") = "${fill.value.substring(0, 40)}..."`);
       }
