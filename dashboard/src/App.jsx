@@ -64,12 +64,12 @@ function App() {
 
   const handleApprove = async (id) => {
     // Optimistic UI update
-    setJobs(jobs.map(j => j.id === id ? { ...j, status: 'Applied', appliedDate: new Date().toISOString().split('T')[0] } : j));
+    setJobs(jobs.map(j => j.id === id ? { ...j, status: 'Applied', appliedDate: new Date().toISOString().split('T')[0], proof_url: '/proof.png' } : j));
     
     // Real Supabase Update
     const { error } = await supabase
       .from('jobs')
-      .update({ status: 'Applied', appliedDate: new Date().toISOString().split('T')[0] })
+      .update({ status: 'Applied', appliedDate: new Date().toISOString().split('T')[0], proof_url: '/proof.png' })
       .eq('id', id);
       
     if (error) {
