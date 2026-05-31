@@ -8,7 +8,7 @@ echo Please ensure all Brave Browser windows are closed.
 echo.
 
 cd /d "G:\lolo\job_search\inbox-agent"
-node stealthAutoApply.js
+node realtime_daemon.js
 
 echo.
 echo Engine execution completed.

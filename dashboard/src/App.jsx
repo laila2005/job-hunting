@@ -69,12 +69,12 @@ function App() {
 
   const handleApprove = async (id) => {
     // Optimistic UI update
-    setJobs(jobs.map(j => j.id === id ? { ...j, status: 'Applied', appliedDate: new Date().toISOString().split('T')[0], proof_url: '/proof.png' } : j));
+    setJobs(jobs.map(j => j.id === id ? { ...j, status: 'Queued for Bot' } : j));
     
-    // Real Supabase Update
+    // Trigger Realtime Daemon
     const { error } = await supabase
       .from('jobs')
-      .update({ status: 'Applied', appliedDate: new Date().toISOString().split('T')[0] })
+      .update({ status: 'Queued for Bot' })
       .eq('id', id);
       
     if (error) {
