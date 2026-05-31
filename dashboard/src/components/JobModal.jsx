@@ -131,17 +131,17 @@ const JobModal = ({ job, onClose, onApprove, onDecline, onStartInterview }) => {
         </div>
 
         <div className="modal-footer">
+          <a href={job.companyLink} target="_blank" rel="noreferrer" className="btn btn-secondary" style={{ marginRight: 'auto' }}>
+            🔗 View Source Posting
+          </a>
+          
           {job.status === 'Pending Review' && (
             <>
               <button className="btn btn-secondary" style={{ color: 'var(--accent-red)' }} onClick={() => { onDecline(job.id); onClose(); }}>Decline Role</button>
               <button className="btn" style={{ background: 'var(--accent-green)' }} onClick={() => { onApprove(job.id); onClose(); }}>Auto-Apply Now</button>
             </>
           )}
-          {job.status !== 'Pending Review' && (
-             <a href={job.companyLink} target="_blank" rel="noreferrer" className="btn btn-secondary">
-               View Source Posting
-             </a>
-          )}
+          
           <button className="btn" style={{ background: 'var(--accent-purple)' }} onClick={() => { onStartInterview(job); onClose(); }}>🎙️ Practice Interview</button>
         </div>
       </div>
