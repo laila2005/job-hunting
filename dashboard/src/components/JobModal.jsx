@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import ResumeViewer from './ResumeViewer';
 
 const JobModal = ({ job, onClose, onApprove, onDecline, onStartInterview }) => {
   const [activeTab, setActiveTab] = useState('overview');
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [viewingResume, setViewingResume] = useState(false);
 
   if (!job) return null;
 
@@ -92,7 +94,7 @@ const JobModal = ({ job, onClose, onApprove, onDecline, onStartInterview }) => {
                     <div style={{ fontWeight: '500' }}>{job.resumeVersion}</div>
                     <div 
                       style={{ fontSize: '0.8rem', color: 'var(--accent-blue)', cursor: 'pointer' }}
-                      onClick={() => alert('This PDF is generated securely on your local machine by the Auto-Apply bot at runtime. It will be automatically attached when the application is submitted.')}
+                      onClick={() => setViewingResume(true)}
                     >
                       View dynamically generated resume
                     </div>
@@ -155,6 +157,10 @@ const JobModal = ({ job, onClose, onApprove, onDecline, onStartInterview }) => {
           <img src={job.proof_url} alt="Proof Full" style={{ maxWidth: '90%', maxHeight: '90%', borderRadius: '8px' }} />
           <div style={{ position: 'absolute', top: '20px', right: '30px', color: 'white', fontSize: '2rem', cursor: 'pointer' }}>&times;</div>
         </div>
+      )}
+
+      {viewingResume && (
+        <ResumeViewer onClose={() => setViewingResume(false)} />
       )}
     </div>
   );
