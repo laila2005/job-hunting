@@ -54,6 +54,47 @@ async function handleUniversalApply(page, companyName) {
   // Wait for the form to load
   await new Promise(r => setTimeout(r, 5000));
 
+  // ── Smart ATS Detection ──
+  // Many ATS pages (Greenhouse, Lever, Workday) show a job description first.
+  // We need to click "Apply" on that page to get to the actual form.
+  console.log(`   [Universal AI] Checking if this is a job listing page (need to click Apply first)...`);
+  const atsApplyXPaths = [
+    "//a[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'apply for this job')]",
+    "//a[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'apply now')]",
+    "//a[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'apply')]",
+    "//button[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'apply for this job')]",
+    "//button[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'apply now')]",
+    "//button[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'apply')]",
+    "//a[contains(@href, '/apply')]",
+    "//a[contains(@id, 'apply')]",
+    "//button[contains(@id, 'apply')]",
+  ];
+
+  // Count form fields to decide if we're on a listing vs application page
+  const initialFieldCount = await page.evaluate(() => {
+    return document.querySelectorAll('input:not([type="hidden"]):not([type="submit"]):not([type="button"]), textarea, select').length;
+  });
+
+  if (initialFieldCount <= 2) {
+    console.log(`   [Universal AI] Only ${initialFieldCount} fields found — this is a job listing, not a form. Looking for Apply button on ATS...`);
+    
+    for (const xpath of atsApplyXPaths) {
+      const btns = await page.$$('::-p-xpath(' + xpath + ')');
+      if (btns.length > 0) {
+        console.log(`   [Universal AI] Found ATS Apply button! Clicking...`);
+        await page.evaluate(el => el.click(), btns[0]);
+        await new Promise(r => setTimeout(r, 5000));
+        break;
+      }
+    }
+
+    // Check if navigation happened (Greenhouse often navigates to /apply)
+    const newFieldCount = await page.evaluate(() => {
+      return document.querySelectorAll('input:not([type="hidden"]):not([type="submit"]):not([type="button"]), textarea, select').length;
+    });
+    console.log(`   [Universal AI] After clicking Apply: found ${newFieldCount} fields.`);
+  }
+
   // 2. Extract DOM Schema
   console.log(`   [Universal AI] Extracting form schema from DOM...`);
   const formSchema = await page.evaluate(() => {
@@ -153,7 +194,15 @@ async function handleUniversalApply(page, companyName) {
     // 4. Inject Answers into the DOM
     for (const field of formSchema) {
       const identifier = field.name || field.id;
-      const selector = field.id ? `#${CSS.escape ? CSS.escape(field.id) : field.id}` : `[name="${field.name}"]`;
+      // Build selector safely (CSS.escape is not available in Node)
+      let selector;
+      if (field.id) {
+        // Escape special characters in IDs for CSS selectors
+        const escapedId = field.id.replace(/([^\w-])/g, '\\$1');
+        selector = `#${escapedId}`;
+      } else {
+        selector = `[name="${field.name}"]`;
+      }
 
       // Handle File Uploads
       if (field.type === 'file') {
