@@ -74,7 +74,7 @@ function App() {
     // Real Supabase Update
     const { error } = await supabase
       .from('jobs')
-      .update({ status: 'Applied', appliedDate: new Date().toISOString().split('T')[0], proof_url: '/proof.png' })
+      .update({ status: 'Applied', appliedDate: new Date().toISOString().split('T')[0] })
       .eq('id', id);
       
     if (error) {
