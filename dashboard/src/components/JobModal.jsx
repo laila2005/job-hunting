@@ -86,6 +86,35 @@ const JobModal = ({ job, onClose, onApprove, onDecline, onStartInterview }) => {
                 </div>
               </div>
 
+              {/* Strengths and Risks Section */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                <div style={{ background: 'rgba(16, 185, 129, 0.05)', padding: '20px', borderRadius: '12px', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+                  <h4 style={{ color: 'var(--accent-green)', margin: '0 0 12px 0', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span>✅</span> Advantages / Strengths
+                  </h4>
+                  <ul style={{ margin: 0, paddingLeft: '20px', color: 'var(--text-main)', fontSize: '0.9rem', lineHeight: '1.6' }}>
+                    {job.aqs_strengths && job.aqs_strengths.length > 0 ? (
+                      job.aqs_strengths.map((strength, idx) => <li key={idx} style={{ marginBottom: '6px' }}>{strength}</li>)
+                    ) : (
+                      <li>Strong architectural alignment with your profile.</li>
+                    )}
+                  </ul>
+                </div>
+
+                <div style={{ background: 'rgba(245, 158, 11, 0.05)', padding: '20px', borderRadius: '12px', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
+                  <h4 style={{ color: '#F59E0B', margin: '0 0 12px 0', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span>⚠️</span> Disadvantages / Risk Factors
+                  </h4>
+                  <ul style={{ margin: 0, paddingLeft: '20px', color: 'var(--text-main)', fontSize: '0.9rem', lineHeight: '1.6' }}>
+                    {job.aqs_risks && job.aqs_risks.length > 0 ? (
+                      job.aqs_risks.map((risk, idx) => <li key={idx} style={{ marginBottom: '6px' }}>{risk}</li>)
+                    ) : (
+                      <li>No significant technical risks identified.</li>
+                    )}
+                  </ul>
+                </div>
+              </div>
+
               <div>
                 <h4 style={{ color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', fontSize: '0.8rem', margin: '0 0 12px 0' }}>Recommended Asset</h4>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'var(--bg-card)', padding: '16px', borderRadius: '8px', border: '1px dashed var(--border-color)' }}>
