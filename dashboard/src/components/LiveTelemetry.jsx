@@ -8,7 +8,7 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 const LiveTelemetry = () => {
   const [telemetry, setTelemetry] = useState({ status: 'Connecting...', current_task: 'Initializing...' });
   const [logs, setLogs] = useState([]);
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
   const logEndRef = useRef(null);
 
   useEffect(() => {
@@ -131,9 +131,26 @@ const LiveTelemetry = () => {
 
         {/* Expand/collapse indicator + log count */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{
+            fontSize: '0.65rem',
+            color: '#22c55e',
+            background: 'rgba(34,197,94,0.1)',
+            border: '1px solid rgba(34,197,94,0.3)',
+            padding: '2px 8px',
+            borderRadius: '4px',
+            textTransform: 'uppercase',
+            fontWeight: 'bold',
+            letterSpacing: '1px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            animation: 'blink 1.5s infinite'
+          }}>
+            <span style={{ fontSize: '8px' }}>●</span> LIVE
+          </span>
           {logs.length > 0 && (
             <span style={{
-              fontSize: '0.7rem', color: '#64748b', background: 'rgba(255,255,255,0.05)',
+              fontSize: '0.7rem', color: '#94a3b8', background: 'rgba(255,255,255,0.05)',
               padding: '2px 8px', borderRadius: '10px',
             }}>
               {logs.length} logs

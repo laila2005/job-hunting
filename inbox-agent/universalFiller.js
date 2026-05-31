@@ -8,7 +8,7 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 // ─────────────────────────────────────────────────────
 // Gemini API with model fallback + smart retry
 // ─────────────────────────────────────────────────────
-const MODELS = ['gemini-1.5-flash', 'gemini-2.0-flash-lite', 'gemini-2.0-flash'];
+const MODELS = ['gemini-3.5-flash', 'gemini-2.5-flash-lite', 'gemini-flash-latest'];
 let quotaExhaustedUntil = 0; // Timestamp when quota resets
 
 async function callGemini(contents, maxRetries = 2) {
