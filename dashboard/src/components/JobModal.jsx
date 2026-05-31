@@ -90,7 +90,12 @@ const JobModal = ({ job, onClose, onApprove, onDecline, onStartInterview }) => {
                   <span style={{ fontSize: '1.5rem' }}>📄</span>
                   <div>
                     <div style={{ fontWeight: '500' }}>{job.resumeVersion}</div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--accent-blue)', cursor: 'pointer' }}>View dynamically generated resume</div>
+                    <div 
+                      style={{ fontSize: '0.8rem', color: 'var(--accent-blue)', cursor: 'pointer' }}
+                      onClick={() => alert('This PDF is generated securely on your local machine by the Auto-Apply bot at runtime. It will be automatically attached when the application is submitted.')}
+                    >
+                      View dynamically generated resume
+                    </div>
                   </div>
                 </div>
               </div>
