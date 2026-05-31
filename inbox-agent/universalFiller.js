@@ -365,12 +365,31 @@ To wait for page to load:
     // 3. Parse the action
     let action;
     try {
-      let cleaned = geminiResponse;
-      if (cleaned.startsWith('```')) cleaned = cleaned.replace(/```json\n?/g, '').replace(/```\n?/g, '');
+      let cleaned = geminiResponse.trim();
+      if (cleaned.startsWith('```')) {
+        cleaned = cleaned.replace(/```json\n?/g, '').replace(/```\n?/g, '');
+      }
+      
+      // Attempt to extract JSON if it is surrounded by conversational text
+      if (!cleaned.startsWith('{')) {
+        const match = cleaned.match(/\{[\s\S]*\}/);
+        if (match) cleaned = match[0];
+      }
+      
       action = JSON.parse(cleaned);
     } catch (err) {
       console.error(`   [AI Agent] Could not parse Gemini response: ${geminiResponse.substring(0, 200)}`);
-      continue;
+      
+      // Fallback: Check if the model is trying to signal that applying is impossible
+      const lowerResp = geminiResponse.toLowerCase();
+      if (lowerResp.includes('impossible') || lowerResp.includes('cannot') || lowerResp.includes('unable') || lowerResp.includes('maintenance') || lowerResp.includes('alert')) {
+        action = {
+          action: 'impossible',
+          reason: `Conversational fallback: ${geminiResponse.substring(0, 120)}...`
+        };
+      } else {
+        continue;
+      }
     }
 
     console.log(`   [AI Agent] Decision: ${action.action} — ${action.reason}`);
