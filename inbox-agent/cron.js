@@ -42,14 +42,32 @@ cron.schedule('0 */6 * * *', () => {
   executeFullPipeline();
 });
 
-// Run GitHub Amplifier every day at 10:00 AM
+// Run Authentic Proof Engine every day at 10:00 AM
 cron.schedule('0 10 * * *', () => {
-  console.log("⏰ CRON TRIGGERED: Securing daily GitHub Green Square...");
-  runScript('githubAmplifier.js');
+  console.log("⏰ CRON TRIGGERED: Analyzing real commits for Proof Engine...");
+  runScript('proofEngine.js');
 });
 
 // Run Follow-Up Engine every day at 9:00 AM
 cron.schedule('0 9 * * *', () => {
   console.log("⏰ CRON TRIGGERED: Drafting follow-up emails...");
   runScript('followUpBot.js');
+});
+
+// Run Dossier Engine every day at 11:00 AM
+cron.schedule('0 11 * * *', () => {
+  console.log("⏰ CRON TRIGGERED: Building Dream Company Dossiers...");
+  runScript('dossierGenerator.js');
+});
+
+// Run Personal Brand Engine every Monday and Thursday at 12:00 PM
+cron.schedule('0 12 * * 1,4', () => {
+  console.log("⏰ CRON TRIGGERED: Drafting LinkedIn Technical Post...");
+  runScript('brandEngine.js');
+});
+
+// Run Analytics Engine every Sunday at 6:00 PM
+cron.schedule('0 18 * * 0', () => {
+  console.log("⏰ CRON TRIGGERED: Generating Weekly Skills Gap & Analytics Report...");
+  runScript('analyticsEngine.js');
 });

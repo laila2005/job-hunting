@@ -62,6 +62,12 @@ const JobBoard = ({ jobs, onApprove, onDecline, onStartInterview }) => {
                     <span className="meta-item"><strong>{job.company}</strong></span>
                     <span className="meta-item">• {job.location} ({job.model})</span>
                     <span className="meta-item">• {job.salary}</span>
+                    <span className="badge badge-primary">{job.type}</span>
+                    {job.aqs_score && (
+                      <span className={`badge ${job.aqs_score >= 90 ? 'badge-primary' : job.aqs_score >= 80 ? 'badge-secondary' : ''}`} style={{ marginLeft: 'auto', fontWeight: 'bold' }}>
+                        AQS: {job.aqs_score}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>

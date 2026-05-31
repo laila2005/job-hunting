@@ -1,9 +1,11 @@
 require('dotenv').config();
 const { GoogleGenAI } = require('@google/genai');
+const { createClient } = require('@supabase/supabase-js');
 const fs = require('fs');
 const path = require('path');
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
 async function sendIcebreaker(page, companyName, jobTitle) {
   console.log(`\n🧊 [Icebreaker] Initiating Networking Protocol for ${companyName}...`);
@@ -72,6 +74,17 @@ async function sendIcebreaker(page, companyName, jobTitle) {
         if (sendBtns.length > 0) {
           await page.evaluate(el => el.click(), sendBtns[0]);
           console.log(`   ✅ [Icebreaker] Connection request successfully sent to recruiter!`);
+          
+          // Save to Advanced Network Intelligence
+          await supabase.from('network_contacts').insert([{
+            name: 'LinkedIn Recruiter',
+            company: companyName,
+            role: 'Recruiter',
+            stage: 'Connected',
+            notes: note,
+            last_contacted: new Date().toISOString()
+          }]);
+
           await new Promise(r => setTimeout(r, 3000));
           return true;
         }

@@ -1,5 +1,6 @@
 require('dotenv').config();
 const { createClient } = require('@supabase/supabase-js');
+const { GoogleGenAI } = require('@google/genai');
 const { syncToGoogleSheet } = require('./sheetsSync');
 const { updateTelemetry } = require('./telemetry');
 const fs = require('fs');
@@ -12,57 +13,64 @@ const supabase = createClient(
   process.env.SUPABASE_KEY
 );
 
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
 // Load Candidate Profile strictly
 const candidateProfilePath = path.join(__dirname, '..', 'candidate_profile.json');
 const candidateProfile = fs.readFileSync(candidateProfilePath, 'utf-8');
 
-async function evaluateJobWithAI(jobTitle, jobDescription) {
+async function evaluateJobWithAI(jobs) {
   const prompt = `
-  You are an expert technical recruiter evaluating a job description against a strict candidate profile.
-  
-  CANDIDATE PROFILE:
-  ${candidateProfile}
-  
-  JOB TO EVALUATE:
-  Title: ${jobTitle}
-  Description snippet: ${jobDescription.substring(0, 3000)} // truncate to save tokens
-  
-  TASK:
-  Determine if this job is a strong fit for the candidate.
-  - AGGRESSIVELY REJECT any jobs that require "Senior", "Staff", "Principal", or "Lead" experience (5+ years).
-  - AGGRESSIVELY REJECT any jobs that strictly require US or EU residency.
-  - For FULL REMOTE roles: Ensure they explicitly allow global workers or candidates from Egypt.
-  - For ON-SITE or HYBRID roles: They MUST be located in Egypt. Prefer locations near New Cairo, El Shorouk, Madinaty, 5th Settlement, or Badr City. REJECT any hybrid/on-site role outside of Egypt entirely.
-  - ACCEPT roles that mention Node.js, Python, or C#.
-  
-  Return ONLY a raw JSON object (no markdown, no backticks) with this structure:
-  {
-    "match": true/false,
-    "reason": "Short 1 sentence explanation of why it was accepted or rejected"
-  }
-  `;
+      You are an expert technical recruiter and career strategist evaluating job descriptions.
+      We are looking ONLY for Early-Career or Junior Backend/Fullstack roles for an Egypt-based developer.
+
+      Here is the batch of jobs:
+      ${JSON.stringify(jobs)}
+
+      For EACH job, output a JSON object in this exact array format:
+      [
+        {
+          "title": "exact title",
+          "pass": boolean, 
+          "aqs_score": number (0-100),
+          "aqs_strengths": ["string"],
+          "aqs_risks": ["string"],
+          "recommended_action": "apply" | "network" | "skip"
+        }
+      ]
+      
+      RULES:
+      - pass: false if it explicitly requires 4+ years of experience, is Senior/Staff, or is purely frontend/design.
+      - aqs_score: Score out of 100 based on fit, remote possibility, and backend relevance.
+      - recommended_action: 'skip' if pass is false. 'network' if it's a high-tier company requiring a referral. 'apply' if it's a perfect match.
+    `;
 
   try {
-    const textToAnalyze = (jobTitle + " " + jobDescription).toLowerCase();
-    
-    // Aggressive Senior/Lead Rejection
-    const seniorRegex = /\b(senior|staff|principal|lead|director|manager|head of)\b/i;
-    const expRegex = /(5\+|6\+|7\+|8\+|9\+|10\+)\s*years/i;
-    if (seniorRegex.test(textToAnalyze) || expRegex.test(textToAnalyze)) {
-      return { match: false, reason: "Strictly rejected: Requires Senior/Lead level experience." };
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+    });
+    const raw = response.text.trim().replace(/\`\`\`json/g, '').replace(/\`\`\`/g, '');
+    const evaluatedJobs = JSON.parse(raw);
+
+    const finalJobs = [];
+    for (const job of jobs) {
+      const evaluation = evaluatedJobs.find(e => e.title === job.title);
+      if (evaluation && evaluation.pass) {
+        finalJobs.push({
+          ...job,
+          aqs_score: evaluation.aqs_score || 80,
+          aqs_strengths: evaluation.aqs_strengths || ['Good fit'],
+          aqs_risks: evaluation.aqs_risks || ['Unknown'],
+          recommended_action: evaluation.recommended_action || 'apply'
+        });
+      }
     }
 
-    // Aggressive Strict Location Rejection (US/EU Only)
-    const locationRegex = /(us residency|must live in the us|eu only|europe only|usa only|citizens only)/i;
-    if (locationRegex.test(textToAnalyze)) {
-      return { match: false, reason: "Strictly rejected: Restricted to US/EU residency." };
-    }
-
-    // If it passes all strict rejections, it's a match!
-    return { match: true, reason: "Perfect match! Early-career friendly and open to global remote." };
+    return finalJobs;
   } catch (err) {
     console.error("Evaluation failed.", err.message);
-    return { match: false, reason: "Evaluation Logic Failure" };
+    return [];
   }
 }
 
@@ -71,56 +79,38 @@ async function fetchRealJobs() {
   await updateTelemetry('Sourcing', 'Activating live job search...');
   
   try {
-    // We use Remotive API for high-quality, verified remote tech jobs
     console.log("🌐 Fetching real remote backend roles from Remotive API...");
     const response = await fetch('https://remotive.com/api/remote-jobs?category=software-dev&search=backend');
     const data = await response.json();
-    const remotiveJobs = data.jobs.slice(0, 5); // Take top 5 from remotive
+    const remotiveJobs = data.jobs.slice(0, 5); 
 
-    // Run Playwright Scrapers in Parallel
     const [wuzzufJobs, linkedinJobs] = await Promise.all([
       scrapeWuzzuf(),
       scrapeLinkedIn()
     ]);
 
-    // Combine all jobs
     const freshJobs = [...remotiveJobs, ...wuzzufJobs.slice(0, 5), ...linkedinJobs.slice(0, 5)];
     
-    console.log(`🎯 Found ${freshJobs.length} live positions across Remotive, Wuzzuf, and LinkedIn. Sending to AI for strict profile evaluation...`);
+    console.log(`🎯 Found ${freshJobs.length} live positions. Sending to AI for AQS scoring...`);
+
+    const finalJobs = await evaluateJobWithAI(freshJobs);
 
     let ingestedCount = 0;
-
-    for (const job of freshJobs) {
-      console.log(`\n🧠 AI Evaluating: ${job.title} at ${job.company_name}...`);
-      
-      const cleanDescription = job.description.replace(/<[^>]*>?/gm, '');
-      const aiDecision = await evaluateJobWithAI(job.title, cleanDescription);
-
-      if (!aiDecision.match) {
-        console.log(`   ❌ REJECTED: ${aiDecision.reason}`);
-        continue; // Skip ingestion!
-      }
-
-      console.log(`   ✅ MATCH: ${aiDecision.reason}`);
-      
-      // Calculate a random realistic fit score for demonstration
-      const score = Math.floor(Math.random() * (98 - 85 + 1) + 85); 
+    for (const job of finalJobs) {
+      console.log(`   ✅ MATCH: ${job.title} | Score: ${job.aqs_score}`);
       
       const newJob = {
         id: 'job-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
-        company: job.company_name,
+        company: job.companyName,
         title: job.title,
-        location: job.candidate_required_location || 'Remote',
-        model: 'Remote',
-        salary: job.salary || 'Unlisted',
+        location: job.location || 'Remote',
         status: 'Pending Review',
         companyLink: job.url,
-        companyLogo: job.company_logo || '',
-        fitScore: score,
-        atsMatch: score - 2,
-        gapRisk: score > 90 ? 'Low' : 'Medium',
-        resumeVersion: 'backend_resume.pdf',
-        companySummary: cleanDescription.substring(0, 200) + '...'
+        aqs_score: job.aqs_score,
+        aqs_strengths: job.aqs_strengths,
+        aqs_risks: job.aqs_risks,
+        recommended_action: job.recommended_action,
+        resumeVersion: 'backend_resume.pdf'
       };
 
       console.log(`   📥 Ingesting to Database...`);
