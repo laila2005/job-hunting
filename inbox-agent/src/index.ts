@@ -5,7 +5,7 @@ import { EmailClassifier } from './services/classifier';
 import { DatabaseService } from './services/supabase';
 import { WhatsAppService } from './services/whatsapp';
 
-dotenv.config({ path: '../.env' }); // Load from root
+dotenv.config();
 
 async function startMicroservice() {
   console.log("🚀 Starting Email -> WhatsApp Microservice...");
@@ -40,8 +40,8 @@ async function startMicroservice() {
         {
           msgId: 'mock-1',
           threadId: 'th-1',
-          subject: 'Your Application to Instabug',
-          body: 'We are moving forward with other candidates at this time. Thank you.',
+          subject: 'Interview Invitation: Software Engineer at Instabug',
+          body: 'Hi Laila, we reviewed your resume and would love to schedule a call for next steps. Please use this calendly link to book your interview!',
           senderName: 'Instabug HR',
           companyName: 'Instabug'
         }
@@ -61,7 +61,7 @@ async function startMicroservice() {
         if (statusChanged && classification.status !== 'RECEIPT') {
           console.log("   └ 🔔 Status changed! Dispatching WhatsApp notification...");
           // We don't have job title from email reliably without LLM extraction, so we pass a generic string or extract it
-          await whatsapp.sendJobUpdate('Application', email.companyName, classification.status as any);
+          await whatsapp.sendJobUpdate('Software Engineer', email.companyName, classification.status as any, classification.summary);
         }
 
         // 4. Mark Read (Idempotency)

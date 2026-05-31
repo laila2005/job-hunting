@@ -29,6 +29,9 @@ export class EmailClassifier {
     if (content.match(/received your application|thank you for applying/)) {
       return { status: 'RECEIPT', important: false, summary: 'Application received.' };
     }
+    if (content.match(/interview|schedule a call|next steps|calendly.com|would love to speak/)) {
+      return { status: 'INTERVIEW', important: true, summary: 'They want to schedule an interview! Check the email for booking links.' };
+    }
 
     // 2. LLM Fallback for Nuance
     if (!this.ai) {

@@ -55,15 +55,15 @@ export class WhatsAppService {
     }
   }
 
-  async sendJobUpdate(jobTitle: string, company: string, type: 'REJECTED' | 'INTERVIEW' | 'ASSESSMENT'): Promise<void> {
+  async sendJobUpdate(jobTitle: string, company: string, type: 'REJECTED' | 'INTERVIEW' | 'ASSESSMENT', summary: string = ''): Promise<void> {
     let message = '';
     
     if (type === 'REJECTED') {
-      message = `*Job Update:* Rejected ❌\n_${jobTitle}_ at *${company}*\nNo action needed.`;
+      message = `*Job Update:* Rejected ❌\n_${jobTitle}_ at *${company}*\n\n📝 *Summary:* ${summary}\nNo action needed.`;
     } else if (type === 'INTERVIEW') {
-      message = `*Job Update:* INTERVIEW! 🚀\n_${jobTitle}_ at *${company}*\nCheck your email immediately for time & link.`;
+      message = `*Job Update:* INTERVIEW! 🚀\n_${jobTitle}_ at *${company}*\n\n📝 *Summary:* ${summary}\nCheck your email immediately for time & link.`;
     } else if (type === 'ASSESSMENT') {
-      message = `*Job Update:* Assessment ⚠️\n_${jobTitle}_ at *${company}*\nAction needed! Check your email.`;
+      message = `*Job Update:* Assessment ⚠️\n_${jobTitle}_ at *${company}*\n\n📝 *Summary:* ${summary}\nAction needed! Check your email.`;
     }
 
     await this.sendRawMessage(message);
