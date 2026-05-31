@@ -2,6 +2,7 @@ require('dotenv').config();
 const { GoogleGenAI } = require('@google/genai');
 const fs = require('fs');
 const path = require('path');
+const { generateDynamicCoverLetter } = require('./coverLetterBot');
 
 // Initialize Gemini
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
@@ -21,7 +22,7 @@ async function handleUniversalApply(page, companyName) {
   const candidateProfile = fs.readFileSync(profilePath, 'utf8');
 
   // Wait for the form to load
-  await page.waitForTimeout(4000);
+  await new Promise(r => setTimeout(r, 4000));
 
   // 2. Extract DOM Schema (Find all inputs, textareas, selects and their labels)
   console.log(`   [Universal AI] Extracting form schema from DOM...`);
@@ -103,9 +104,19 @@ async function handleUniversalApply(page, companyName) {
       
       // Handle File Uploads
       if (field.type === 'file') {
-        console.log(`   [Universal AI] Attaching backend_resume.pdf to file input...`);
-        const fileInput = await page.$(`input[type="file"]`);
-        if (fileInput) {
+        const fileInput = await page.$(selector);
+        if (!fileInput) continue;
+
+        const isCoverLetter = field.label.toLowerCase().includes('cover') || field.name.toLowerCase().includes('cover');
+        
+        if (isCoverLetter) {
+          const coverLetterPath = await generateDynamicCoverLetter(companyName, "Junior Backend Engineer");
+          if (coverLetterPath) {
+            console.log(`   [Universal AI] Attaching Dynamic Cover Letter to file input...`);
+            await fileInput.uploadFile(coverLetterPath);
+          }
+        } else {
+          console.log(`   [Universal AI] Attaching backend_resume.pdf to file input...`);
           await fileInput.uploadFile(path.join(__dirname, 'backend_resume.pdf'));
         }
         continue;
@@ -120,10 +131,12 @@ async function handleUniversalApply(page, companyName) {
           if (field.tagName === 'select') {
             await page.select(selector, aiAnswers[identifier]);
           } else {
-            // Clear and type
-            await element.click({ clickCount: 3 });
-            await element.press('Backspace');
-            await element.type(aiAnswers[identifier]);
+            // Direct native DOM injection to bypass React/Vue interception
+            await page.evaluate((el, val) => {
+              el.value = val;
+              el.dispatchEvent(new Event('input', { bubbles: true }));
+              el.dispatchEvent(new Event('change', { bubbles: true }));
+            }, element, aiAnswers[identifier]);
           }
         }
       }
@@ -133,11 +146,11 @@ async function handleUniversalApply(page, companyName) {
     
     // 5. Attempt Submit
     const submitBtnXPath = "//button[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'submit')] | //input[@type='submit']";
-    const submitBtn = await page.$x(submitBtnXPath);
+    const submitBtn = await page.$$("::-p-xpath(" + submitBtnXPath + ")");
     
     if (submitBtn.length > 0) {
-      await submitBtn[0].click();
-      await page.waitForTimeout(4000);
+      await page.evaluate(el => el.click(), submitBtn[0]);
+      await new Promise(r => setTimeout(r, 4000));
       return { success: true, message: 'Applied natively via AI Universal Form Filler' };
     }
 

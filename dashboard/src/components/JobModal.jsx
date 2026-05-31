@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const JobModal = ({ job, onClose, onApprove, onDecline }) => {
+const JobModal = ({ job, onClose, onApprove, onDecline, onStartInterview }) => {
   const [activeTab, setActiveTab] = useState('overview');
   const [lightboxOpen, setLightboxOpen] = useState(false);
 
@@ -137,6 +137,7 @@ const JobModal = ({ job, onClose, onApprove, onDecline }) => {
                View Source Posting
              </a>
           )}
+          <button className="btn" style={{ background: 'var(--accent-purple)' }} onClick={() => { onStartInterview(job); onClose(); }}>🎙️ Practice Interview</button>
         </div>
       </div>
 

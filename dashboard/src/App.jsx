@@ -4,6 +4,7 @@ import './index.css'
 import StatCards from './components/StatCards'
 import JobBoard from './components/JobBoard'
 import NetworkingBoard from './components/NetworkingBoard'
+import InterviewAgent from './components/InterviewAgent'
 
 // Initialize Supabase Client
 const supabaseUrl = 'https://wpxtstbquvbsiqgoqwma.supabase.co'
@@ -14,6 +15,7 @@ function App() {
   const [jobs, setJobs] = useState([]);
   const [contacts, setContacts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [interviewJob, setInterviewJob] = useState(null);
 
   useEffect(() => {
     fetchJobs();
@@ -119,10 +121,12 @@ function App() {
           <h2>Connecting to Cloud Database...</h2>
           <p>Authenticating background agents.</p>
         </div>
+      ) : interviewJob ? (
+        <InterviewAgent job={interviewJob} onBack={() => setInterviewJob(null)} />
       ) : (
         <>
           <StatCards jobs={jobs} />
-          <JobBoard jobs={jobs} onApprove={handleApprove} onDecline={handleDecline} />
+          <JobBoard jobs={jobs} onApprove={handleApprove} onDecline={handleDecline} onStartInterview={setInterviewJob} />
           <NetworkingBoard contacts={contacts} onMarkSent={handleMarkSent} />
         </>
       )}

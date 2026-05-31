@@ -5,6 +5,7 @@ const fs = require('fs');
 const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 const { handleUniversalApply } = require('./universalFiller');
+const { sendIcebreaker } = require('./icebreakerBot');
 puppeteer.use(StealthPlugin());
 
 const supabase = createClient(
@@ -18,19 +19,19 @@ async function handleWuzzufApply(page) {
   // Wuzzuf has multiple button classes, so we use XPath text search
   const applyBtnXPath = "//button[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'apply for job')] | //a[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'apply for job')]";
   
-  const applyBtn = await page.$x(applyBtnXPath);
+  const applyBtn = await page.$$("::-p-xpath(" + applyBtnXPath + ")");
     if (applyBtn.length > 0) {
     console.log(`   [Wuzzuf] Found Apply button! Clicking...`);
-    await applyBtn[0].click();
+    await page.evaluate(el => el.click(), applyBtn[0]);
     await new Promise(r => setTimeout(r, 3000)); // Wait for modal or navigation
     
     // Check if it asks to 'Submit Application' (internal Easy Apply)
     const submitBtnXPath = "//button[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'submit application')]";
-    const submitBtn = await page.$x(submitBtnXPath);
+    const submitBtn = await page.$$("::-p-xpath(" + submitBtnXPath + ")");
     
     if (submitBtn.length > 0) {
       console.log(`   [Wuzzuf] Found Submit button! Clicking...`);
-      await submitBtn[0].click();
+      await page.evaluate(el => el.click(), submitBtn[0]);
       await new Promise(r => setTimeout(r, 3000));
       return { success: true, message: 'Applied natively via Wuzzuf' };
     }
@@ -46,20 +47,20 @@ async function handleLinkedInApply(page) {
   
   // LinkedIn Easy Apply button
   const easyApplyXPath = "//button[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'easy apply')]";
-  const easyApplyBtn = await page.$x(easyApplyXPath);
+  const easyApplyBtn = await page.$$("::-p-xpath(" + easyApplyXPath + ")");
   
   if (easyApplyBtn.length > 0) {
     console.log(`   [LinkedIn] Found Easy Apply! Clicking...`);
-    await easyApplyBtn[0].click();
+    await page.evaluate(el => el.click(), easyApplyBtn[0]);
     await new Promise(r => setTimeout(r, 2000));
     
     // Loop clicking Next until Submit appears
     for (let i = 0; i < 5; i++) {
       const nextBtnXPath = "//button[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'next')] | //button[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'review')]";
-      const nextBtn = await page.$x(nextBtnXPath);
+      const nextBtn = await page.$$("::-p-xpath(" + nextBtnXPath + ")");
       
       if (nextBtn.length > 0) {
-        await nextBtn[0].click();
+        await page.evaluate(el => el.click(), nextBtn[0]);
         await new Promise(r => setTimeout(r, 1500));
       } else {
         break; // Either we reached Submit, or it failed
@@ -68,10 +69,10 @@ async function handleLinkedInApply(page) {
     
     // Attempt Submit
     const submitBtnXPath = "//button[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'submit application')]";
-    const submitBtn = await page.$x(submitBtnXPath);
+    const submitBtn = await page.$$("::-p-xpath(" + submitBtnXPath + ")");
     
     if (submitBtn.length > 0) {
-      await submitBtn[0].click();
+      await page.evaluate(el => el.click(), submitBtn[0]);
       await new Promise(r => setTimeout(r, 3000));
       return { success: true, message: 'Applied via LinkedIn Easy Apply' };
     }
@@ -100,10 +101,12 @@ async function autoApply() {
 
   console.log(`🎯 Found ${jobs.length} jobs ready for Auto-Apply.`);
 
-  // Launch browser pointing to user's local Chrome user data directory so it inherits active logins!
-  // Note: The user must log into LinkedIn/Wuzzuf on their host Chrome for this to work.
+  // Launch browser pointing to user's local Brave user data directory so it inherits active logins!
+  // Note: The user MUST completely close Brave before running this, or it will crash due to file locks.
   const browser = await puppeteer.launch({ 
     headless: false, // We keep it visible so you can see it work!
+    executablePath: 'C:\\Program Files\\BraveSoftware\\Brave-Browser\\Application\\brave.exe',
+    userDataDir: 'C:\\Users\\lolo\\AppData\\Local\\BraveSoftware\\Brave-Browser\\User Data',
     defaultViewport: null
   });
 
@@ -128,11 +131,17 @@ async function autoApply() {
       }
 
       const newStatus = result.success ? 'Applied' : 'Action Required';
+      console.log(`   Result: ${result.message}`);
+      
+      // FIRE THE ICEBREAKER BOT IF APPLIED SUCCESSFULLY
+      if (result.success) {
+        await sendIcebreaker(page, job.company, job.title);
+      }
       
       // Update DB Status
       const { error: updateError } = await supabase
         .from('jobs')
-        .update({ status: newStatus, notes: result.message })
+        .update({ status: newStatus, notes: result.message, appliedDate: new Date().toISOString().split('T')[0] })
         .eq('id', job.id);
 
       if (!updateError) {
