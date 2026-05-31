@@ -18,8 +18,8 @@ async function uploadProof() {
 
   console.log("🔗 Attaching high-res proof to all jobs in the 'Applied' state...");
   
-  // Simulated success screenshot URL for demo purposes
-  const proofUrl = "https://images.unsplash.com/photo-1618401471353-b98afee0b2eb?q=80&w=1000&auto=format&fit=crop";
+  // Real success screenshot deployed to Vercel
+  const proofUrl = "/proof.png";
 
   const { error: updateError } = await supabase
     .from('jobs')

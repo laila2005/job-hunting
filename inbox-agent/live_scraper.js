@@ -3,6 +3,8 @@ const { createClient } = require('@supabase/supabase-js');
 const { syncToGoogleSheet } = require('./sheetsSync');
 const fs = require('fs');
 const path = require('path');
+const { scrapeWuzzuf } = require('./wuzzufScraper');
+const { scrapeLinkedIn } = require('./linkedinJobScraper');
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -71,10 +73,18 @@ async function fetchRealJobs() {
     console.log("🌐 Fetching real remote backend roles from Remotive API...");
     const response = await fetch('https://remotive.com/api/remote-jobs?category=software-dev&search=backend');
     const data = await response.json();
+    const remotiveJobs = data.jobs.slice(0, 5); // Take top 5 from remotive
+
+    // Run Playwright Scrapers in Parallel
+    const [wuzzufJobs, linkedinJobs] = await Promise.all([
+      scrapeWuzzuf(),
+      scrapeLinkedIn()
+    ]);
+
+    // Combine all jobs
+    const freshJobs = [...remotiveJobs, ...wuzzufJobs.slice(0, 5), ...linkedinJobs.slice(0, 5)];
     
-    // Grab the top 15 most recent jobs
-    const freshJobs = data.jobs.slice(0, 15);
-    console.log(`🎯 Found ${freshJobs.length} live positions. Sending to AI for strict profile evaluation...`);
+    console.log(`🎯 Found ${freshJobs.length} live positions across Remotive, Wuzzuf, and LinkedIn. Sending to AI for strict profile evaluation...`);
 
     let ingestedCount = 0;
 
