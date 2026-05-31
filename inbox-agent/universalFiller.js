@@ -69,24 +69,24 @@ async function extractPageState(page) {
     });
 
     // Visible buttons
-    document.querySelectorAll('button, input[type="submit"], input[type="button"], [role="button"]').forEach((el, i) => {
+    document.querySelectorAll('button, input[type="submit"], input[type="button"], [role="button"]').forEach((el) => {
       const text = el.innerText?.trim() || el.value || el.getAttribute('aria-label') || '';
       if (!text || el.offsetParent === null) return; // Skip hidden
-      state.buttons.push({ index: i, text: text.substring(0, 80), tag: el.tagName, type: el.type || '', disabled: el.disabled, id: el.id || '', className: (el.className || '').toString().substring(0, 60) });
+      state.buttons.push({ index: state.buttons.length, text: text.substring(0, 80), tag: el.tagName, type: el.type || '', disabled: el.disabled, id: el.id || '', className: (el.className || '').toString().substring(0, 60) });
     });
 
     // Visible links that look like CTAs
-    document.querySelectorAll('a').forEach((el, i) => {
+    document.querySelectorAll('a').forEach((el) => {
       const text = el.innerText?.trim() || '';
       if (!text || el.offsetParent === null) return;
       const lowerText = text.toLowerCase();
       if (lowerText.includes('apply') || lowerText.includes('submit') || lowerText.includes('next') || lowerText.includes('continue') || lowerText.includes('sign') || lowerText.includes('start') || lowerText.includes('begin') || lowerText.includes('upload')) {
-        state.links.push({ index: i, text: text.substring(0, 80), href: el.href?.substring(0, 120) || '' });
+        state.links.push({ index: state.links.length, text: text.substring(0, 80), href: el.href?.substring(0, 120) || '' });
       }
     });
 
     // Form fields
-    document.querySelectorAll('input:not([type="hidden"]):not([type="submit"]):not([type="button"]), textarea, select').forEach((el, i) => {
+    document.querySelectorAll('input:not([type="hidden"]):not([type="submit"]):not([type="button"]), textarea, select').forEach((el) => {
       if (el.offsetParent === null) return;
       let label = '';
       if (el.id) { const l = document.querySelector(`label[for="${el.id}"]`); if (l) label = l.innerText?.trim(); }
@@ -99,7 +99,7 @@ async function extractPageState(page) {
       if (el.tagName === 'SELECT') options = Array.from(el.options).slice(0, 15).map(o => o.text);
 
       state.fields.push({
-        index: i, tag: el.tagName.toLowerCase(), type: el.type || 'text',
+        index: state.fields.length, tag: el.tagName.toLowerCase(), type: el.type || 'text',
         name: el.name || '', id: el.id || '', label: label.substring(0, 80),
         value: (el.value || '').substring(0, 50), required: el.required,
         options: options
@@ -124,54 +124,71 @@ async function executeAction(page, action) {
 
     case 'click_button': {
       const buttons = await page.$$('button, input[type="submit"], input[type="button"], [role="button"]');
-      const visibleButtons = [];
+      const matchingButtons = [];
       for (const btn of buttons) {
-        const visible = await btn.evaluate(el => el.offsetParent !== null);
-        if (visible) visibleButtons.push(btn);
+        const hasTextAndVisible = await btn.evaluate(el => {
+          const text = el.innerText?.trim() || el.value || el.getAttribute('aria-label') || '';
+          return !!text && el.offsetParent !== null;
+        });
+        if (hasTextAndVisible) {
+          matchingButtons.push(btn);
+        }
       }
-      if (visibleButtons[action.index]) {
-        await visibleButtons[action.index].evaluate(el => el.click());
+      if (matchingButtons[action.index] !== undefined) {
+        await matchingButtons[action.index].evaluate(el => el.click());
         console.log(`      → Clicked button #${action.index}: "${action.reason}"`);
+      } else {
+        console.error(`      → ERROR: Button #${action.index} not found in DOM!`);
       }
       break;
     }
 
     case 'click_link': {
       const links = await page.$$('a');
-      const visibleLinks = [];
+      const matchingLinks = [];
       for (const link of links) {
-        const text = await link.evaluate(el => el.innerText?.trim() || '');
-        const visible = await link.evaluate(el => el.offsetParent !== null);
-        const lowerText = text.toLowerCase();
-        if (visible && (lowerText.includes('apply') || lowerText.includes('submit') || lowerText.includes('next') || lowerText.includes('continue') || lowerText.includes('sign') || lowerText.includes('start') || lowerText.includes('begin') || lowerText.includes('upload'))) {
-          visibleLinks.push(link);
-        }
+        const matches = await link.evaluate(el => {
+          const text = el.innerText?.trim() || '';
+          const visible = el.offsetParent !== null;
+          const lowerText = text.toLowerCase();
+          return visible && !!text && (
+            lowerText.includes('apply') || lowerText.includes('submit') || lowerText.includes('next') || 
+            lowerText.includes('continue') || lowerText.includes('sign') || lowerText.includes('start') || 
+            lowerText.includes('begin') || lowerText.includes('upload')
+          );
+        });
+        if (matches) matchingLinks.push(link);
       }
-      if (visibleLinks[action.index]) {
+      if (matchingLinks[action.index] !== undefined) {
         // Get the href and navigate directly (fixes popup-blocked links)
-        const href = await visibleLinks[action.index].evaluate(el => el.href || '');
+        const href = await matchingLinks[action.index].evaluate(el => el.href || '');
         if (href && href.startsWith('http') && !href.includes('javascript:')) {
           console.log(`      → Navigating directly to: ${href.substring(0, 80)}`);
           await page.goto(href, { waitUntil: 'domcontentloaded', timeout: 30000 });
         } else {
-          await visibleLinks[action.index].evaluate(el => el.click());
+          await matchingLinks[action.index].evaluate(el => el.click());
         }
         console.log(`      → Clicked link #${action.index}: "${action.reason}"`);
+      } else {
+        console.error(`      → ERROR: Link #${action.index} not found in DOM!`);
       }
       break;
     }
 
     case 'fill_fields': {
       const inputs = await page.$$('input:not([type="hidden"]):not([type="submit"]):not([type="button"]), textarea, select');
-      const visibleInputs = [];
+      const matchingInputs = [];
       for (const inp of inputs) {
         const visible = await inp.evaluate(el => el.offsetParent !== null);
-        if (visible) visibleInputs.push(inp);
+        if (visible) matchingInputs.push(inp);
       }
 
       for (const fill of (action.fields || [])) {
-        const el = visibleInputs[fill.index];
-        if (!el) continue;
+        const el = matchingInputs[fill.index];
+        if (!el) {
+          console.error(`      → ERROR: Input field #${fill.index} not found in DOM!`);
+          continue;
+        }
         const tagName = await el.evaluate(e => e.tagName.toLowerCase());
 
         if (tagName === 'select') {
