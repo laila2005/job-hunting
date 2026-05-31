@@ -5,26 +5,54 @@ const path = require('path');
 const { botLog } = require('./telemetry');
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+// ─────────────────────────────────────────────────────
+// Gemini API with model fallback + smart retry
+// ─────────────────────────────────────────────────────
+const MODELS = ['gemini-1.5-flash', 'gemini-2.0-flash-lite', 'gemini-2.0-flash'];
+let quotaExhaustedUntil = 0; // Timestamp when quota resets
 
-// ─────────────────────────────────────────────────────
-// Gemini API with retry
-// ─────────────────────────────────────────────────────
-async function callGemini(contents, maxRetries = 3) {
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    try {
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.0-flash',
-        contents: contents,
-        config: { temperature: 0.1 }
-      });
-      return response.text.trim();
-    } catch (err) {
-      if (attempt === maxRetries - 1) throw err;
-      const wait = Math.pow(2, attempt + 1) * 1000;
-      console.log(`   [Gemini] Retry ${attempt + 1}/${maxRetries} in ${wait / 1000}s...`);
-      await new Promise(r => setTimeout(r, wait));
+async function callGemini(contents, maxRetries = 2) {
+  // If we're in a quota cooldown, abort immediately
+  if (Date.now() < quotaExhaustedUntil) {
+    throw new Error('QUOTA_EXHAUSTED: Waiting for API quota to reset.');
+  }
+
+  for (const model of MODELS) {
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        const response = await ai.models.generateContent({
+          model: model,
+          contents: contents,
+          config: { temperature: 0.1 }
+        });
+        return response.text.trim();
+      } catch (err) {
+        const msg = err.message || '';
+        const is429 = msg.includes('429') || msg.includes('RESOURCE_EXHAUSTED') || msg.includes('quota');
+        
+        if (is429) {
+          // Parse the retry delay from the API response
+          const delayMatch = msg.match(/retryDelay.*?(\d+)/);
+          const waitSec = delayMatch ? Math.min(parseInt(delayMatch[1]), 60) : 10;
+          
+          if (attempt < maxRetries - 1) {
+            console.log(`   [Gemini] ${model} rate limited. Waiting ${waitSec}s...`);
+            await new Promise(r => setTimeout(r, waitSec * 1000));
+          } else {
+            console.log(`   [Gemini] ${model} quota exhausted. Trying next model...`);
+            break; // Try next model
+          }
+        } else {
+          // Non-quota error — don't retry
+          throw err;
+        }
+      }
     }
   }
+  
+  // All models exhausted — set cooldown and throw
+  quotaExhaustedUntil = Date.now() + 60000; // 1 minute cooldown
+  throw new Error('QUOTA_EXHAUSTED: All Gemini models are rate limited. Bot will pause.');
 }
 
 // ─────────────────────────────────────────────────────
@@ -282,7 +310,12 @@ To wait for page to load:
     try {
       geminiResponse = await callGemini(prompt);
     } catch (err) {
-      console.error(`   [AI Agent] Gemini error: ${err.message}`);
+      const msg = err.message || '';
+      if (msg.includes('QUOTA_EXHAUSTED')) {
+        await botLog('⏸️', `[${companyName}] API quota exhausted. Pausing bot to save quota.`, 'error');
+        return { success: false, message: 'Gemini API quota exhausted. Will retry when quota resets.' };
+      }
+      console.error(`   [AI Agent] Gemini error: ${msg.substring(0, 100)}`);
       continue;
     }
 
