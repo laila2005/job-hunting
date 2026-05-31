@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const JobModal = ({ job, onClose, onApprove }) => {
+const JobModal = ({ job, onClose, onApprove, onDecline }) => {
   const [lightboxOpen, setLightboxOpen] = useState(false);
 
   if (!job) return null;
@@ -91,7 +91,10 @@ const JobModal = ({ job, onClose, onApprove }) => {
         <div className="modal-footer">
           <button className="btn btn-secondary" onClick={onClose}>Close</button>
           {job.status === 'Pending Review' && (
-            <button className="btn" style={{ background: 'var(--success)', color: '#000' }} onClick={() => onApprove(job.id)}>Approve & Apply</button>
+            <div style={{ display: 'flex', gap: 'var(--spacing-md)' }}>
+              <button className="btn" style={{ background: 'var(--danger)', color: '#fff' }} onClick={() => onDecline(job.id)}>Decline</button>
+              <button className="btn" style={{ background: 'var(--success)', color: '#000' }} onClick={() => onApprove(job.id)}>Approve & Apply</button>
+            </div>
           )}
         </div>
       </div>

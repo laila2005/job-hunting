@@ -7,7 +7,7 @@ const getScoreColor = (score) => {
   return 'var(--danger)';
 };
 
-const JobBoard = ({ jobs, onApprove }) => {
+const JobBoard = ({ jobs, onApprove, onDecline }) => {
   const [selectedJob, setSelectedJob] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('All');
@@ -80,6 +80,19 @@ const JobBoard = ({ jobs, onApprove }) => {
             </div>
 
             <div className="item-actions">
+              {job.status === 'Applied' && job.proof_url && (
+                <div 
+                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', gap: '4px' }}
+                  onClick={() => setSelectedJob(job)}
+                >
+                  <span style={{ fontSize: '10px', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Proof</span>
+                  <img 
+                    src={job.proof_url} 
+                    alt="Proof" 
+                    style={{ width: '40px', height: '30px', objectFit: 'cover', borderRadius: '4px', border: '1px solid var(--border-subtle)' }}
+                  />
+                </div>
+              )}
               <div className="item-score-block">
                 <div className="item-score-label">Fit Score</div>
                 <div className="item-score-value" style={{ color: getScoreColor(job.fitScore) }}>
@@ -100,7 +113,11 @@ const JobBoard = ({ jobs, onApprove }) => {
         onApprove={(id) => {
           onApprove(id);
           setSelectedJob(null);
-        }} 
+        }}
+        onDecline={(id) => {
+          onDecline(id);
+          setSelectedJob(null);
+        }}
       />
     </div>
   );

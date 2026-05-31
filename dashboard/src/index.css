@@ -459,7 +459,9 @@ h1, h2, h3, h4 {
   width: 100%;
   max-width: 600px;
   max-height: 90vh;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   position: relative;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
   animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -481,6 +483,8 @@ h1, h2, h3, h4 {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xl);
+  overflow-y: auto;
+  flex: 1;
 }
 
 .modal-footer {

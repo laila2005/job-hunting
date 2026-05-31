@@ -80,6 +80,22 @@ function App() {
     }
   };
 
+  const handleDecline = async (id) => {
+    setJobs(jobs.map(j => j.id === id ? { ...j, status: 'Rejected' } : j));
+    
+    const { error } = await supabase
+      .from('jobs')
+      .update({ status: 'Rejected' })
+      .eq('id', id);
+      
+    if (error) {
+      console.error('Error rejecting job in Supabase:', error);
+      alert('Error updating Supabase database. See console.');
+    } else {
+      alert("Job declined and moved to Rejected tab.");
+    }
+  };
+
   const handleMarkSent = async (id) => {
     setContacts(contacts.map(c => c.id === id ? { ...c, status: 'Sent' } : c));
     await supabase.from('networking_contacts').update({ status: 'Sent' }).eq('id', id);
@@ -106,7 +122,7 @@ function App() {
       ) : (
         <>
           <StatCards jobs={jobs} />
-          <JobBoard jobs={jobs} onApprove={handleApprove} />
+          <JobBoard jobs={jobs} onApprove={handleApprove} onDecline={handleDecline} />
           <NetworkingBoard contacts={contacts} onMarkSent={handleMarkSent} />
         </>
       )}
