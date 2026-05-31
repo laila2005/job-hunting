@@ -120,7 +120,7 @@ async function autoApply() {
   const dreamCompanies = dreamData ? dreamData.map(d => d.name.toLowerCase()) : [];
 
   for (const job of jobs) {
-    if (dreamCompanies.includes(job.company.toLowerCase())) {
+    if (dreamCompanies.includes(job.company.toLowerCase()) || job.recommended_action === 'dream_company') {
       console.log(`\n💎 [Dream Company Detected] ${job.company}. Pausing auto-apply and routing to Dossier Engine...`);
       await updateTelemetry('Networking', `Generating Dream Dossier for ${job.company}...`);
       await supabase.from('jobs').update({ status: 'Needs Dossier' }).eq('id', job.id);

@@ -36,13 +36,18 @@ async function evaluateJobWithAI(jobs) {
           "aqs_strengths": ["string"],
           "aqs_risks": ["string"],
           "recommended_action": "apply" | "network" | "skip"
+          "recommended_action": "apply" | "network" | "skip" | "dream_company"
         }
       ]
       
       RULES:
       - pass: false if it explicitly requires 4+ years of experience, is Senior/Staff, or is purely frontend/design.
       - aqs_score: Score out of 100 based on fit, remote possibility, and backend relevance.
-      - recommended_action: 'skip' if pass is false. 'network' if it's a high-tier company requiring a referral. 'apply' if it's a perfect match.
+      - recommended_action: 
+        - 'skip' if pass is false. 
+        - 'dream_company' if it is an international/multinational company offering a high salary and is EITHER fully remote OR hybrid in New Cairo.
+        - 'network' if it's a high-tier company requiring a referral. 
+        - 'apply' if it's a perfect match but not a dream company.
     `;
 
   try {
