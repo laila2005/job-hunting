@@ -2,6 +2,7 @@ require('dotenv').config();
 const { GoogleGenAI } = require('@google/genai');
 const fs = require('fs');
 const path = require('path');
+const { botLog } = require('./telemetry');
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
@@ -200,14 +201,13 @@ async function handleUniversalApply(page, companyName) {
   const history = []; // Track what we've done to avoid loops
 
   for (let step = 0; step < MAX_STEPS; step++) {
-    console.log(`\n   [AI Agent] ── Step ${step + 1}/${MAX_STEPS} ──`);
+    await botLog('🔄', `[${companyName}] Step ${step + 1}/${MAX_STEPS}`, 'step');
 
     await new Promise(r => setTimeout(r, 2000));
 
     // 1. Read the page
     const pageState = await extractPageState(page);
-    console.log(`   [AI Agent] Page: ${pageState.url.substring(0, 80)}`);
-    console.log(`   [AI Agent] Found: ${pageState.fields.length} fields, ${pageState.buttons.length} buttons, ${pageState.links.length} CTA links`);
+    await botLog('👁️', `[${companyName}] Page: ${pageState.url.substring(0, 60)} | ${pageState.fields.length} fields, ${pageState.buttons.length} buttons`, 'step');
 
     // 2. Ask Gemini what to do
     const prompt = `You are an autonomous AI agent applying for a job on behalf of a candidate.
@@ -291,16 +291,17 @@ To wait for page to load:
     }
 
     console.log(`   [AI Agent] Decision: ${action.action} — ${action.reason}`);
+    await botLog('🧠', `[${companyName}] AI Decision: ${action.action} — ${action.reason}`, 'step');
     history.push(`Step${step + 1}:${action.action}(${action.reason?.substring(0, 30)})`);
 
     // 4. Handle terminal states
     if (action.action === 'done') {
-      console.log(`   [AI Agent] \u2705 Application complete: ${action.reason}`);
+      await botLog('✅', `[${companyName}] APPLICATION SUBMITTED: ${action.reason}`, 'success');
       return { success: true, message: action.reason };
     }
 
     if (action.action === 'impossible') {
-      console.log(`   [AI Agent] \u274c Cannot apply: ${action.reason}`);
+      await botLog('🚫', `[${companyName}] CANNOT APPLY: ${action.reason}`, 'error');
       return { success: false, message: action.reason };
     }
 
