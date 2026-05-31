@@ -106,11 +106,11 @@ async function fetchRealJobs() {
       
       const newJob = {
         id: 'job-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
-        company: job.companyName,
+        company: job.companyName || job.company_name || job.company || 'Unknown Company',
         title: job.title,
-        location: job.location || 'Remote',
+        location: job.location || job.candidate_required_location || 'Remote',
         status: 'Pending Review',
-        companyLink: job.url,
+        companyLink: job.url || job.companyLink,
         aqs_score: job.aqs_score,
         aqs_strengths: job.aqs_strengths,
         aqs_risks: job.aqs_risks,
