@@ -161,8 +161,21 @@ async function executeAction(page, action) {
       }
       if (matchingLinks[action.index] !== undefined) {
         // Get the href and navigate directly (fixes popup-blocked links)
-        const href = await matchingLinks[action.index].evaluate(el => el.href || '');
+        let href = await matchingLinks[action.index].evaluate(el => el.href || '');
         if (href && href.startsWith('http') && !href.includes('javascript:')) {
+          // Bypass safety redirect warning pages by extracting the real target URL
+          if (href.includes('linkedin.com/safety/go') || href.includes('url=')) {
+            const urlParam = href.match(/[?&]url=([^&]+)/);
+            if (urlParam) {
+              try {
+                const decoded = decodeURIComponent(urlParam[1]);
+                console.log(`      [Bypass redirect] Extracted real URL: ${decoded}`);
+                href = decoded;
+              } catch (e) {
+                console.error(`      [Bypass redirect] Could not decode URL parameter: ${e.message}`);
+              }
+            }
+          }
           console.log(`      → Navigating directly to: ${href.substring(0, 80)}`);
           await page.goto(href, { waitUntil: 'domcontentloaded', timeout: 30000 });
         } else {
