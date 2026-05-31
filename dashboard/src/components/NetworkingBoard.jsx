@@ -10,37 +10,32 @@ const NetworkingBoard = ({ contacts, onMarkSent }) => {
         Click the button to copy the drafted message and instantly open their LinkedIn profile.
       </p>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }}>
-        {contacts.map(contact => (
-          <div key={contact.id} className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div className="list-grid">
+        {contacts.length === 0 ? (
+          <p className="empty-state">No networking tasks right now. The bot is resting.</p>
+        ) : contacts.map(contact => (
+          <div key={contact.id} className="premium-card item-card">
             
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <h3 style={{ margin: 0, fontSize: '1.2rem' }}>{contact.employee_name}</h3>
-                <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+            <div className="item-main">
+              <div className="item-details">
+                <div className="item-title-row">
+                  <h3 className="item-title">{contact.employee_name}</h3>
+                  <span className={contact.status === 'Sent' ? 'badge badge-sent' : 'badge badge-pending'}>
+                    {contact.status}
+                  </span>
+                </div>
+                <p className="item-meta">
                   {contact.role} at {contact.company}
                 </p>
+                <div className="networking-message">
+                  "{contact.draft_message}"
+                </div>
               </div>
-              <span style={{ 
-                background: contact.status === 'Sent' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.2)', 
-                color: contact.status === 'Sent' ? 'var(--success)' : 'var(--warning)',
-                padding: '4px 10px', 
-                borderRadius: '12px', 
-                fontSize: '0.75rem',
-                fontWeight: '600'
-              }}>
-                {contact.status}
-              </span>
             </div>
 
-            <div style={{ background: 'rgba(0,0,0,0.2)', padding: '16px', borderRadius: '8px' }}>
-              <p style={{ fontStyle: 'italic', fontSize: '0.95rem', color: 'var(--text-primary)', margin: 0 }}>
-                "{contact.draft_message}"
-              </p>
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '8px' }}>
+            <div className="item-actions">
               <button 
+                className="btn"
                 onClick={() => {
                   navigator.clipboard.writeText(contact.draft_message);
                   window.open(contact.linkedin_url, '_blank');
@@ -48,8 +43,10 @@ const NetworkingBoard = ({ contacts, onMarkSent }) => {
                     onMarkSent(contact.id);
                   }
                 }}
+                disabled={contact.status === 'Sent'}
+                style={{ opacity: contact.status === 'Sent' ? 0.5 : 1, cursor: contact.status === 'Sent' ? 'not-allowed' : 'pointer' }}
               >
-                Copy Message & Connect
+                {contact.status === 'Sent' ? 'Request Sent ✓' : 'Copy Message & Connect'}
               </button>
             </div>
 

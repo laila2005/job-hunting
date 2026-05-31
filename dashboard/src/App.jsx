@@ -87,20 +87,21 @@ function App() {
 
   return (
     <div className="container">
-      <header className="header">
+      <header className="hero-header">
         <div>
-          <h1 style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <h1 className="hero-title">
             Job Search Command Center
-            {isLoading && <span style={{ fontSize: '1rem', color: 'var(--text-secondary)', fontWeight: '400' }}>(Syncing...)</span>}
+            {isLoading && <span style={{ fontSize: 'var(--text-base)', color: 'var(--text-secondary)', fontWeight: '400' }}>(Syncing...)</span>}
           </h1>
-          <p className="subtitle">Welcome back, Laila. Here is your current pipeline.</p>
+          <p className="hero-subtitle">Welcome back, Laila. Here is your automated pipeline.</p>
         </div>
-        <button style={{ padding: '12px 24px' }}>+ Manual Add</button>
+        <button className="btn btn-secondary">+ Manual Add</button>
       </header>
 
       {isLoading && jobs.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '60px', color: 'var(--text-secondary)' }}>
+        <div className="empty-state">
           <h2>Connecting to Cloud Database...</h2>
+          <p>Authenticating background agents.</p>
         </div>
       ) : (
         <>

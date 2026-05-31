@@ -1,6 +1,7 @@
 require('dotenv').config();
 const { createClient } = require('@supabase/supabase-js');
 const { findNetworkingContacts } = require('./linkedinScraper');
+const { syncToGoogleSheet } = require('./sheetsSync');
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -58,6 +59,9 @@ async function runRealHunt() {
     } else {
       console.log(`✅ Applied! Generating networking contacts...`);
       await findNetworkingContacts(job.id, job.company);
+      
+      console.log(`📝 Syncing to Google Sheets...`);
+      await syncToGoogleSheet(job);
     }
   }
 

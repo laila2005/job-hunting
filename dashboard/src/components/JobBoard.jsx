@@ -13,10 +13,10 @@ const JobBoard = ({ jobs, onApprove }) => {
   const [activeTab, setActiveTab] = useState('All');
 
   const getStatusClass = (status) => {
-    if (status === 'Needs Input') return 'status-needs-input';
-    if (status === 'Applied') return 'status-applied';
-    if (status === 'Pending Review') return 'status-pending';
-    return '';
+    if (status === 'Needs Input') return 'badge badge-needs-input';
+    if (status === 'Applied') return 'badge badge-applied';
+    if (status === 'Pending Review') return 'badge badge-pending';
+    return 'badge';
   };
 
   const filteredJobs = jobs.filter(job => {
@@ -52,52 +52,42 @@ const JobBoard = ({ jobs, onApprove }) => {
         ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }}>
+      <div className="list-grid">
         {filteredJobs.length === 0 ? (
-          <p style={{ color: 'var(--text-secondary)', textAlign: 'center', padding: '40px' }}>No jobs found matching your filters.</p>
+          <p className="empty-state">No jobs found matching your filters.</p>
         ) : filteredJobs.map(job => (
-          <div key={job.id} className="glass-panel" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div key={job.id} className="premium-card item-card">
             
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div className="item-main">
               {job.companyLogo && (
                 <img 
                   src={job.companyLogo} 
                   alt={job.company} 
-                  style={{ width: '40px', height: '40px', objectFit: 'contain', background: '#fff', borderRadius: '8px', padding: '4px' }} 
+                  className="item-logo"
                 />
               )}
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                  <h3 style={{ margin: 0, fontSize: '1.2rem' }}>{job.title}</h3>
-                  <span style={{ 
-                    padding: '4px 10px', 
-                    borderRadius: '12px', 
-                    fontSize: '0.75rem',
-                    fontWeight: '600',
-                    border: '1px solid transparent'
-                  }} className={getStatusClass(job.status)}>
+              <div className="item-details">
+                <div className="item-title-row">
+                  <h3 className="item-title">{job.title}</h3>
+                  <span className={getStatusClass(job.status)}>
                     {job.status}
                   </span>
                 </div>
-                <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                <p className="item-meta">
                   {job.company} • {job.location} ({job.model}) • {job.salary}
                 </p>
               </div>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '30px' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>Fit Score</div>
-                <div style={{ 
-                  color: getScoreColor(job.fitScore), 
-                  fontWeight: '800', 
-                  fontSize: '1.5rem' 
-                }}>
+            <div className="item-actions">
+              <div className="item-score-block">
+                <div className="item-score-label">Fit Score</div>
+                <div className="item-score-value" style={{ color: getScoreColor(job.fitScore) }}>
                   {job.fitScore}
                 </div>
               </div>
 
-              <button onClick={() => setSelectedJob(job)}>Review Details</button>
+              <button className="btn" onClick={() => setSelectedJob(job)}>Review Details</button>
             </div>
 
           </div>
