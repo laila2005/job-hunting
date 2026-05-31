@@ -6,6 +6,7 @@ const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 const { handleUniversalApply } = require('./universalFiller');
 const { sendIcebreaker } = require('./icebreakerBot');
+const { updateTelemetry } = require('./telemetry');
 puppeteer.use(StealthPlugin());
 
 const supabase = createClient(
@@ -94,12 +95,14 @@ async function autoApply() {
     .select('*')
     .eq('status', 'Pending Review');
 
-  if (error || !jobs.length) {
-    console.log("No pending jobs to apply for.");
+  if (!jobs || jobs.length === 0) {
+    console.log("   [Stealth] No pending jobs to apply for.");
+    await updateTelemetry('Sleeping', 'No pending jobs in queue.');
     return;
   }
 
   console.log(`🎯 Found ${jobs.length} jobs ready for Auto-Apply.`);
+  await updateTelemetry('Applying', `Found ${jobs.length} pending jobs.`);
 
   // Launch browser pointing to user's local Brave user data directory so it inherits active logins!
   // Note: The user MUST completely close Brave before running this, or it will crash due to file locks.
@@ -114,9 +117,10 @@ async function autoApply() {
 
   for (const job of jobs) {
     console.log(`\n⏳ Navigating to ${job.company} portal (${job.title})...`);
+    await updateTelemetry('Applying', `Applying to ${job.company} for ${job.title}...`);
     
     try {
-      await page.goto(job.companyLink, { waitUntil: 'domcontentloaded' });
+      await page.goto(job.companyLink, { waitUntil: 'networkidle2' });
       await new Promise(r => setTimeout(r, 3000)); // Wait for React to mount
       
       let result = { success: false, message: 'Unknown platform' };
@@ -166,6 +170,7 @@ async function autoApply() {
 
   await browser.close();
   console.log("\n🎉 Auto-Apply Batch Complete! Your dashboard and Google Sheets are updated.");
+  await updateTelemetry('Sleeping', 'Auto-Apply batch finished. Waiting for new jobs.');
 }
 
 autoApply();

@@ -1,6 +1,7 @@
 require('dotenv').config();
 const { createClient } = require('@supabase/supabase-js');
 const { syncToGoogleSheet } = require('./sheetsSync');
+const { updateTelemetry } = require('./telemetry');
 const fs = require('fs');
 const path = require('path');
 const { scrapeWuzzuf } = require('./wuzzufScraper');
@@ -67,6 +68,7 @@ async function evaluateJobWithAI(jobTitle, jobDescription) {
 
 async function fetchRealJobs() {
   console.log("🚀 Sourcing Engine: Activating Live Search...");
+  await updateTelemetry('Sourcing', 'Activating live job search...');
   
   try {
     // We use Remotive API for high-quality, verified remote tech jobs
@@ -147,6 +149,7 @@ async function fetchRealJobs() {
       ingestedCount++;
     }
 
+    await updateTelemetry('Sleeping', 'Scraping cycle complete. Database synced.');
     console.log(`\n✅ Sourcing Complete! ${ingestedCount} jobs passed the strict AI filter and were sent to your Dashboard.`);
   } catch (err) {
     console.error("❌ Sourcing Engine Failed:", err.message);

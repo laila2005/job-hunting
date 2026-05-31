@@ -5,6 +5,7 @@ import StatCards from './components/StatCards'
 import JobBoard from './components/JobBoard'
 import NetworkingBoard from './components/NetworkingBoard'
 import InterviewAgent from './components/InterviewAgent'
+import LiveTelemetry from './components/LiveTelemetry'
 
 // Initialize Supabase Client
 const supabaseUrl = 'https://wpxtstbquvbsiqgoqwma.supabase.co'
@@ -125,6 +126,7 @@ function App() {
         <InterviewAgent job={interviewJob} onBack={() => setInterviewJob(null)} />
       ) : (
         <>
+          <LiveTelemetry />
           <StatCards jobs={jobs} />
           <JobBoard jobs={jobs} onApprove={handleApprove} onDecline={handleDecline} onStartInterview={setInterviewJob} />
           <NetworkingBoard contacts={contacts} onMarkSent={handleMarkSent} />
