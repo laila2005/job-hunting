@@ -24,6 +24,19 @@
   --border-subtle: rgba(255, 255, 255, 0.08);
   --border-strong: rgba(255, 255, 255, 0.15);
 
+  /* Component Aliases */
+  --bg-dark: #0B0F19;
+  --bg-card: #111827;
+  --bg-hover: #1F2937;
+  --glass-bg: rgba(17, 24, 39, 0.7);
+  --text-main: #F9FAFB;
+  --border-color: rgba(255, 255, 255, 0.15);
+  --accent-blue: #3B82F6;
+  --accent-blue-hover: #2563EB;
+  --accent-green: #10B981;
+  --accent-red: #EF4444;
+  --accent-purple: #8B5CF6;
+
   /* Fluid Typography using clamp */
   --text-xs: clamp(0.7rem, 0.65rem + 0.25vw, 0.75rem);
   --text-sm: clamp(0.8rem, 0.75rem + 0.25vw, 0.875rem);
