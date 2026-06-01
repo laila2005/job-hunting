@@ -38,15 +38,15 @@ const DreamBoard = () => {
 
   return (
     <div style={{ background: 'var(--bg-card)', borderRadius: '12px', border: '1px solid var(--border-color)', padding: '20px', marginBottom: '30px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+      <div className="dreamboard-header">
         <h2 style={{ margin: 0, color: 'var(--text-main)', fontSize: '1.2rem' }}>💎 Dream Companies Vault</h2>
-        <div style={{ display: 'flex', gap: '10px' }}>
+        <div className="dreamboard-form">
           <input 
             type="text" 
             placeholder="Add Company (e.g. Stripe)" 
             value={newCompany}
             onChange={e => setNewCompany(e.target.value)}
-            style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-dark)', color: 'white' }}
+            className="dreamboard-input"
           />
           <button className="btn btn-primary" onClick={handleAdd}>Add Target</button>
         </div>

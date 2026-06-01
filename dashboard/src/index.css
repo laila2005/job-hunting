@@ -527,3 +527,48 @@ h1, h2, h3, h4 {
   background: var(--bg-hover);
   color: var(--text-main);
 }
+
+/* Dream Companies Vault Responsive styling */
+.dreamboard-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+}
+
+@media (min-width: 768px) {
+  .dreamboard-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
+.dreamboard-form {
+  display: flex;
+  gap: var(--spacing-sm);
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .dreamboard-form {
+    width: auto;
+  }
+}
+
+.dreamboard-input {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-dark);
+  color: white;
+  min-width: 0;
+}
+
+@media (min-width: 768px) {
+  .dreamboard-input {
+    flex: none;
+    width: 220px;
+  }
+}

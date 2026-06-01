@@ -109,7 +109,7 @@ const LiveTelemetry = () => {
         </div>
 
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px 10px', flexWrap: 'wrap' }}>
             <span style={{ fontWeight: '600', fontSize: '0.95rem', color: '#e2e8f0' }}>
               Autonomous Engine
             </span>
