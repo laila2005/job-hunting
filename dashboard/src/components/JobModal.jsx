@@ -66,56 +66,70 @@ const JobModal = ({ job, onClose, onApprove, onDecline, onMarkApplied, onStartIn
           {activeTab === 'analysis' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
               <div className="modal-fit-summary">
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: '3rem', fontWeight: 'bold', color: 'var(--accent-blue)' }}>{job.fitScore}</div>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Overall Fit Score</div>
-                </div>
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ color: 'var(--text-muted)' }}>ATS Match Probability</span>
-                    <span style={{ fontWeight: 'bold' }}>{job.atsMatch}%</span>
+                <div className="fit-score-dial-wrapper">
+                  <div className="fit-score-neon-circle">
+                    <svg className="fit-score-svg" viewBox="0 0 100 100">
+                      <circle className="fit-score-svg-bg" cx="50" cy="50" r="40" />
+                      <circle 
+                        className="fit-score-svg-fill" 
+                        cx="50" 
+                        cy="50" 
+                        r="40" 
+                        style={{ strokeDashoffset: 251.2 - (251.2 * (job.fitScore || 85)) / 100 }}
+                      />
+                    </svg>
+                    <div className="fit-score-circle-text">
+                      <span className="circle-val">{job.fitScore || '85'}</span>
+                      <span className="circle-lbl">Match</span>
+                    </div>
                   </div>
-                  <div style={{ height: '8px', background: 'var(--bg-card)', borderRadius: '4px', overflow: 'hidden' }}>
-                    <div style={{ width: `${job.atsMatch}%`, height: '100%', background: 'var(--accent-blue)' }}></div>
+                  <div className="fit-score-caption">Overall AQS Fit Score</div>
+                </div>
+                
+                <div className="fit-score-metrics">
+                  <div className="metric-row">
+                    <span className="metric-label">ATS Match Probability</span>
+                    <span className="metric-value">{job.atsMatch}%</span>
+                  </div>
+                  <div className="metric-progress-track">
+                    <div className="metric-progress-bar" style={{ width: `${job.atsMatch}%` }}></div>
                   </div>
                   
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
-                    <span style={{ color: 'var(--text-muted)' }}>Candidate Gap Risk</span>
-                    <span style={{ fontWeight: 'bold', color: job.gapRisk === 'Low' ? 'var(--accent-green)' : '#F59E0B' }}>{job.gapRisk}</span>
+                  <div className="metric-row" style={{ marginTop: '16px' }}>
+                    <span className="metric-label">Candidate Gap Risk</span>
+                    <span className={`metric-value risk-${(job.gapRisk || 'Low').toLowerCase()}`}>{job.gapRisk}</span>
                   </div>
                 </div>
               </div>
 
               {/* Strengths and Risks Section */}
               <div className="modal-grid-2col">
-                <div style={{ background: 'rgba(16, 185, 129, 0.05)', padding: '20px', borderRadius: '12px', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
-                  <h4 style={{ color: 'var(--accent-green)', margin: '0 0 12px 0', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div className="fit-strengths-card">
+                  <h4 className="strengths-title">
                     <span>✅</span> Advantages / Strengths
                   </h4>
-                  <ul style={{ margin: 0, paddingLeft: '20px', color: 'var(--text-main)', fontSize: '0.9rem', lineHeight: '1.6' }}>
+                  <ul className="strengths-list">
                     {job.aqs_strengths && job.aqs_strengths.length > 0 ? (
-                      job.aqs_strengths.map((strength, idx) => <li key={idx} style={{ marginBottom: '6px' }}>{strength}</li>)
+                      job.aqs_strengths.map((strength, idx) => <li key={idx}>{strength}</li>)
                     ) : (
                       <li>Strong architectural alignment with your profile.</li>
                     )}
                   </ul>
                 </div>
 
-                <div style={{ background: 'rgba(245, 158, 11, 0.05)', padding: '20px', borderRadius: '12px', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
-                  <h4 style={{ color: '#F59E0B', margin: '0 0 12px 0', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div className="fit-risks-card">
+                  <h4 className="risks-title">
                     <span>⚠️</span> Disadvantages / Risk Factors
                   </h4>
-                  <ul style={{ margin: 0, paddingLeft: '20px', color: 'var(--text-main)', fontSize: '0.9rem', lineHeight: '1.6' }}>
+                  <ul className="risks-list">
                     {job.aqs_risks && job.aqs_risks.length > 0 ? (
-                      job.aqs_risks.map((risk, idx) => <li key={idx} style={{ marginBottom: '6px' }}>{risk}</li>)
+                      job.aqs_risks.map((risk, idx) => <li key={idx}>{risk}</li>)
                     ) : (
                       <li>No significant technical risks identified.</li>
                     )}
                   </ul>
                 </div>
               </div>
-
-              <div>
                 <h4 style={{ color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', fontSize: '0.8rem', margin: '0 0 12px 0' }}>Recommended Asset</h4>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'var(--bg-card)', padding: '16px', borderRadius: '8px', border: '1px dashed var(--border-color)' }}>
                   <span style={{ fontSize: '1.5rem' }}>📄</span>
@@ -130,8 +144,7 @@ const JobModal = ({ job, onClose, onApprove, onDecline, onMarkApplied, onStartIn
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
           {activeTab === 'proof' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>

@@ -112,8 +112,10 @@ const InterviewAgent = ({ job, onBack }) => {
           </div>
         ))}
         {isTyping && (
-          <div className="chat-bubble typing-indicator">
-            Interviewer is typing...
+          <div className="typing-indicator-dots">
+            <span></span>
+            <span></span>
+            <span></span>
           </div>
         )}
         <div ref={messagesEndRef} />

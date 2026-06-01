@@ -133,11 +133,19 @@ function App() {
         <div>
           <h1 className="hero-title">
             Job Search Command Center
-            {isLoading && <span style={{ fontSize: 'var(--text-base)', color: 'var(--text-secondary)', fontWeight: '400' }}>(Syncing...)</span>}
+            <span className="live-pill">
+              <span className="live-indicator-dot"></span>
+              {isLoading ? 'Syncing Cloud...' : 'Live Connected'}
+            </span>
           </h1>
-          <p className="hero-subtitle">Welcome back, Laila. Here is your automated pipeline.</p>
+          <p className="hero-subtitle">Welcome back, Laila. Here is your automated telemetry stream.</p>
         </div>
-        <button className="btn btn-secondary">+ Manual Add</button>
+        <button className="btn btn-gradient">
+          <svg className="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+          </svg>
+          Manual Add
+        </button>
       </header>
 
       {isLoading && jobs.length === 0 ? (

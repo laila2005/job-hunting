@@ -32,17 +32,43 @@ const StatCards = ({ jobs }) => {
     <div style={{ marginBottom: 'var(--spacing-2xl)' }}>
       {/* Top 3 Summary Cards */}
       <div className="kpi-grid">
-        <div className="premium-card">
-          <h3 style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-sm)', marginBottom: 'var(--spacing-sm)' }}>Total Pipeline</h3>
-          <p style={{ fontSize: 'var(--text-3xl)', fontWeight: '800', margin: 0 }}>{total}</p>
+        <div className="kpi-card kpi-total">
+          <div className="kpi-content">
+            <h3 className="kpi-title">Total Pipeline</h3>
+            <p className="kpi-value">{total}</p>
+            <span className="kpi-badge">Active Queue</span>
+          </div>
+          <div className="kpi-icon-wrapper">
+            <svg className="kpi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3v16.5c0 .621.504 1.125 1.125 1.125H21m-16.5-5.25L12 10.5l4.5 4.5 5.25-5.25" />
+            </svg>
+          </div>
         </div>
-        <div className="premium-card" style={{ borderLeft: `4px solid ${COLORS['Applied']}` }}>
-          <h3 style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-sm)', marginBottom: 'var(--spacing-sm)' }}>Successfully Applied</h3>
-          <p style={{ fontSize: 'var(--text-3xl)', fontWeight: '800', margin: 0 }}>{applied}</p>
+
+        <div className="kpi-card kpi-applied">
+          <div className="kpi-content">
+            <h3 className="kpi-title">Successfully Applied</h3>
+            <p className="kpi-value">{applied}</p>
+            <span className="kpi-badge badge-green">Syncing Live</span>
+          </div>
+          <div className="kpi-icon-wrapper icon-green">
+            <svg className="kpi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
         </div>
-        <div className="premium-card badge-needs-input" style={{ borderLeft: `4px solid ${COLORS['Needs Input']}` }}>
-          <h3 style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-sm)', marginBottom: 'var(--spacing-sm)' }}>Needs Input (Blocked)</h3>
-          <p style={{ fontSize: 'var(--text-3xl)', fontWeight: '800', margin: 0 }}>{needsInput}</p>
+
+        <div className="kpi-card kpi-blocked">
+          <div className="kpi-content">
+            <h3 className="kpi-title">Needs Input (Blocked)</h3>
+            <p className="kpi-value">{needsInput}</p>
+            <span className="kpi-badge badge-orange">Action Required</span>
+          </div>
+          <div className="kpi-icon-wrapper icon-orange">
+            <svg className="kpi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+            </svg>
+          </div>
         </div>
       </div>
 
@@ -50,23 +76,23 @@ const StatCards = ({ jobs }) => {
       <div className="analytics-grid">
         
         {/* Status Distribution Pie Chart */}
-        <div className="premium-card" style={{ height: '320px', display: 'flex', flexDirection: 'column' }}>
-          <h3 style={{ margin: 0, marginBottom: '16px', fontSize: '1.1rem' }}>Status Distribution</h3>
+        <div className="analytics-card status-distribution-card">
+          <h3 className="analytics-card-title">Status Distribution</h3>
           {total === 0 ? (
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
-              No data yet.
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+              No active metrics.
             </div>
           ) : (
-            <div style={{ flex: 1 }}>
+            <div style={{ flex: 1, minHeight: '220px' }}>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={pieData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    paddingAngle={5}
+                    innerRadius={65}
+                    outerRadius={85}
+                    paddingAngle={6}
                     dataKey="value"
                   >
                     {pieData.map((entry, index) => (
@@ -74,8 +100,8 @@ const StatCards = ({ jobs }) => {
                     ))}
                   </Pie>
                   <Tooltip 
-                    contentStyle={{ background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }} 
-                    itemStyle={{ color: '#fff' }}
+                    contentStyle={{ background: '#0e1227', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.5)' }} 
+                    itemStyle={{ color: '#fff', fontSize: '0.85rem' }}
                   />
                 </PieChart>
               </ResponsiveContainer>
@@ -84,21 +110,17 @@ const StatCards = ({ jobs }) => {
         </div>
 
         {/* Weekly Goal Tracker */}
-        <div className="premium-card" style={{ height: '320px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-          <h3 style={{ margin: 0, marginBottom: '16px', fontSize: '1.1rem' }}>Weekly Automation Goal</h3>
-          <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-            <span style={{ fontSize: 'var(--text-4xl)', fontWeight: '800', color: 'var(--accent-primary)' }}>{total}</span>
-            <span style={{ fontSize: 'var(--text-xl)', color: 'var(--text-secondary)' }}> / {weeklyGoal}</span>
-            <p style={{ color: 'var(--text-secondary)', margin: '8px 0 0 0', fontSize: 'var(--text-sm)' }}>Jobs targeted this week</p>
+        <div className="analytics-card weekly-goal-card">
+          <h3 className="analytics-card-title">Weekly Automation Goal</h3>
+          
+          <div className="goal-metric-container">
+            <span className="goal-metric-highlight">{total}</span>
+            <span className="goal-metric-divider"> / {weeklyGoal}</span>
+            <p className="goal-metric-caption">Automated job submittals this week</p>
           </div>
           
-          <div style={{ width: '100%', background: 'var(--bg-base)', height: '12px', borderRadius: '6px', overflow: 'hidden', border: '1px solid var(--border-subtle)' }}>
-            <div style={{ 
-              height: '100%', 
-              width: `${progressPercent}%`, 
-              background: 'var(--accent-primary)',
-              transition: 'width 1s ease-in-out'
-            }}></div>
+          <div className="goal-progress-track">
+            <div className="goal-progress-bar" style={{ width: `${progressPercent}%` }}></div>
           </div>
         </div>
 

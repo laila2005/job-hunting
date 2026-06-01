@@ -20,13 +20,18 @@ const JobBoard = ({ jobs, onApprove, onDecline, onMarkApplied, onStartInterview 
   return (
     <div>
       <div className="job-board-header">
-        <input 
-          type="text" 
-          placeholder="Search jobs by company or title..." 
-          className="search-input job-search-input"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
+        <div className="search-wrapper">
+          <svg className="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+          </svg>
+          <input 
+            type="text" 
+            placeholder="Search jobs by company or title..." 
+            className="search-input job-search-input-with-icon"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
         <div className="tabs-container">
           {['All', 'Pending Review', 'Needs Input', 'Applied', 'Rejected'].map(tab => (
             <button 
@@ -61,9 +66,9 @@ const JobBoard = ({ jobs, onApprove, onDecline, onMarkApplied, onStartInterview 
                     <span className="meta-item"><strong>{job.company}</strong></span>
                     <span className="meta-item">• {job.location} ({job.model})</span>
                     <span className="meta-item">• {job.salary}</span>
-                    <span className="badge badge-primary">{job.type}</span>
+                    <span className="badge badge-type-chip">{job.type}</span>
                     {job.aqs_score && (
-                      <span className={`badge ${job.aqs_score >= 90 ? 'badge-primary' : job.aqs_score >= 80 ? 'badge-secondary' : ''}`} style={{ marginLeft: 'auto', fontWeight: 'bold' }}>
+                      <span className={`badge badge-aqs ${job.aqs_score >= 90 ? 'badge-high' : 'badge-mid'}`}>
                         AQS: {job.aqs_score}
                       </span>
                     )}
@@ -73,23 +78,20 @@ const JobBoard = ({ jobs, onApprove, onDecline, onMarkApplied, onStartInterview 
               
               <div className="job-actions-container">
                 {job.status === 'Applied' && job.proof_url && (
-                  <div 
-                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', gap: '4px' }}
-                    onClick={() => setSelectedJob(job)}
-                  >
-                    <span style={{ fontSize: '10px', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Proof</span>
-                    <img 
-                      src={job.proof_url} 
-                      alt="Proof" 
-                      style={{ width: '40px', height: '30px', objectFit: 'cover', borderRadius: '4px', border: '1px solid var(--border-color)' }}
-                    />
+                  <div className="proof-indicator" onClick={() => setSelectedJob(job)}>
+                    <span className="proof-label">Proof</span>
+                    <img src={job.proof_url} alt="Proof" className="proof-thumbnail" />
                   </div>
                 )}
-                <div className="item-score-block" style={{textAlign: 'center'}}>
-                  <div style={{ fontSize: '10px', color: 'var(--text-muted)', letterSpacing: '1px' }}>FIT SCORE</div>
-                  <div className="text-success" style={{ fontSize: '20px', fontWeight: 'bold' }}>{job.fitScore || '85'}</div>
+                
+                <div className="item-score-block">
+                  <div className="fit-score-ring">
+                    <span className="fit-score-val">{job.fitScore || '85'}</span>
+                    <span className="fit-score-lbl">FIT</span>
+                  </div>
                 </div>
-                <button className="btn btn-secondary" onClick={() => setSelectedJob(job)}>Review Details</button>
+                
+                <button className="btn btn-secondary review-btn" onClick={() => setSelectedJob(job)}>Review Details</button>
               </div>
             </div>
           ))
