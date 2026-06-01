@@ -12,7 +12,23 @@ const supabase = createClient(
 
 // 2. Setup WhatsApp Client
 const waClient = new Client({
-  authStrategy: new LocalAuth() // Saves session so you don't scan QR every time
+  authStrategy: new LocalAuth(), // Saves session so you don't scan QR every time
+  puppeteer: {
+    headless: true,
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-accelerated-2d-canvas',
+      '--no-first-run',
+      '--no-zygote',
+      '--disable-gpu'
+    ]
+  },
+  webVersionCache: {
+    type: 'remote',
+    remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2412.54.html'
+  }
 });
 
 waClient.on('qr', (qr) => {
