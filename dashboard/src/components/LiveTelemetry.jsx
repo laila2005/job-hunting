@@ -9,7 +9,7 @@ const LiveTelemetry = () => {
   const [telemetry, setTelemetry] = useState({ status: 'Connecting...', current_task: 'Initializing...' });
   const [logs, setLogs] = useState([]);
   const [expanded, setExpanded] = useState(true);
-  const logEndRef = useRef(null);
+  const containerRef = useRef(null);
 
   useEffect(() => {
     fetchTelemetry();
@@ -19,8 +19,8 @@ const LiveTelemetry = () => {
   }, []);
 
   useEffect(() => {
-    if (logEndRef.current && expanded) {
-      logEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    if (containerRef.current && expanded) {
+      containerRef.current.scrollTop = containerRef.current.scrollHeight;
     }
   }, [logs, expanded]);
 
@@ -166,15 +166,18 @@ const LiveTelemetry = () => {
 
       {/* Expandable Log Terminal */}
       {expanded && (
-        <div style={{
-          maxHeight: '350px',
-          overflowY: 'auto',
-          padding: '0',
-          background: 'rgba(0, 0, 0, 0.4)',
-          fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace",
-          fontSize: '0.75rem',
-          lineHeight: '1.7',
-        }}>
+        <div 
+          ref={containerRef}
+          style={{
+            maxHeight: '350px',
+            overflowY: 'auto',
+            padding: '0',
+            background: 'rgba(0, 0, 0, 0.4)',
+            fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace",
+            fontSize: '0.75rem',
+            lineHeight: '1.7',
+          }}
+        >
           {logs.length === 0 ? (
             <div style={{ padding: '20px', color: '#475569', textAlign: 'center' }}>
               No logs yet. Start the bot to see live activity here.
@@ -201,7 +204,6 @@ const LiveTelemetry = () => {
               </div>
             ))
           )}
-          <div ref={logEndRef} />
         </div>
       )}
 
