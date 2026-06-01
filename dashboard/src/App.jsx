@@ -101,6 +101,27 @@ function App() {
     }
   };
 
+  const handleMarkApplied = async (id) => {
+    const today = new Date().toISOString().split('T')[0];
+    setJobs(jobs.map(j => j.id === id ? { ...j, status: 'Applied', appliedDate: today } : j));
+    
+    const { error } = await supabase
+      .from('jobs')
+      .update({ 
+        status: 'Applied', 
+        appliedDate: today,
+        notes: 'Applied manually by candidate'
+      })
+      .eq('id', id);
+      
+    if (error) {
+      console.error('Error marking job as applied in Supabase:', error);
+      alert('Error updating Supabase database. See console.');
+    } else {
+      alert("Job successfully marked as Applied!");
+    }
+  };
+
   const handleMarkSent = async (id) => {
     setContacts(contacts.map(c => c.id === id ? { ...c, status: 'Sent' } : c));
     await supabase.from('networking_contacts').update({ status: 'Sent' }).eq('id', id);
@@ -132,7 +153,7 @@ function App() {
           <ActionCenter jobs={jobs} />
           <DreamBoard />
           <StatCards jobs={jobs} />
-          <JobBoard jobs={jobs} onApprove={handleApprove} onDecline={handleDecline} onStartInterview={setInterviewJob} />
+          <JobBoard jobs={jobs} onApprove={handleApprove} onDecline={handleDecline} onMarkApplied={handleMarkApplied} onStartInterview={setInterviewJob} />
           <NetworkingBoard contacts={contacts} onMarkSent={handleMarkSent} />
         </>
       )}

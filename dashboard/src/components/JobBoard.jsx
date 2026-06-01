@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import JobModal from './JobModal';
 
-const JobBoard = ({ jobs, onApprove, onDecline, onStartInterview }) => {
+const JobBoard = ({ jobs, onApprove, onDecline, onMarkApplied, onStartInterview }) => {
   const [selectedJob, setSelectedJob] = useState(null);
   const [activeFilter, setActiveFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
@@ -103,6 +103,7 @@ const JobBoard = ({ jobs, onApprove, onDecline, onStartInterview }) => {
           onClose={() => setSelectedJob(null)} 
           onApprove={onApprove}
           onDecline={onDecline}
+          onMarkApplied={onMarkApplied}
           onStartInterview={onStartInterview}
         />
       )}

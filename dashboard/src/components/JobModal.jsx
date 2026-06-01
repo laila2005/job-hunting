@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import ResumeViewer from './ResumeViewer';
 
-const JobModal = ({ job, onClose, onApprove, onDecline, onStartInterview }) => {
+const JobModal = ({ job, onClose, onApprove, onDecline, onMarkApplied, onStartInterview }) => {
   const [activeTab, setActiveTab] = useState('overview');
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [viewingResume, setViewingResume] = useState(false);
@@ -169,8 +169,12 @@ const JobModal = ({ job, onClose, onApprove, onDecline, onStartInterview }) => {
           {job.status === 'Pending Review' && (
             <>
               <button className="btn btn-secondary" style={{ color: 'var(--accent-red)' }} onClick={() => { onDecline(job.id); onClose(); }}>Decline Role</button>
+              <button className="btn btn-secondary" style={{ color: 'var(--accent-blue)' }} onClick={() => { onMarkApplied(job.id); onClose(); }}>✅ Mark as Applied</button>
               <button className="btn" style={{ background: 'var(--accent-green)' }} onClick={() => { onApprove(job.id); onClose(); }}>Auto-Apply Now</button>
             </>
+          )}
+          {job.status === 'Needs Input' && (
+            <button className="btn btn-secondary" style={{ color: 'var(--accent-blue)', marginRight: '10px' }} onClick={() => { onMarkApplied(job.id); onClose(); }}>✅ Mark as Applied</button>
           )}
           
           <button className="btn" style={{ background: 'var(--accent-purple)' }} onClick={() => { onStartInterview(job); onClose(); }}>🎙️ Practice Interview</button>
