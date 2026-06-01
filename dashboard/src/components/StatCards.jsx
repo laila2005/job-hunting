@@ -10,12 +10,18 @@ const COLORS = {
 
 const StatCards = ({ jobs }) => {
   const total = jobs.length;
-  const needsInput = jobs.filter(j => j.status === 'Needs Input').length;
-  const applied = jobs.filter(j => j.status === 'Applied').length;
+  const needsInput = jobs.filter(j => (j.status || '').trim().toLowerCase() === 'needs input').length;
+  const applied = jobs.filter(j => (j.status || '').trim().toLowerCase() === 'applied').length;
 
   // Data for Pie Chart
   const statusCounts = jobs.reduce((acc, job) => {
-    acc[job.status] = (acc[job.status] || 0) + 1;
+    let status = (job.status || '').trim();
+    if (status.toLowerCase() === 'needs input') status = 'Needs Input';
+    else if (status.toLowerCase() === 'pending review') status = 'Pending Review';
+    else if (status.toLowerCase() === 'applied') status = 'Applied';
+    else if (status.toLowerCase() === 'rejected') status = 'Rejected';
+    
+    acc[status] = (acc[status] || 0) + 1;
     return acc;
   }, {});
 

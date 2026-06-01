@@ -6,15 +6,32 @@ const JobBoard = ({ jobs, onApprove, onDecline, onMarkApplied, onStartInterview 
   const [activeFilter, setActiveFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
 
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '';
+    try {
+      const d = new Date(dateStr);
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    } catch (e) {
+      return dateStr;
+    }
+  };
+
   // Derived filtered jobs
   const filteredJobs = useMemo(() => {
     return jobs
       .filter(job => {
-        if (activeFilter !== 'All' && job.status !== activeFilter) return false;
+        const normStatus = (job.status || '').trim().toLowerCase();
+        const normFilter = activeFilter.trim().toLowerCase();
+        if (normFilter !== 'all' && normStatus !== normFilter) return false;
         if (searchQuery && !job.company.toLowerCase().includes(searchQuery.toLowerCase()) && !job.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
         return true;
       })
-      .sort((a, b) => (b.fitScore || 0) - (a.fitScore || 0)); // Sort by Fit Score High to Low
+      .sort((a, b) => {
+        const dateA = new Date(a.created_at || a.appliedDate || 0);
+        const dateB = new Date(b.created_at || b.appliedDate || 0);
+        if (dateB - dateA !== 0) return dateB - dateA;
+        return (b.fitScore || 0) - (a.fitScore || 0);
+      });
   }, [jobs, activeFilter, searchQuery]);
 
   return (
@@ -70,6 +87,16 @@ const JobBoard = ({ jobs, onApprove, onDecline, onMarkApplied, onStartInterview 
                     {job.aqs_score && (
                       <span className={`badge badge-aqs ${job.aqs_score >= 90 ? 'badge-high' : 'badge-mid'}`}>
                         AQS: {job.aqs_score}
+                      </span>
+                    )}
+                    {job.status === 'Applied' && (job.appliedDate || job.created_at) && (
+                      <span className="meta-item" style={{ color: 'var(--accent-green)', fontWeight: '600' }}>
+                        ✅ Applied: {formatDate(job.appliedDate || job.created_at)}
+                      </span>
+                    )}
+                    {job.status !== 'Applied' && job.created_at && (
+                      <span className="meta-item" style={{ color: 'var(--accent-purple)', fontWeight: '500' }}>
+                        📅 Scraped: {formatDate(job.created_at)}
                       </span>
                     )}
                   </div>

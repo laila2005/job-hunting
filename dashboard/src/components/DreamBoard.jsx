@@ -9,6 +9,16 @@ const DreamBoard = () => {
   const [companies, setCompanies] = useState([]);
   const [newCompany, setNewCompany] = useState('');
 
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '';
+    try {
+      const d = new Date(dateStr);
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    } catch (e) {
+      return dateStr;
+    }
+  };
+
   useEffect(() => {
     fetchDreamCompanies();
   }, []);
@@ -64,6 +74,11 @@ const DreamBoard = () => {
               <div className="dream-icon">🏢</div>
               <h4 className="dream-name">{c.name}</h4>
               <span className="badge badge-dream">{c.status}</span>
+              {c.created_at && (
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '8px', fontWeight: '500' }}>
+                  📅 Added: {formatDate(c.created_at)}
+                </div>
+              )}
             </div>
           ))}
         </div>
