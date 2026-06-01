@@ -96,47 +96,39 @@ const InterviewAgent = ({ job, onBack }) => {
   };
 
   return (
-    <div style={{ background: 'var(--bg-card)', borderRadius: '12px', border: '1px solid var(--border-color)', height: '70vh', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ padding: '20px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div className="interview-container">
+      <div className="interview-header">
         <div>
           <h2 style={{ margin: 0, color: 'var(--text-main)', fontSize: '1.2rem' }}>Live Technical Interview</h2>
           <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Practicing for: {job?.title} at {job?.company}</span>
         </div>
-        <button className="btn btn-secondary" onClick={onBack}>Exit Interview</button>
+        <button className="btn btn-secondary exit-btn" onClick={onBack}>Exit Interview</button>
       </div>
 
-      <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div className="interview-body">
         {messages.map((msg, index) => (
-          <div key={index} style={{
-            alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
-            background: msg.role === 'user' ? 'var(--accent-blue)' : 'var(--bg-hover)',
-            color: msg.role === 'user' ? 'white' : 'var(--text-main)',
-            padding: '12px 16px',
-            borderRadius: '12px',
-            maxWidth: '70%',
-            lineHeight: '1.5'
-          }}>
+          <div key={index} className={`chat-bubble ${msg.role === 'user' ? 'bubble-user' : 'bubble-agent'}`}>
             {msg.content}
           </div>
         ))}
         {isTyping && (
-          <div style={{ alignSelf: 'flex-start', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+          <div className="chat-bubble typing-indicator">
             Interviewer is typing...
           </div>
         )}
         <div ref={messagesEndRef} />
       </div>
 
-      <div style={{ padding: '20px', borderTop: '1px solid var(--border-color)', display: 'flex', gap: '12px' }}>
+      <div className="interview-footer">
         <input 
           type="text" 
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && handleSend()}
           placeholder="Type your answer..." 
-          style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-dark)', color: 'var(--text-main)' }}
+          className="interview-input"
         />
-        <button className="btn" onClick={handleSend} disabled={isTyping}>Send</button>
+        <button className="btn send-btn" onClick={handleSend} disabled={isTyping}>Send</button>
       </div>
     </div>
   );

@@ -11,14 +11,14 @@ const JobModal = ({ job, onClose, onApprove, onDecline, onMarkApplied, onStartIn
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={e => e.stopPropagation()}>
-        <div className="modal-header" style={{ justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+        <div className="modal-header">
+          <div className="modal-header-main">
             <div className="job-logo" style={{ width: '64px', height: '64px' }}>
               {job.companyLogo ? <img src={job.companyLogo} alt={job.company} /> : <span style={{fontSize:'32px'}}>🏢</span>}
             </div>
             <div>
               <h2 style={{ margin: '0 0 8px 0', fontSize: '1.5rem' }}>{job.title}</h2>
-              <div style={{ display: 'flex', gap: '12px', alignItems: 'center', color: 'var(--text-muted)' }}>
+              <div className="modal-header-meta">
                 <strong style={{ color: 'var(--text-main)' }}>{job.company}</strong>
                 <span>• {job.location}</span>
                 <span className={`status-badge badge-${job.status.toLowerCase().replace(' ', '-')}`}>{job.status}</span>
@@ -50,7 +50,7 @@ const JobModal = ({ job, onClose, onApprove, onDecline, onMarkApplied, onStartIn
                 <p style={{ lineHeight: '1.6' }}>{job.companySummary || 'No detailed summary provided for this position.'}</p>
               </div>
               
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+              <div className="modal-grid-2col">
                 <div style={{ background: 'var(--bg-hover)', padding: '16px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
                   <h4 style={{ margin: '0 0 8px 0', fontSize: '0.9rem', color: 'var(--text-muted)' }}>Work Model</h4>
                   <div style={{ fontSize: '1.1rem', fontWeight: '500' }}>{job.model}</div>
@@ -65,7 +65,7 @@ const JobModal = ({ job, onClose, onApprove, onDecline, onMarkApplied, onStartIn
 
           {activeTab === 'analysis' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '40px', background: 'var(--bg-hover)', padding: '24px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+              <div className="modal-fit-summary">
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: '3rem', fontWeight: 'bold', color: 'var(--accent-blue)' }}>{job.fitScore}</div>
                   <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Overall Fit Score</div>
@@ -87,7 +87,7 @@ const JobModal = ({ job, onClose, onApprove, onDecline, onMarkApplied, onStartIn
               </div>
 
               {/* Strengths and Risks Section */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+              <div className="modal-grid-2col">
                 <div style={{ background: 'rgba(16, 185, 129, 0.05)', padding: '20px', borderRadius: '12px', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
                   <h4 style={{ color: 'var(--accent-green)', margin: '0 0 12px 0', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span>✅</span> Advantages / Strengths
@@ -162,7 +162,7 @@ const JobModal = ({ job, onClose, onApprove, onDecline, onMarkApplied, onStartIn
         </div>
 
         <div className="modal-footer">
-          <a href={job.companyLink} target="_blank" rel="noreferrer" className="btn btn-secondary" style={{ marginRight: 'auto' }}>
+          <a href={job.companyLink} target="_blank" rel="noreferrer" className="btn btn-secondary modal-source-btn">
             🔗 View Source Posting
           </a>
           

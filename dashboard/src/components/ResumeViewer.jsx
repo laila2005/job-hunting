@@ -2,36 +2,11 @@ import React from 'react';
 
 const ResumeViewer = ({ onClose }) => {
   return (
-    <div style={{
-      position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
-      background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)',
-      zIndex: 10000, display: 'flex', flexDirection: 'column',
-      alignItems: 'center', padding: '40px 20px', overflowY: 'auto'
-    }} onClick={onClose}>
+    <div className="resume-viewer-overlay" onClick={onClose}>
       
       {/* Resume Container */}
-      <div 
-        style={{
-          width: '100%', maxWidth: '850px', background: 'white',
-          color: '#1a1a1a', padding: '60px 80px', borderRadius: '4px',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
-          fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
-          position: 'relative', cursor: 'default'
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <button 
-          onClick={onClose}
-          style={{
-            position: 'absolute', top: '20px', right: '20px',
-            background: '#f3f4f6', border: 'none', width: '32px', height: '32px',
-            borderRadius: '50%', cursor: 'pointer', fontSize: '18px',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: '#4b5563'
-          }}
-        >
-          &times;
-        </button>
+      <div className="resume-paper" onClick={(e) => e.stopPropagation()}>
+        <button onClick={onClose} className="resume-close-btn">&times;</button>
 
         {/* Header */}
         <div style={{ textAlign: 'center', borderBottom: '2px solid #2563eb', paddingBottom: '24px', marginBottom: '32px' }}>
@@ -63,27 +38,27 @@ const ResumeViewer = ({ onClose }) => {
         {/* Technical Skills */}
         <div style={{ marginBottom: '28px' }}>
           <h2 style={{ fontSize: '1.25rem', color: '#1f2937', borderBottom: '1px solid #e5e7eb', paddingBottom: '8px', marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '1px' }}>Technical Skills</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 3fr', gap: '12px', fontSize: '0.95rem' }}>
-            <strong style={{ color: '#4b5563' }}>Languages:</strong>
-            <span style={{ color: '#111827' }}>C#, C, C++, Python, Java, JavaScript, SQL, Bash</span>
+          <div className="resume-skills-grid">
+            <strong className="skill-label">Languages:</strong>
+            <span className="skill-value">C#, C, C++, Python, Java, JavaScript, SQL, Bash</span>
             
-            <strong style={{ color: '#4b5563' }}>Backend:</strong>
-            <span style={{ color: '#111827' }}>ASP.NET, Node.js, Express.js, RESTful API Design, Custom Windows Services</span>
+            <strong className="skill-label">Backend:</strong>
+            <span className="skill-value">ASP.NET, Node.js, Express.js, RESTful API Design, Custom Windows Services</span>
             
-            <strong style={{ color: '#4b5563' }}>Frontend:</strong>
-            <span style={{ color: '#111827' }}>React.js, Next.js, Tailwind CSS, HTML5, CSS3, JavaScript</span>
+            <strong className="skill-label">Frontend:</strong>
+            <span className="skill-value">React.js, Next.js, Tailwind CSS, HTML5, CSS3, JavaScript</span>
             
-            <strong style={{ color: '#4b5563' }}>AI & Machine Learning:</strong>
-            <span style={{ color: '#111827' }}>TensorFlow, Keras, CNN, Transfer Learning, MobileNetV2, Grad-CAM, Computer Vision</span>
+            <strong className="skill-label">AI & Machine Learning:</strong>
+            <span className="skill-value">TensorFlow, Keras, CNN, Transfer Learning, MobileNetV2, Grad-CAM, Computer Vision</span>
             
-            <strong style={{ color: '#4b5563' }}>IoT & Protocols:</strong>
-            <span style={{ color: '#111827' }}>SNMP, Modbus, HTTP, Hardware Integration, Industrial Device Communication</span>
+            <strong className="skill-label">IoT & Protocols:</strong>
+            <span className="skill-value">SNMP, Modbus, HTTP, Hardware Integration, Industrial Device Communication</span>
 
-            <strong style={{ color: '#4b5563' }}>Databases:</strong>
-            <span style={{ color: '#111827' }}>SQL Server, PostgreSQL, MySQL, MongoDB</span>
+            <strong className="skill-label">Databases:</strong>
+            <span className="skill-value">SQL Server, PostgreSQL, MySQL, MongoDB</span>
 
-            <strong style={{ color: '#4b5563' }}>Tools & Practices:</strong>
-            <span style={{ color: '#111827' }}>Git, MSBuild, Linux (Ubuntu), Bash Scripting, Agile, Scrum, SDLC</span>
+            <strong className="skill-label">Tools & Practices:</strong>
+            <span className="skill-value">Git, MSBuild, Linux (Ubuntu), Bash Scripting, Agile, Scrum, SDLC</span>
           </div>
         </div>
 
@@ -92,9 +67,9 @@ const ResumeViewer = ({ onClose }) => {
           <h2 style={{ fontSize: '1.25rem', color: '#1f2937', borderBottom: '1px solid #e5e7eb', paddingBottom: '8px', marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '1px' }}>Work Experience</h2>
           
           <div style={{ marginBottom: '20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '6px' }}>
+            <div className="resume-section-header">
               <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#111827' }}>Lead Software Engineer</h3>
-              <span style={{ color: '#4b5563', fontSize: '0.9rem', fontWeight: '500' }}>Nov 2025 – Present</span>
+              <span className="resume-date">Nov 2025 – Present</span>
             </div>
             <p style={{ margin: '0 0 8px 0', fontSize: '1rem', color: '#4b5563', fontStyle: 'italic' }}>LM Tech Solutions | Cairo, Egypt</p>
             <ul style={{ margin: 0, paddingLeft: '20px', color: '#374151', fontSize: '0.95rem', lineHeight: '1.6' }}>
@@ -106,9 +81,9 @@ const ResumeViewer = ({ onClose }) => {
           </div>
 
           <div style={{ marginBottom: '20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '6px' }}>
+            <div className="resume-section-header">
               <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#111827' }}>Freelance Full Stack Developer</h3>
-              <span style={{ color: '#4b5563', fontSize: '0.9rem', fontWeight: '500' }}>August 2025 – Oct 2025</span>
+              <span className="resume-date">August 2025 – Oct 2025</span>
             </div>
             <p style={{ margin: '0 0 8px 0', fontSize: '1rem', color: '#4b5563', fontStyle: 'italic' }}>Media Gate Company | Cairo, Egypt</p>
             <ul style={{ margin: 0, paddingLeft: '20px', color: '#374151', fontSize: '0.95rem', lineHeight: '1.6' }}>
@@ -119,9 +94,9 @@ const ResumeViewer = ({ onClose }) => {
           </div>
           
           <div style={{ marginBottom: '20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '6px' }}>
+            <div className="resume-section-header">
               <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#111827' }}>Software Engineering Trainee</h3>
-              <span style={{ color: '#4b5563', fontSize: '0.9rem', fontWeight: '500' }}>Oct 2023 – Jul 2025</span>
+              <span className="resume-date">Oct 2023 – Jul 2025</span>
             </div>
             <p style={{ margin: '0 0 8px 0', fontSize: '1rem', color: '#4b5563', fontStyle: 'italic' }}>ALX Africa | Remote</p>
             <ul style={{ margin: 0, paddingLeft: '20px', color: '#374151', fontSize: '0.95rem', lineHeight: '1.6' }}>
@@ -138,9 +113,9 @@ const ResumeViewer = ({ onClose }) => {
           <h2 style={{ fontSize: '1.25rem', color: '#1f2937', borderBottom: '1px solid #e5e7eb', paddingBottom: '8px', marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '1px' }}>Projects</h2>
           
           <div style={{ marginBottom: '20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
+            <div className="resume-section-header" style={{ marginBottom: '4px' }}>
               <h3 style={{ margin: 0, fontSize: '1.05rem', color: '#111827' }}>Inqaz-app – Egypt Emergency AI Response System</h3>
-              <span style={{ color: '#4b5563', fontSize: '0.9rem' }}>Jan 2026</span>
+              <span className="resume-date">Jan 2026</span>
             </div>
             <p style={{ margin: '0 0 8px 0', fontSize: '0.9rem', color: '#6b7280', fontStyle: 'italic' }}>Full-Stack AI Platform – Python, Computer Vision, REST API, Web Frontend</p>
             <ul style={{ margin: 0, paddingLeft: '20px', color: '#374151', fontSize: '0.95rem', lineHeight: '1.6' }}>
@@ -151,9 +126,9 @@ const ResumeViewer = ({ onClose }) => {
           </div>
 
           <div style={{ marginBottom: '20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
+            <div className="resume-section-header" style={{ marginBottom: '4px' }}>
               <h3 style={{ margin: 0, fontSize: '1.05rem', color: '#111827' }}>Crash Detection and Classification Model</h3>
-              <span style={{ color: '#4b5563', fontSize: '0.9rem' }}>Dec 2025</span>
+              <span className="resume-date">Dec 2025</span>
             </div>
             <p style={{ margin: '0 0 8px 0', fontSize: '0.9rem', color: '#6b7280', fontStyle: 'italic' }}>Deep Learning, CNN, Transfer Learning, Grad-CAM, Python, Streamlit</p>
             <ul style={{ margin: 0, paddingLeft: '20px', color: '#374151', fontSize: '0.95rem', lineHeight: '1.6' }}>
@@ -164,9 +139,9 @@ const ResumeViewer = ({ onClose }) => {
           </div>
 
           <div style={{ marginBottom: '20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
+            <div className="resume-section-header" style={{ marginBottom: '4px' }}>
               <h3 style={{ margin: 0, fontSize: '1.05rem', color: '#111827' }}>Secure Real-Time Chat System</h3>
-              <span style={{ color: '#4b5563', fontSize: '0.9rem' }}>Dec 2025</span>
+              <span className="resume-date">Dec 2025</span>
             </div>
             <p style={{ margin: '0 0 8px 0', fontSize: '0.9rem', color: '#6b7280', fontStyle: 'italic' }}>Python, TCP Sockets, AES-256 Encryption, Multi-threading</p>
             <ul style={{ margin: 0, paddingLeft: '20px', color: '#374151', fontSize: '0.95rem', lineHeight: '1.6' }}>
@@ -176,9 +151,9 @@ const ResumeViewer = ({ onClose }) => {
           </div>
 
           <div style={{ marginBottom: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
+            <div className="resume-section-header" style={{ marginBottom: '4px' }}>
               <h3 style={{ margin: 0, fontSize: '1.05rem', color: '#111827' }}>Tech-Road – Workforce Readiness Platform</h3>
-              <span style={{ color: '#4b5563', fontSize: '0.9rem' }}>August 2025</span>
+              <span className="resume-date">August 2025</span>
             </div>
             <p style={{ margin: '0 0 8px 0', fontSize: '0.9rem', color: '#6b7280', fontStyle: 'italic' }}>Full-Stack Web Development, System Architecture, REST API</p>
             <ul style={{ margin: 0, paddingLeft: '20px', color: '#374151', fontSize: '0.95rem', lineHeight: '1.6' }}>
@@ -191,9 +166,9 @@ const ResumeViewer = ({ onClose }) => {
         {/* Education */}
         <div style={{ marginBottom: '28px' }}>
           <h2 style={{ fontSize: '1.25rem', color: '#1f2937', borderBottom: '1px solid #e5e7eb', paddingBottom: '8px', marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '1px' }}>Education</h2>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+          <div className="resume-section-header">
             <h3 style={{ margin: 0, fontSize: '1.05rem', color: '#111827' }}>Bachelor of Science in Computer Science</h3>
-            <span style={{ color: '#4b5563', fontSize: '0.9rem', fontWeight: '500' }}>Expected 2027</span>
+            <span className="resume-date">Expected 2027</span>
           </div>
           <p style={{ margin: '4px 0 4px 0', color: '#374151', fontSize: '0.95rem', fontWeight: '500' }}>El Sewedy University of Technology – Polytechnic of Egypt <span style={{ color: '#6b7280', fontWeight: 'normal' }}>(2025 – Present)</span></p>
           <p style={{ margin: '0 0 8px 0', color: '#374151', fontSize: '0.95rem', fontWeight: '500' }}>Egyptian Russian University <span style={{ color: '#6b7280', fontWeight: 'normal' }}>(2023 – 2025, Transferred)</span></p>
@@ -201,7 +176,7 @@ const ResumeViewer = ({ onClose }) => {
         </div>
 
         {/* Volunteering & Languages */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+        <div className="resume-footer-grid">
           <div>
             <h2 style={{ fontSize: '1.25rem', color: '#1f2937', borderBottom: '1px solid #e5e7eb', paddingBottom: '8px', marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '1px' }}>Volunteering</h2>
             <h3 style={{ margin: '0 0 4px 0', fontSize: '1.05rem', color: '#111827' }}>Computality Community – HR Team</h3>
