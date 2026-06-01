@@ -19,12 +19,11 @@ const JobBoard = ({ jobs, onApprove, onDecline, onMarkApplied, onStartInterview 
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+      <div className="job-board-header">
         <input 
           type="text" 
           placeholder="Search jobs by company or title..." 
-          className="search-input"
-          style={{ width: '300px', marginBottom: 0 }}
+          className="search-input job-search-input"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
@@ -72,7 +71,7 @@ const JobBoard = ({ jobs, onApprove, onDecline, onMarkApplied, onStartInterview 
                 </div>
               </div>
               
-              <div className="item-actions" style={{display: 'flex', alignItems: 'center', gap: '20px'}}>
+              <div className="job-actions-container">
                 {job.status === 'Applied' && job.proof_url && (
                   <div 
                     style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', gap: '4px' }}

@@ -572,3 +572,84 @@ h1, h2, h3, h4 {
     width: 220px;
   }
 }
+
+/* Job Board Search & Tabs responsive rules */
+.job-board-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-xl);
+}
+
+.job-search-input {
+  width: 100% !important;
+  margin-bottom: 0;
+}
+
+@media (min-width: 768px) {
+  .job-board-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .job-search-input {
+    width: 300px !important;
+  }
+}
+
+/* Job Card Responsive styling */
+.job-actions-container {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+@media (max-width: 767px) {
+  .job-card {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-md);
+    padding: 16px;
+  }
+  
+  .job-card-main {
+    align-items: flex-start;
+    width: 100%;
+  }
+  
+  .job-title {
+    font-size: 1.05rem;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+  }
+
+  .status-badge {
+    font-size: 0.65rem;
+    padding: 2px 6px;
+  }
+  
+  .job-meta {
+    flex-wrap: wrap;
+    gap: 6px 12px;
+    font-size: 0.8rem;
+    width: 100%;
+  }
+
+  .job-meta span {
+    white-space: normal;
+  }
+  
+  .job-actions-container {
+    width: 100%;
+    justify-content: space-between;
+    border-top: 1px solid var(--border-subtle);
+    padding-top: var(--spacing-md);
+    gap: var(--spacing-md);
+  }
+  
+  .job-actions-container .btn {
+    flex: 1;
+    padding: 8px 12px;
+    font-size: 0.8rem;
+  }
+}
