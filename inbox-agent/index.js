@@ -1,11 +1,12 @@
 require('dotenv').config();
-const { Client, LocalAuth } = require('whatsapp-web.js');
+const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const imaps = require('imap-simple');
 const { createClient } = require('@supabase/supabase-js');
 const { GoogleGenAI } = require('@google/genai');
 const fs = require('fs');
 const path = require('path');
+const { botLog } = require('./telemetry');
 
 // 1. Setup Supabase
 const supabase = createClient(
@@ -69,6 +70,256 @@ waClient.on('ready', () => {
   startEmailListener();
 });
 
+// Resilient Incoming WhatsApp Message Listener (Bidirectional Chat Agent)
+const processedMsgIds = new Set();
+
+const handleIncomingMessage = async (msg) => {
+  try {
+    const msgId = msg.id._serialized || msg.id.id;
+    if (processedMsgIds.has(msgId)) return;
+    processedMsgIds.add(msgId);
+    if (processedMsgIds.size > 100) {
+      const firstKey = processedMsgIds.values().next().value;
+      processedMsgIds.delete(firstKey);
+    }
+
+    const senderId = msg.from.replace(/\D/g, '');
+    const recipientId = msg.to.replace(/\D/g, '');
+    
+    const ALLOWED_NUMBERS = ['201147656669', '201210212792'];
+    
+    // Restrict bot strictly to messages between Laila's registered numbers (self-chat or primary <-> secondary)
+    // BOTH the sender and the recipient must be in the whitelisted numbers.
+    // This prevents the bot from capturing or intercepting messages she sends to external contacts!
+    const isSenderLaila = ALLOWED_NUMBERS.some(num => senderId.includes(num));
+    const isRecipientLaila = ALLOWED_NUMBERS.some(num => recipientId.includes(num));
+    
+    if (isSenderLaila && isRecipientLaila) {
+      // Prevent infinite loops: only ignore if the message was sent by the bot's own code.
+      // Bot messages always match standard command prefixes or contain the "Antigravity" signature.
+      if (msg.fromMe) {
+        const text = msg.body;
+        const isBotSignature = text.startsWith('📊') ||
+                               text.startsWith('🐍') ||
+                               text.startsWith('🤖') ||
+                               text.startsWith('✅') ||
+                               text.startsWith('❌') ||
+                               text.startsWith('📄') ||
+                               text.startsWith('✍️') ||
+                               text.startsWith('📩') ||
+                               text.startsWith('💔') ||
+                               text.startsWith('🎉') ||
+                               text.startsWith('📝') ||
+                               text.startsWith('📅') ||
+                               text.startsWith('ℹ️') ||
+                               text.toLowerCase().includes('antigravity');
+        if (isBotSignature) {
+          return; // Ignore our own replies to prevent loops
+        }
+      }
+      
+      console.log(`\n💬 [WhatsApp] Message detected from Laila: "${msg.body}" (fromMe: ${msg.fromMe})`);
+      
+      let replyText = '';
+      let jobTitle = 'Software Engineer'; // Default
+      
+      // Check for Cover Letter Requests (Scenario D)
+      const lowerBody = msg.body.toLowerCase();
+      let companyForCv = '';
+      
+      if (msg.body.startsWith('/cv')) {
+        companyForCv = msg.body.replace(/^\/cv\s*/i, '').trim();
+      } else if (lowerBody.includes('applying to') || lowerBody.includes('applying for') || lowerBody.includes('appling to') || lowerBody.includes('appling for')) {
+        // Match company name and optionally custom position (e.g. "am applying to Deloitte as a Backend Engineer")
+        const match = msg.body.match(/(?:applying|appling)\s+(?:to|for)\s+\[?([^\]\n\r|]+?)\]?(?:\s+(?:as|for)\s+(?:a|an)?\s*([^\n\r]+))?$/i);
+        if (match) {
+          companyForCv = match[1].trim();
+          if (match[2]) {
+            jobTitle = match[2].trim();
+          }
+        }
+      }
+      
+      // Instant direct reply for dashboard links / URLs (if not a CV generation request)
+      if (!companyForCv && (lowerBody.includes('dashboard') || lowerBody.includes('dashbord') || lowerBody.includes('link') || lowerBody.includes('url'))) {
+        replyText = `📊 *Job Search Dashboard:*\n\nHere is your live tracking dashboard URL where you can view analytics, auto-apply proofs, and manually log jobs:\n\n🔗 https://dashboard-bay-six-10.vercel.app\n\nIs there anything else I can do for you, Laila? 🚀`;
+      }
+      
+      if (companyForCv) {
+        console.log(`🎯 Detected Cover Letter request for company: "${companyForCv}" | Role: "${jobTitle}"`);
+        await waClient.sendMessage(msg.from, `✍️ *Antigravity Cover Letter Engine active!*\n\nI am drafting your customized cover letter for *${companyForCv}* as a *${jobTitle}*... Please wait a few seconds.`);
+        
+        // Check if we have this company in Supabase to get the exact job title
+        try {
+          const { data: matchedJobs } = await supabase
+            .from('jobs')
+            .select('company, title')
+            .ilike('company', `%${companyForCv}%`);
+            
+          if (matchedJobs && matchedJobs.length > 0) {
+            // Only overwrite title if the user didn't explicitly specify one in their text
+            if (jobTitle === 'Software Engineer') {
+              jobTitle = matchedJobs[0].title;
+            }
+            companyForCv = matchedJobs[0].company;
+          }
+        } catch (e) {
+          console.error("DB check failed for CV:", e.message);
+        }
+        
+        const { generateDynamicCoverLetter } = require('./coverLetterBot');
+        const pdfPath = await generateDynamicCoverLetter(companyForCv, jobTitle);
+        
+        if (pdfPath && fs.existsSync(pdfPath)) {
+          console.log(`✉️ Dispatching PDF to ${msg.from}...`);
+          const media = MessageMedia.fromFilePath(pdfPath);
+          await waClient.sendMessage(msg.from, media, {
+            caption: `📄 *Tailored Cover Letter for ${companyForCv}*\nPosition: *${jobTitle}*\nFormat: PDF\n\nReady for submission! Good luck Laila! 🚀`
+          });
+          try { fs.unlinkSync(pdfPath); } catch (e) {}
+          return;
+        } else {
+          replyText = `❌ *Generation Failed!* I could not compile your Cover Letter for *${companyForCv}*. Please check my local PC console logs for details.`;
+        }
+      }
+      
+      // 1. Handle Slash Commands in Chat
+      if (msg.body.startsWith('/')) {
+        const parts = msg.body.split(' ');
+        const cmd = parts[0].toLowerCase();
+        const arg = parts.slice(1).join(' ');
+        
+        if (cmd === '/status') {
+          const { data: allJobs } = await supabase.from('jobs').select('status');
+          const total = allJobs ? allJobs.length : 0;
+          const applied = allJobs ? allJobs.filter(j => j.status === 'Applied').length : 0;
+          const interviewing = allJobs ? allJobs.filter(j => j.status === 'Interviewing').length : 0;
+          
+          replyText = `📊 *Job Command Center Diagnostics:*\n\n• Crawled Positions: *${total}*\n• Marked as Applied: *${applied}*\n• Interviewing: *${interviewing}*\n\n_System Worker Status: ACTIVE_`;
+        } else if (cmd === '/search') {
+          const keyword = arg || 'backend';
+          const { exec } = require('child_process');
+          exec(`node G:\\lolo\\job_search\\inbox-agent\\live_scraper.js --keyword="${keyword}"`);
+          replyText = `🐍 *Scraper Triggered!* I have launched \`live_scraper.js\` in the background for *"${keyword}"*. I will alert you once matches are inserted!`;
+        } else if (cmd === '/applied') {
+          const parts = arg.split('|');
+          const company = parts[0]?.trim();
+          const title = parts[1]?.trim() || 'Software Engineer';
+          const companyLink = parts[2]?.trim() || '';
+          
+          if (!company) {
+            replyText = `⚠️ *Format Error!*\n\nPlease use: \`/applied Company Name | Job Title | URL\``;
+          } else {
+            const manualId = `job-manual-${Date.now()}`;
+            const { error } = await supabase.from('jobs').insert([{
+              id: manualId,
+              company,
+              title,
+              companyLink: companyLink || null,
+              location: 'Remote / Egypt',
+              model: 'Remote',
+              salary: 'Unlisted',
+              fitScore: 85,
+              status: 'Applied',
+              appliedDate: new Date().toISOString().split('T')[0],
+              resumeVersion: 'backend_resume.pdf'
+            }]);
+            
+            if (error) {
+              console.error("Error creating manual job via WA:", error);
+              replyText = `❌ *Database Sync Failed!* Could not log your job to Supabase. Check PC logs.`;
+            } else {
+              replyText = `✅ *Manual Application Logged!*\n\n• *Company*: ${company}\n• *Title*: ${title}\n• *Status*: Applied\n\nYour dashboard and Supabase database are fully updated!`;
+            }
+          }
+        } else if (cmd === '/help') {
+          replyText = `🤖 *AI Command Menu:*\n\n• \`/status\` - Diagnostics & counts\n• \`/search <keyword>\` - Run crawler\n• \`/applied Company | Title | URL\` - Quickly log a manual job\n• \`/help\` - Show this menu`;
+        }
+      }
+      
+      // 2. Route standard conversational questions to Gemini (Intent Routing & Actions)
+      if (!replyText) {
+        console.log(`🤖 [WhatsApp] Consulting Gemini AI for conversational intent routing...`);
+        const { data: recentJobs } = await supabase
+          .from('jobs')
+          .select('company, title, status')
+          .order('created_at', { ascending: false })
+          .limit(3);
+          
+        const jobsContext = (recentJobs || [])
+          .map(j => `- ${j.title} at ${j.company} [${j.status}]`)
+          .join('\n');
+          
+        const intentPrompt = `
+          You are "Antigravity", Laila's supportive AI career companion.
+          Laila is in Year 3 of her CS degree but has built production platforms (RMS 3.0) for Ministry of Interior & GASCO.
+          
+          Laila's technical stack: C#, ASP.NET, Python, Node.js, React, SQL Server, PostgreSQL, CNN, MobileNetV2.
+          
+          Recent Jobs:
+          ${jobsContext}
+
+          Analyze Laila's message to determine her intent. Categorize into one of these intents:
+          - status: Check diagnostic application stats (e.g. "how are my applications?", "show my dashboard counts", "status check")
+          - search: Sourcing a new keyword (e.g. "crawling remote react positions", "ابحثلي عن شغل C#", "search backend jobs")
+          - generate_pitch: Writing a cold LinkedIn/email pitch (e.g. "write a LinkedIn pitch for Paymob", "outreach message for PwC")
+          - general_chat: General conversation or technical query (e.g. "greetings", "how can I improve thread safety?", general talk)
+          
+          Laila's Message: "${msg.body}"
+          
+          Respond STRICTLY with a valid JSON object in this format (no markdown, no backticks):
+          {
+            "intent": "status" | "search" | "generate_pitch" | "general_chat",
+            "argument": "string or null (keyword for search, company name for generate_pitch)",
+            "reply_text": "string (only populated for general_chat, keep it very concise, 1-2 short paragraphs, friendly, use emojis!)"
+          }
+        `;
+        
+        try {
+          const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: intentPrompt,
+          });
+          const raw = response.text.trim().replace(/\`\`\`json/g, '').replace(/\`\`\`/g, '');
+          const decision = JSON.parse(raw);
+          
+          if (decision.intent === 'status') {
+            const { data: allJobs } = await supabase.from('jobs').select('status');
+            const total = allJobs ? allJobs.length : 0;
+            const applied = allJobs ? allJobs.filter(j => j.status === 'Applied').length : 0;
+            const interviewing = allJobs ? allJobs.filter(j => j.status === 'Interviewing').length : 0;
+            
+            replyText = `📊 *Job Command Center Diagnostics:*\n\n• Crawled Positions: *${total}*\n• Marked as Applied: *${applied}*\n• Interviewing: *${interviewing}*\n\n_Everything is synced in real-time, Laila!_ 🚀`;
+          } else if (decision.intent === 'search') {
+            const keyword = decision.argument || 'backend';
+            const { exec } = require('child_process');
+            exec(`node G:\\lolo\\job_search\\inbox-agent\\live_scraper.js --keyword="${keyword}"`);
+            replyText = `📡 *Scraper Activated!* I have launched the autonomous crawler for *"${keyword}"* in the background. I will notify you once matches land! 🚀`;
+          } else if (decision.intent === 'generate_pitch') {
+            const company = decision.argument || 'Target Company';
+            replyText = `✍️ *Antigravity Pitch Engine active!*\n\nCustomized LinkedIn Message for *${company}*:\n\n"Dear Hiring Leader,\n\nI was inspired by your open backend engineering role. As a Year 3 CS student who has already architected and deployed concurrent enterprise-scale SNMP/Modbus IoT monitoring servers (RMS 3.0) rolled out to the Ministry of Interior and GASCO, I bring substantial production depth. I'd love to connect for a quick 5-minute sync to see how my high-concurrency C# skills can assist your team.\n\nBest regards,\nLaila Mohamed Fikry"\n\nReady for copy/sending! 🚀`;
+          } else {
+            replyText = decision.reply_text;
+          }
+        } catch (genErr) {
+          console.error("❌ Gemini response failed:", genErr.message);
+          replyText = `🤖 Antigravity here! I received your message: "${msg.body}". My conversational core is highly active and monitoring your commands!`;
+        }
+      }
+      
+      // 3. Deliver reply directly to Laila's WhatsApp
+      console.log(`✉️ [WhatsApp] Dispatching reply to ${msg.from}...`);
+      await waClient.sendMessage(msg.from, replyText);
+      console.log(`✅ [WhatsApp] Reply successfully delivered!`);
+    }
+  } catch (err) {
+    console.error("❌ [WhatsApp] Incoming message handler error:", err.message);
+  }
+};
+
+waClient.on('message', handleIncomingMessage);
+waClient.on('message_create', handleIncomingMessage);
+
 // Function to send WhatsApp message
 const notifyLaila = async (message) => {
   try {
@@ -90,6 +341,7 @@ const imapConfig = {
     host: 'imap.gmail.com',
     port: 993,
     tls: true,
+    tlsOptions: { rejectUnauthorized: false },
     authTimeout: 5000
   }
 };
@@ -109,19 +361,16 @@ async function evaluateEmailWithAI(from, subject, body) {
       "category": "application_received" | "interview_invite" | "assessment_request" | "rejection" | "job_offer" | "other_update",
       "company_name": "string (name of the hiring company, or null if unknown)",
       "job_title": "string (job title, or null if unknown)",
-      "whatsapp_summary": "string (a beautifully formatted WhatsApp message of 1-3 lines to Laila, using bold markers like *Subject*, *Company*, *Status* and matching emojis)"
-    }
-
-    Formatting rules for "whatsapp_summary":
+      "whatsapp_summary": "string (a b     Formatting rules for "whatsapp_summary":
     - Keep it under 250 characters.
-    - Start with a vibrant, relevant emoji based on the category:
-      - interview_invite: 📅
-      - assessment_request: 📝
-      - rejection: 💔
-      - job_offer: 🎉
-      - application_received: 📩
-      - other_update: ℹ️
-    - Make sure it clearly states the Company, Job Title (if known), and next steps/status.
+    - Start with a clear, bold status header based on the category (be direct so the user knows instantly without reading further):
+      - rejection: 💔 *APPLICATION REJECTED* (use this for rejections, pursuit of other candidates, etc.)
+      - interview_invite: 📅 *INTERVIEW INVITATION!* (use this for interviews, phone screens)
+      - assessment_request: 📝 *ASSESSMENT/TEST REQUEST* (use this for hackerrank, tests, coding screens)
+      - job_offer: 🎉 *JOB OFFER RECEIVED!* (use this for offers)
+      - application_received: 📩 *APPLICATION CONFIRMED* (use this for received/applied receipts)
+      - other_update: ℹ️ *STATUS UPDATE* (use this for general updates)
+    - Make sure it clearly states the Company, Job Title (if known), and a brief, honest 1-line summary.
   `;
 
   try {
@@ -133,7 +382,98 @@ async function evaluateEmailWithAI(from, subject, body) {
     return JSON.parse(raw);
   } catch (err) {
     console.error("❌ Gemini Email Analysis failed:", err.message);
-    return { is_job_related: false };
+    console.log("🔄 [Fallback] Running rule-based local email scanner...");
+    
+    const lowerSubject = subject.toLowerCase();
+    const lowerBody = body.toLowerCase();
+    const lowerFrom = from.toLowerCase();
+    
+    // 1. Determine if job-related
+    const jobKeywords = [
+      'apply', 'applied', 'application', 'received', 'interview', 'assessment', 
+      'hiring', 'recruitment', 'career', 'offer', 'rejection', 'unfortunately', 
+      'position', 'job', 'cv', 'resume', 'wuzzuf', 'linkedin', 'indeed', 'glassdoor'
+    ];
+    
+    const isJobRelated = jobKeywords.some(keyword => lowerSubject.includes(keyword) || lowerBody.includes(keyword));
+    
+    if (!isJobRelated) {
+      return { is_job_related: false };
+    }
+    
+    // 2. Identify Category
+    let category = 'other_update';
+    
+    if (lowerSubject.includes('interview') || lowerBody.includes('schedule a call') || lowerBody.includes('invitation to interview') || lowerBody.includes('phone screen') || lowerBody.includes('chat with')) {
+      category = 'interview_invite';
+    } else if (lowerSubject.includes('assessment') || lowerSubject.includes('test') || lowerBody.includes('online test') || lowerBody.includes('hackerrank') || lowerBody.includes('codility') || lowerBody.includes('assessments')) {
+      category = 'assessment_request';
+    } else if (
+      lowerSubject.includes('unfortunately') || lowerSubject.includes('rejection') || lowerSubject.includes('pursue') || lowerSubject.includes('regret') ||
+      lowerBody.includes('not move forward') || lowerBody.includes('other candidates') || lowerBody.includes('filled the position') || lowerBody.includes('decided to pursue') ||
+      lowerBody.includes('regret to inform') || lowerBody.includes('unable to offer') || lowerBody.includes('not be proceeding') || lowerBody.includes('not selected') ||
+      lowerBody.includes('turned down') || lowerBody.includes('thank you for your interest') || lowerBody.includes('not match our')
+    ) {
+      category = 'rejection';
+    } else if (lowerSubject.includes('offer') || lowerBody.includes('job offer') || lowerBody.includes('congratulations') || lowerBody.includes('pleased to offer')) {
+      category = 'job_offer';
+    } else if (lowerSubject.includes('received') || lowerSubject.includes('thank you for applying') || lowerBody.includes('application received') || lowerBody.includes('thanks for applying') || lowerBody.includes('successful submission')) {
+      category = 'application_received';
+    }
+    
+    // 3. Extract Company Name
+    let companyName = null;
+    
+    // Try to extract from sender domain first (e.g. "hr@microsoft.com" -> "Microsoft")
+    const domainMatch = lowerFrom.match(/@([a-z0-9-]+)\./);
+    if (domainMatch && !['gmail', 'yahoo', 'outlook', 'hotmail', 'mail', 'atlassian', 'jira'].includes(domainMatch[1])) {
+      companyName = domainMatch[1].charAt(0).toUpperCase() + domainMatch[1].slice(1);
+    } else {
+      // Look for patterns like "at CompanyName" or "from CompanyName"
+      const atMatch = subject.match(/(?:at|from|with)\s+([A-Z][a-zA-Z0-9\s]+)/);
+      if (atMatch) {
+        companyName = atMatch[1].split(' ')[0].trim();
+      }
+    }
+    
+    if (!companyName) {
+      companyName = 'Hiring Team';
+    }
+    
+    // 4. Extract Job Title
+    let jobTitle = 'Software Engineer';
+    const titleKeywords = ['backend', 'frontend', 'fullstack', 'software', 'engineer', 'developer', 'net', 'c#', 'react', 'node'];
+    const words = subject.split(/\s+/);
+    let matchedTitleWords = [];
+    
+    for (let word of words) {
+      const cleanWord = word.replace(/[^a-zA-Z]/g, '');
+      if (titleKeywords.includes(cleanWord.toLowerCase())) {
+        matchedTitleWords.push(word);
+      }
+    }
+    
+    if (matchedTitleWords.length > 0) {
+      jobTitle = matchedTitleWords.join(' ').replace(/[^a-zA-Z0-9\s-]/g, '').trim();
+    }
+    
+    // 5. Generate beautiful WhatsApp Summary
+    let categoryHeader = 'ℹ️ *STATUS UPDATE*';
+    if (category === 'rejection') categoryHeader = '💔 *APPLICATION REJECTED*';
+    else if (category === 'interview_invite') categoryHeader = '📅 *INTERVIEW INVITATION!*';
+    else if (category === 'assessment_request') categoryHeader = '📝 *ASSESSMENT/TEST REQUEST*';
+    else if (category === 'job_offer') categoryHeader = '🎉 *JOB OFFER RECEIVED!*';
+    else if (category === 'application_received') categoryHeader = '📩 *APPLICATION CONFIRMED*';
+    
+    const whatsappSummary = `${categoryHeader}\n• *Company*: ${companyName}\n• *Role*: ${jobTitle}\n• *Subject*: ${subject.slice(0, 50)}`;
+    
+    return {
+      is_job_related: true,
+      category,
+      company_name: companyName,
+      job_title: jobTitle,
+      whatsapp_summary: whatsappSummary
+    };
   }
 }
 
@@ -182,13 +522,16 @@ async function syncEmailToDatabase(evalResult, from) {
         company: company,
         title: title,
         location: 'Remote / Egypt',
+        model: 'Remote',
+        fitScore: 95,
+        atsMatch: 90,
+        gapRisk: 'Low',
         status: newStatus,
         companyLink: 'mailto:' + from,
-        aqs_score: 95, // Manual applications represent high fit
-        aqs_strengths: ['Manually applied', 'Auto-tracked & ingested via Gmail agent'],
-        aqs_risks: [],
-        recommended_action: 'apply',
-        resumeVersion: 'backend_resume.pdf'
+        companySummary: 'Auto-tracked & ingested via Gmail agent',
+        salary: 'Unlisted',
+        resumeVersion: 'backend_resume.pdf',
+        appliedDate: newStatus === 'Applied' ? new Date().toISOString().split('T')[0] : null
       };
 
       const { error: insertErr } = await supabase
@@ -203,6 +546,14 @@ async function syncEmailToDatabase(evalResult, from) {
   }
 }
 
+function getImapDate(date) {
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = months[date.getMonth()];
+  const year = date.getFullYear();
+  return `${day}-${month}-${year}`;
+}
+
 async function startEmailListener() {
   if (!process.env.EMAIL_USER || !process.env.EMAIL_APP_PASSWORD) {
     console.log('⚠️ Email credentials not set in .env, skipping IMAP listener...');
@@ -214,17 +565,17 @@ async function startEmailListener() {
     console.log('📧 [IMAP] Connected successfully to Gmail inbox');
     await connection.openBox('INBOX');
 
-    // Poll for new emails every 1 minute
-    console.log('👀 [IMAP] Monitoring unseen emails in real-time...');
-    
-    setInterval(async () => {
+    async function scanEmails() {
       try {
-        const searchCriteria = ['UNSEEN'];
+        const twoDaysAgo = new Date();
+        twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+        const searchCriteria = [['SINCE', getImapDate(twoDaysAgo)]];
         const fetchOptions = { bodies: ['HEADER', 'TEXT'], markSeen: false };
         
         const results = await connection.search(searchCriteria, fetchOptions);
         
         if (results && results.length > 0) {
+          let processedInInterval = 0;
           for (let item of results) {
             const uid = item.attributes.uid;
             
@@ -244,7 +595,7 @@ async function startEmailListener() {
               body = body.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 1500);
             }
 
-            console.log(`\n📨 [Email] Unseen message caught: "${subject}" from [${from}]`);
+            console.log(`\n📨 [Email] Processing incoming message: "${subject}" from [${from}]`);
 
             // Evaluate email using Gemini AI
             const analysis = await evaluateEmailWithAI(from, subject, body);
@@ -263,18 +614,105 @@ async function startEmailListener() {
 
             // Mark as processed in local cache
             processedUIDs.add(uid);
+            processedInInterval++;
+          }
+          if (processedInInterval > 0) {
             saveProcessedUIDs();
           }
         }
       } catch (pollErr) {
-        console.error("❌ Error during email polling interval:", pollErr.message);
+        console.error("❌ Error during email scanning:", pollErr.message);
       }
-    }, 60 * 1000); // Poll every 60 seconds for higher responsiveness
+    }
+
+    // Run once immediately on startup
+    console.log('👀 [IMAP] Running immediate initial email scan...');
+    await scanEmails();
+
+    // Poll for new and recent emails every 1 minute
+    console.log('👀 [IMAP] Monitoring recent emails in real-time (last 2 days fallback loop)...');
+    setInterval(scanEmails, 60 * 1000);
 
   } catch (err) {
     console.error('❌ Failed to establish IMAP email listener:', err.message);
   }
 }
+
+// 6. Setup Dashboard Telemetry CLI Command Poller
+async function pollDashboardCommands() {
+  try {
+    const { data, error } = await supabase
+      .from('jobs')
+      .select('recommended_action')
+      .eq('id', 'telemetry_bot_status')
+      .single();
+
+    if (data && data.recommended_action) {
+      const cmdText = data.recommended_action;
+      console.log(`🤖 [Dashboard CLI] Command detected: "${cmdText}"`);
+      
+      // Wipe the command immediately in the database to prevent duplicate execution
+      await supabase
+        .from('jobs')
+        .update({ recommended_action: null })
+        .eq('id', 'telemetry_bot_status');
+
+      // Log receipt to telemetry
+      await botLog('🧠', `[CLI Command] Executing: "${cmdText}"`, 'step');
+
+      // Parse and execute
+      const parts = cmdText.split(' ');
+      const cmd = parts[0].toLowerCase();
+      const arg = parts.slice(1).join(' ');
+
+      if (cmd === '/status') {
+        const { data: allJobs } = await supabase.from('jobs').select('status');
+        const total = allJobs ? allJobs.length : 0;
+        const applied = allJobs ? allJobs.filter(j => j.status === 'Applied').length : 0;
+        const interviewing = allJobs ? allJobs.filter(j => j.status === 'Interviewing').length : 0;
+        
+        await botLog('📊', `Status Diagnostics: ${total} Total, ${applied} Applied, ${interviewing} Interviewing`, 'success');
+      } else if (cmd === '/search') {
+        const keyword = arg || 'backend';
+        const { exec } = require('child_process');
+        await botLog('📡', `Triggering live crawler for keyword: "${keyword}"...`, 'step');
+        
+        exec(`node G:\\lolo\\job_search\\inbox-agent\\live_scraper.js --keyword="${keyword}"`, (err) => {
+          if (err) {
+            botLog('❌', `Crawler error: ${err.message}`, 'error');
+          } else {
+            botLog('✅', `Scraping cycle completed for keyword "${keyword}"`, 'success');
+          }
+        });
+      } else if (cmd === '/apply') {
+        const jobId = arg;
+        if (!jobId) {
+          await botLog('⚠️', `Format error. Use: /apply <job_id>`, 'error');
+        } else {
+          const { error: updateErr } = await supabase
+            .from('jobs')
+            .update({ status: 'Queued for Bot' })
+            .eq('id', jobId);
+          
+          if (updateErr) {
+            await botLog('❌', `Failed to queue job ${jobId}: ${updateErr.message}`, 'error');
+          } else {
+            await botLog('🚀', `Job ${jobId} queued successfully for auto-apply!`, 'success');
+          }
+        }
+      } else if (cmd === '/help') {
+        await botLog('ℹ️', `Available CLI commands:\n• /status - Diagnostics summary\n• /search <kw> - Trigger crawler\n• /apply <id> - Execute auto-apply\n• /help - Command menu`, 'info');
+      } else {
+        await botLog('⚠️', `Unknown command: "${cmd}". Type /help for details.`, 'error');
+      }
+    }
+  } catch (err) {
+    console.error("Dashboard CLI execution error:", err.message);
+  }
+}
+
+// Start polling CLI commands every 2 seconds
+setInterval(pollDashboardCommands, 2000);
 
 // Start everything
 console.log('🚀 Initializing Job Search Autonomous Agent...');

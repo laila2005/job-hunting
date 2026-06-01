@@ -142,7 +142,7 @@ async function autoApply() {
         result = await handleLinkedInApply(page);
       } else {
         console.log(`   [External] Detected custom portal. Routing to AI Universal Form Filler...`);
-        result = await handleUniversalApply(page, job.company);
+        result = await handleUniversalApply(page, job);
       }
 
       const newStatus = result.success ? 'Applied' : 'Action Required';

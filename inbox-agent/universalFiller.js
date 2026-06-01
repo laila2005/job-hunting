@@ -3,6 +3,9 @@ const { GoogleGenAI } = require('@google/genai');
 const fs = require('fs');
 const path = require('path');
 const { botLog } = require('./telemetry');
+const { createClient } = require('@supabase/supabase-js');
+
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 // ─────────────────────────────────────────────────────
@@ -266,7 +269,8 @@ async function executeAction(page, action) {
 // ─────────────────────────────────────────────────────
 // THE MAIN AI AGENT LOOP
 // ─────────────────────────────────────────────────────
-async function handleUniversalApply(page, companyName) {
+async function handleUniversalApply(page, job) {
+  const companyName = job.company;
   console.log(`   [AI Agent] \u{1F9E0} Activating Autonomous Agent for ${companyName}...`);
 
   const profilePath = path.join(__dirname, '..', 'candidate_profile.json');
@@ -286,6 +290,125 @@ async function handleUniversalApply(page, companyName) {
     // 1. Read the page
     const pageState = await extractPageState(page);
     await botLog('👁️', `[${companyName}] Page: ${pageState.url.substring(0, 60)} | ${pageState.fields.length} fields, ${pageState.buttons.length} buttons`, 'step');
+
+    // --- CYBORG PAUSE & REHYDRATE CHECK ---
+    const customFields = pageState.fields.filter(f => {
+      const lbl = (f.label || '').toLowerCase();
+      return f.tag === 'textarea' || lbl.includes('why') || lbl.includes('motivation') || lbl.includes('cover letter') || lbl.includes('salary') || lbl.includes('expectations');
+    });
+
+    if (customFields.length > 0) {
+      // Fetch approved responses from database
+      const { data: dbJob } = await supabase.from('jobs').select('approved_responses, status').eq('id', job.id).single();
+      const approved = dbJob?.approved_responses || {};
+      
+      // Check if we need to draft answers
+      const needsDrafting = customFields.filter(f => !approved[f.label]);
+
+      if (needsDrafting.length > 0) {
+        console.log(`   [Cyborg] Custom fields detected that require drafting!`);
+        await botLog('🧠', `[${companyName}] Drafting responses for ${needsDrafting.length} custom questions...`, 'step');
+        
+        const drafts = {};
+        for (const f of needsDrafting) {
+          const draftPrompt = `
+            You are applying for the role ${job.title} at ${job.company} on behalf of Laila Mohamed Fikry.
+            Draft a concise, ultra-professional 2-paragraph response for this application question:
+            "${f.label}"
+            
+            Laila's real profile achievements:
+            - Shipped enterprise concurrent IoT monitoring telemetry server (C# / ASP.NET) for GASCO and Ministry of Interior.
+            - Completed 15-month ALX Africa Software Intensive.
+            - Trained CNN MobileNetV2 emergency response classifiers.
+            
+            Keep the response brief (2-3 sentences), highly compelling, and 100% factual.
+          `;
+          
+          try {
+            const draftVal = await callGemini(draftPrompt);
+            drafts[f.label] = draftVal;
+          } catch (err) {
+            drafts[f.label] = "Negotiable based on overall internship specifications and remote balance.";
+          }
+        }
+
+        // Update Supabase to pause the bot
+        await supabase.from('jobs').update({
+          draft_responses: drafts,
+          status: 'Needs Input'
+        }).eq('id', job.id);
+
+        await botLog('⏸️', `[${companyName}] Auto-apply paused. Waiting for user approval on dashboard...`, 'step');
+
+        // Poll for approval (timeout after 15 mins)
+        let approvedResponses = null;
+        let pollCount = 0;
+        const MAX_POLLS = 180; // 15 minutes (180 * 5s)
+
+        while (pollCount < MAX_POLLS) {
+          await new Promise(r => setTimeout(r, 5000));
+          pollCount++;
+
+          const { data: pollJob } = await supabase.from('jobs').select('approved_responses, status').eq('id', job.id).single();
+
+          if (pollJob && pollJob.status === 'Queued for Bot' && pollJob.approved_responses) {
+            approvedResponses = pollJob.approved_responses;
+            await botLog('🚀', `[${companyName}] Approval received! Resuming application submission...`, 'step');
+            break;
+          }
+
+          if (pollJob && pollJob.status === 'Rejected') {
+            await botLog('🚫', `[${companyName}] Application declined by user. Closing browser.`, 'error');
+            return { success: false, message: 'Declined by user' };
+          }
+        }
+
+        if (!approvedResponses) {
+          // Timeout reached! Save session state and close browser.
+          await botLog('⏳', `[${companyName}] Cyborg timeout reached (15 mins). Saving session state and closing Brave.`, 'error');
+          
+          const cookies = await page.cookies();
+          const sessionState = {
+            url: page.url(),
+            cookies,
+            fields: pageState.fields
+          };
+          
+          await supabase.from('jobs').update({
+            session_state: sessionState,
+            status: 'Needs Input'
+          }).eq('id', job.id);
+
+          return { success: false, message: 'Cyborg review timeout. Session saved.' };
+        }
+
+        // Fill fields with approved responses!
+        const fillFields = [];
+        customFields.forEach(f => {
+          const val = approvedResponses[f.label] || drafts[f.label];
+          if (val) {
+            fillFields.push({ index: f.index, label: f.label, value: val });
+          }
+        });
+
+        if (fillFields.length > 0) {
+          await executeAction(page, { action: 'fill_fields', fields: fillFields, reason: 'Filling approved custom answers' });
+        }
+      } else {
+        // All custom fields have pre-approved responses! Fill them!
+        const fillFields = [];
+        customFields.forEach(f => {
+          const val = approved[f.label];
+          if (val) {
+            fillFields.push({ index: f.index, label: f.label, value: val });
+          }
+        });
+
+        if (fillFields.length > 0) {
+          await executeAction(page, { action: 'fill_fields', fields: fillFields, reason: 'Filling pre-approved custom answers' });
+        }
+      }
+    }
 
     // 2. Ask Gemini what to do
     const prompt = `You are an autonomous AI agent applying for a job on behalf of a candidate.

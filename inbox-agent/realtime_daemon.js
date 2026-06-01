@@ -43,7 +43,7 @@ async function processJobRealtime(job) {
     // No more hardcoded LinkedIn/Wuzzuf handlers.
     // The AI Agent reads the page, decides what to do, and loops until done.
     console.log(`   [Router] Routing to Autonomous AI Agent...`);
-    const result = await handleUniversalApply(page, job.company);
+    const result = await handleUniversalApply(page, job);
 
     const newStatus = result.success ? 'Applied' : 'Action Required';
     console.log(`\n   Final Result: ${result.message}`);
@@ -107,7 +107,7 @@ async function startDaemon() {
       const { data } = await supabase
         .from('jobs')
         .select('*')
-        .or('status.eq.Queued for Bot,status.eq.Applied');
+        .eq('status', 'Queued for Bot');
 
       if (data && data.length > 0) {
         const job = data.find(j => !processedJobs.has(j.id) && j.id !== 'telemetry_bot_status');

@@ -166,44 +166,92 @@ const LiveTelemetry = () => {
 
       {/* Expandable Log Terminal */}
       {expanded && (
-        <div 
-          ref={containerRef}
-          style={{
-            maxHeight: '350px',
-            overflowY: 'auto',
-            padding: '0',
-            background: 'rgba(0, 0, 0, 0.4)',
-            fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace",
-            fontSize: '0.75rem',
-            lineHeight: '1.7',
-          }}
-        >
-          {logs.length === 0 ? (
-            <div style={{ padding: '20px', color: '#475569', textAlign: 'center' }}>
-              No logs yet. Start the bot to see live activity here.
-            </div>
-          ) : (
-            logs.map((log, i) => (
-              <div key={i} style={{
-                padding: '4px 16px',
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: '10px',
-                borderBottom: '1px solid rgba(255,255,255,0.02)',
-                background: log.l === 'success' ? 'rgba(34,197,94,0.05)' 
-                  : log.l === 'error' ? 'rgba(239,68,68,0.05)' : 'transparent',
-                transition: 'background 0.2s ease',
-              }}>
-                <span style={{ color: '#475569', flexShrink: 0, fontSize: '0.68rem', paddingTop: '2px' }}>
-                  {formatTime(log.t)}
-                </span>
-                <span style={{ flexShrink: 0 }}>{log.e}</span>
-                <span style={{ color: logLevelColor(log.l), wordBreak: 'break-word' }}>
-                  {log.m}
-                </span>
+        <div style={{ background: 'rgba(0, 0, 0, 0.4)', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+          <div 
+            ref={containerRef}
+            style={{
+              maxHeight: '280px',
+              overflowY: 'auto',
+              padding: '8px 0',
+              fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace",
+              fontSize: '0.75rem',
+              lineHeight: '1.7',
+            }}
+          >
+            {logs.length === 0 ? (
+              <div style={{ padding: '20px', color: '#475569', textAlign: 'center' }}>
+                No logs yet. Start the bot to see live activity here.
               </div>
-            ))
-          )}
+            ) : (
+              logs.map((log, i) => (
+                <div key={i} style={{
+                  padding: '4px 16px',
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '10px',
+                  borderBottom: '1px solid rgba(255,255,255,0.02)',
+                  background: log.l === 'success' ? 'rgba(34,197,94,0.05)' 
+                    : log.l === 'error' ? 'rgba(239,68,68,0.05)' : 'transparent',
+                  transition: 'background 0.2s ease',
+                }}>
+                  <span style={{ color: '#475569', flexShrink: 0, fontSize: '0.68rem', paddingTop: '2px' }}>
+                    {formatTime(log.t)}
+                  </span>
+                  <span style={{ flexShrink: 0 }}>{log.e}</span>
+                  <span style={{ color: logLevelColor(log.l), wordBreak: 'break-word' }}>
+                    {log.m}
+                  </span>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Glowing Terminal Input */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            padding: '12px 16px',
+            background: 'rgba(5, 5, 8, 0.8)',
+            borderTop: '1px solid rgba(255,255,255,0.06)'
+          }}>
+            <span style={{ color: glowColor, fontFamily: 'monospace', fontWeight: 'bold', fontSize: '0.8rem' }}>laila@antigravity-os:~$</span>
+            <input
+              type="text"
+              placeholder="Type /help, /status, /search [kw], /apply [id]..."
+              style={{
+                flex: 1,
+                background: 'transparent',
+                border: 'none',
+                outline: 'none',
+                color: '#e2e8f0',
+                fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+                fontSize: '0.78rem'
+              }}
+              onKeyDown={async (e) => {
+                if (e.key === 'Enter' && e.target.value.trim()) {
+                  const cmd = e.target.value.trim();
+                  e.target.value = '';
+                  
+                  // Inject local log instantly for reactive UI response
+                  const localLog = {
+                    t: new Date().toISOString(),
+                    e: '🧠',
+                    m: `[CLI Input] Dispatched command: "${cmd}"`,
+                    l: 'step'
+                  };
+                  setLogs(prev => [...prev, localLog]);
+
+                  // Sync to Supabase
+                  await supabase
+                    .from('jobs')
+                    .update({ recommended_action: cmd })
+                    .eq('id', 'telemetry_bot_status');
+                }
+              }}
+            />
+            <span style={{ color: '#475569', fontSize: '0.65rem', fontFamily: 'monospace' }}>[Enter to Send]</span>
+          </div>
         </div>
       )}
 

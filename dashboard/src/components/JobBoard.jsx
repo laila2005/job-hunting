@@ -22,7 +22,14 @@ const JobBoard = ({ jobs, onApprove, onDecline, onMarkApplied, onStartInterview 
       .filter(job => {
         const normStatus = (job.status || '').trim().toLowerCase();
         const normFilter = activeFilter.trim().toLowerCase();
-        if (normFilter !== 'all' && normStatus !== normFilter) return false;
+        
+        // Exclude applied and rejected jobs from "All" tab view to keep pipeline clean
+        if (normFilter === 'all') {
+          if (normStatus === 'applied' || normStatus === 'rejected') return false;
+        } else {
+          if (normStatus !== normFilter) return false;
+        }
+        
         if (searchQuery && !job.company.toLowerCase().includes(searchQuery.toLowerCase()) && !job.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
         return true;
       })

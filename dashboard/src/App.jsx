@@ -8,6 +8,8 @@ import InterviewAgent from './components/InterviewAgent'
 import LiveTelemetry from './components/LiveTelemetry'
 import ActionCenter from './components/ActionCenter'
 import DreamBoard from './components/DreamBoard'
+import AiCommander from './components/AiCommander'
+import ManualAddModal from './components/ManualAddModal'
 
 // Initialize Supabase Client
 const supabaseUrl = 'https://wpxtstbquvbsiqgoqwma.supabase.co'
@@ -19,6 +21,8 @@ function App() {
   const [contacts, setContacts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [interviewJob, setInterviewJob] = useState(null);
+  const [activeTab, setActiveTab] = useState('telemetry');
+  const [showAddModal, setShowAddModal] = useState(false);
 
   useEffect(() => {
     fetchJobs();
@@ -126,6 +130,33 @@ function App() {
     await supabase.from('networking_contacts').update({ status: 'Sent' }).eq('id', id);
   };
 
+  const handleCreateJob = async (newJobData) => {
+    const manualId = `job-manual-${Date.now()}`;
+    const jobRow = {
+      id: manualId,
+      ...newJobData,
+      resumeVersion: 'backend_resume.pdf'
+    };
+
+    // Optimistic UI update
+    setJobs([jobRow, ...jobs]);
+    setShowAddModal(false);
+
+    // Save to Supabase
+    const { error } = await supabase
+      .from('jobs')
+      .insert([jobRow]);
+
+    if (error) {
+      console.error('Error inserting manual job in Supabase:', error);
+      alert('Error saving job to Supabase. Check console logs.');
+      // Revert optimistic update
+      setJobs(jobs.filter(j => j.id !== manualId));
+    } else {
+      alert('Job successfully saved and synced with Supabase!');
+    }
+  };
+
   return (
     <div className="container">
       <header className="hero-header">
@@ -139,12 +170,28 @@ function App() {
           </h1>
           <p className="hero-subtitle">Welcome back, Laila. Here is your automated telemetry stream.</p>
         </div>
-        <button className="btn btn-gradient">
-          <svg className="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-          </svg>
-          Manual Add
-        </button>
+        <div className="header-actions-row">
+          <div className="tab-navigation">
+            <button 
+              className={`tab-btn ${activeTab === 'telemetry' ? 'active' : ''}`}
+              onClick={() => setActiveTab('telemetry')}
+            >
+              📊 Telemetry
+            </button>
+            <button 
+              className={`tab-btn ${activeTab === 'commander' ? 'active' : ''}`}
+              onClick={() => setActiveTab('commander')}
+            >
+              🤖 AI Commander
+            </button>
+          </div>
+          <button className="btn btn-gradient" onClick={() => setShowAddModal(true)}>
+            <svg className="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            Manual Add
+          </button>
+        </div>
       </header>
 
       {isLoading && jobs.length === 0 ? (
@@ -154,6 +201,8 @@ function App() {
         </div>
       ) : interviewJob ? (
         <InterviewAgent job={interviewJob} onBack={() => setInterviewJob(null)} />
+      ) : activeTab === 'commander' ? (
+        <AiCommander supabase={supabase} />
       ) : (
         <>
           <LiveTelemetry />
@@ -163,6 +212,12 @@ function App() {
           <JobBoard jobs={jobs} onApprove={handleApprove} onDecline={handleDecline} onMarkApplied={handleMarkApplied} onStartInterview={setInterviewJob} />
           <NetworkingBoard contacts={contacts} onMarkSent={handleMarkSent} />
         </>
+      )}
+      {showAddModal && (
+        <ManualAddModal 
+          onClose={() => setShowAddModal(false)} 
+          onCreate={handleCreateJob} 
+        />
       )}
     </div>
   )
