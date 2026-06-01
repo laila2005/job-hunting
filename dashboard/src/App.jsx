@@ -109,8 +109,7 @@ function App() {
       .from('jobs')
       .update({ 
         status: 'Applied', 
-        appliedDate: today,
-        notes: 'Applied manually by candidate'
+        appliedDate: today
       })
       .eq('id', id);
       

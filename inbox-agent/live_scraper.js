@@ -20,63 +20,104 @@ const candidateProfilePath = path.join(__dirname, '..', 'candidate_profile.json'
 const candidateProfile = fs.readFileSync(candidateProfilePath, 'utf-8');
 
 async function evaluateJobWithAI(jobs) {
-  const prompt = `
+  if (!jobs || jobs.length === 0) return [];
+
+  const batchSize = 25;
+  const finalJobs = [];
+  
+  for (let i = 0; i < jobs.length; i += batchSize) {
+    const chunk = jobs.slice(i, i + batchSize);
+    console.log(`   🤖 [AI Evaluation] Scoring batch ${Math.floor(i / batchSize) + 1} of ${Math.ceil(jobs.length / batchSize)} (${chunk.length} jobs)...`);
+    
+    // Add temp IDs for precise matching
+    const jobsWithId = chunk.map((job, idx) => ({ id: idx, ...job }));
+
+    const prompt = `
       You are an expert technical recruiter and career strategist evaluating job descriptions.
-      We are looking ONLY for Early-Career or Junior Backend/Fullstack roles for an Egypt-based developer.
+      
+      We are matching jobs for this specific candidate:
+      Candidate Profile:
+      ${candidateProfile}
 
-      Here is the batch of jobs:
-      ${JSON.stringify(jobs)}
+      Here is the batch of jobs to evaluate:
+      ${JSON.stringify(jobsWithId.map(j => ({ 
+        id: j.id, 
+        title: j.title, 
+        company: j.company_name, 
+        location: j.candidate_required_location, 
+        description: j.description, 
+        salary: j.salary 
+      })))}
 
-      For EACH job, output a JSON object in this exact array format:
+      For EACH job, output a JSON array in this exact format:
       [
         {
-          "title": "exact title",
+          "id": number,
           "pass": boolean, 
           "aqs_score": number (0-100),
           "aqs_strengths": ["string"],
           "aqs_risks": ["string"],
-          "recommended_action": "apply" | "network" | "skip"
           "recommended_action": "apply" | "network" | "skip" | "dream_company"
         }
       ]
       
-      RULES:
-      - pass: false if it explicitly requires 4+ years of experience, is Senior/Staff, or is purely frontend/design.
-      - aqs_score: Score out of 100 based on fit, remote possibility, and backend relevance.
+      RULES FOR EVALUATION:
+      - pass: true if the candidate has strong overlap in backend/fullstack/IoT/ML and fits the tech stack (e.g. C#, ASP.NET, Python, Node, React).
+      - Do NOT fail jobs that require 2-4 years of experience, as this candidate's production experience at LM Tech Solutions (MOI and GASCO enterprise systems) makes her fully qualified.
+      - pass: false if it explicitly requires 5+ years of experience (Senior/Staff/Lead) OR is purely frontend/design/WordPress OR has a strict location restriction that excludes candidates based in Egypt.
+      - aqs_score: Score out of 100 based on fit with Laila's technical skills (C#, ASP.NET, React, Python), remote feasibility, and career progression potential.
       - recommended_action: 
         - 'skip' if pass is false. 
-        - 'dream_company' if it is an international/multinational company offering a high salary and is EITHER fully remote OR hybrid in New Cairo.
+        - 'dream_company' if it is a prominent international/multinational company offering high/premium salaries (USD, Euro, or top-tier EGP) and is EITHER fully remote OR hybrid near New Cairo.
         - 'network' if it's a high-tier company requiring a referral. 
-        - 'apply' if it's a perfect match but not a dream company.
+        - 'apply' if it's a good match but not a dream company.
     `;
 
-  try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: prompt,
-    });
-    const raw = response.text.trim().replace(/\`\`\`json/g, '').replace(/\`\`\`/g, '');
-    const evaluatedJobs = JSON.parse(raw);
-
-    const finalJobs = [];
-    for (const job of jobs) {
-      const evaluation = evaluatedJobs.find(e => e.title === job.title);
-      if (evaluation && evaluation.pass) {
-        finalJobs.push({
-          ...job,
-          aqs_score: evaluation.aqs_score || 80,
-          aqs_strengths: evaluation.aqs_strengths || ['Good fit'],
-          aqs_risks: evaluation.aqs_risks || ['Unknown'],
-          recommended_action: evaluation.recommended_action || 'apply'
+    let attempts = 3;
+    let success = false;
+    let evaluatedJobs = [];
+    
+    while (attempts > 0 && !success) {
+      try {
+        const response = await ai.models.generateContent({
+          model: 'gemini-2.5-flash',
+          contents: prompt,
         });
+        const raw = response.text.trim().replace(/\`\`\`json/g, '').replace(/\`\`\`/g, '');
+        evaluatedJobs = JSON.parse(raw);
+        success = true;
+      } catch (err) {
+        attempts--;
+        console.warn(`      ⚠️ Batch evaluation failed (Status 503/Transient). Attempts left: ${attempts}. Error: ${err.message}`);
+        if (attempts > 0) {
+          console.log(`      ⏳ Sleeping 4 seconds before retry...`);
+          await new Promise(r => setTimeout(r, 4000));
+        }
       }
     }
 
-    return finalJobs;
-  } catch (err) {
-    console.error("Evaluation failed.", err.message);
-    return [];
+    if (success) {
+      for (const job of jobsWithId) {
+        const evaluation = evaluatedJobs.find(e => e.id === job.id);
+        if (evaluation && evaluation.pass) {
+          finalJobs.push({
+            ...job,
+            aqs_score: evaluation.aqs_score || 80,
+            aqs_strengths: evaluation.aqs_strengths || ['Good fit'],
+            aqs_risks: evaluation.aqs_risks || ['Unknown'],
+            recommended_action: evaluation.recommended_action || 'apply'
+          });
+        }
+      }
+    } else {
+      console.error(`   ❌ All 3 evaluation attempts failed for this batch. Skipping chunk.`);
+    }
+    
+    // Slight pause to prevent rate-limit throttling
+    await new Promise(r => setTimeout(r, 1000));
   }
+
+  return finalJobs;
 }
 
 async function fetchRealJobs() {
@@ -85,32 +126,87 @@ async function fetchRealJobs() {
   
   try {
     console.log("🌐 Fetching real remote backend roles from Remotive API...");
-    const response = await fetch('https://remotive.com/api/remote-jobs?category=software-dev&search=backend');
-    const data = await response.json();
-    const remotiveJobs = data.jobs.slice(0, 5); 
+    let remotiveJobs = [];
+    try {
+      const response = await fetch('https://remotive.com/api/remote-jobs?category=software-dev&search=backend');
+      const data = await response.json();
+      remotiveJobs = (data.jobs || []).slice(0, 8).map(job => ({
+        title: job.title,
+        company_name: job.company_name || 'Remotive Recruiter',
+        candidate_required_location: job.candidate_required_location || 'Remote',
+        url: job.url,
+        description: job.description ? job.description.replace(/<[^>]*>/g, '').slice(0, 500) : 'Remote Backend Role',
+        salary: job.salary || 'Unlisted',
+        company_logo: job.company_logo || ''
+      }));
+    } catch (e) {
+      console.error("⚠️ Failed to fetch from Remotive:", e.message);
+    }
+
+    console.log("🌐 Fetching premium remote jobs from Arbeitnow API...");
+    let arbeitnowJobs = [];
+    try {
+      const response = await fetch('https://www.arbeitnow.com/api/job-board-api');
+      const data = await response.json();
+      arbeitnowJobs = (data.data || []).slice(0, 8).map(job => ({
+        title: job.title,
+        company_name: job.company_name || 'Arbeitnow Recruiter',
+        candidate_required_location: job.location || 'Remote',
+        url: job.url,
+        description: job.description ? job.description.replace(/<[^>]*>/g, '').slice(0, 500) : 'Remote Backend Role',
+        salary: 'Unlisted (Euro/Global standard)',
+        company_logo: ''
+      }));
+    } catch (e) {
+      console.error("⚠️ Failed to fetch from Arbeitnow:", e.message);
+    }
 
     const [wuzzufJobs, linkedinJobs] = await Promise.all([
       scrapeWuzzuf(),
       scrapeLinkedIn()
     ]);
 
-    const freshJobs = [...remotiveJobs, ...wuzzufJobs.slice(0, 5), ...linkedinJobs.slice(0, 5)];
+    const freshJobs = [...remotiveJobs, ...arbeitnowJobs, ...wuzzufJobs, ...linkedinJobs];
     
-    console.log(`🎯 Found ${freshJobs.length} live positions. Sending to AI for AQS scoring...`);
+    // Deduplicate by URL locally first
+    const uniqueFreshJobs = [];
+    const seenUrls = new Set();
+    for (const job of freshJobs) {
+      if (job.url && !seenUrls.has(job.url)) {
+        seenUrls.add(job.url);
+        uniqueFreshJobs.push(job);
+      }
+    }
+    
+    console.log(`🎯 Compiled ${uniqueFreshJobs.length} unique live positions. Sending to AI for AQS scoring...`);
 
-    const finalJobs = await evaluateJobWithAI(freshJobs);
+    const finalJobs = await evaluateJobWithAI(uniqueFreshJobs);
+
+    // Fetch existing job URLs from Supabase to prevent duplicate inserts
+    const { data: existingJobs, error: fetchErr } = await supabase
+      .from('jobs')
+      .select('companyLink');
+    
+    const dbUrls = new Set((existingJobs || []).map(j => j.companyLink));
 
     let ingestedCount = 0;
     for (const job of finalJobs) {
+      const companyLink = job.url || job.companyLink;
+      
+      if (dbUrls.has(companyLink)) {
+        console.log(`   ⏭️ Skipping duplicate: ${job.title} at ${job.company_name || job.company}`);
+        continue;
+      }
+
       console.log(`   ✅ MATCH: ${job.title} | Score: ${job.aqs_score}`);
       
       const newJob = {
         id: 'job-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
-        company: job.companyName || job.company_name || job.company || 'Unknown Company',
+        company: job.company_name || job.company || 'Unknown Company',
         title: job.title,
-        location: job.location || job.candidate_required_location || 'Remote',
+        location: job.candidate_required_location || 'Remote',
         status: 'Pending Review',
-        companyLink: job.url || job.companyLink,
+        companyLink: companyLink,
         aqs_score: job.aqs_score,
         aqs_strengths: job.aqs_strengths,
         aqs_risks: job.aqs_risks,
@@ -142,10 +238,12 @@ async function fetchRealJobs() {
       });
       
       ingestedCount++;
+      // Mark as seen so if duplicates exist within the same scraped batch, they aren't inserted twice
+      dbUrls.add(companyLink);
     }
 
     await updateTelemetry('Sleeping', 'Scraping cycle complete. Database synced.');
-    console.log(`\n✅ Sourcing Complete! ${ingestedCount} jobs passed the strict AI filter and were sent to your Dashboard.`);
+    console.log(`\n✅ Sourcing Complete! ${ingestedCount} new jobs passed the strict AI filter and were sent to your Dashboard.`);
   } catch (err) {
     console.error("❌ Sourcing Engine Failed:", err.message);
   }
