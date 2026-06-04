@@ -34,7 +34,7 @@ async function scrapeWuzzuf(customQueries) {
 
             const title = titleEl.innerText || titleEl.textContent;
             const link = titleEl.href;
-            if (!link.includes('/jobs/p/')) return;
+            if (!link.includes('/jobs/p/') && !link.includes('/internship/')) return;
 
             // Try to get company name
             let companyEl = card.querySelector('.css-17s97q8, .css-d7j1kk a');
