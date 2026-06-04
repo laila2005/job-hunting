@@ -115,11 +115,16 @@ async function evaluateJobWithAI(jobs) {
         const title = (job.title || '').toLowerCase();
         const desc = (job.description || '').toLowerCase();
         
-        const keywords = ['backend', 'c#', '.net', 'asp.net', 'python', 'node', 'react', 'fullstack', 'software', 'develop', 'engineer', 'iot', 'intern'];
-        const isMatch = keywords.some(kw => title.includes(kw) || desc.includes(kw));
+        const techKeywords = ['backend', 'c#', '.net', 'asp.net', 'python', 'node', 'react', 'fullstack', 'software', 'developer', 'programmer', 'computer science', 'frontend'];
+        const excludeKeywords = ['warehouse', 'mechanical', 'civil', 'architecture', 'electrical', 'marketing', 'sales', 'hr', 'logistics', 'accounting', 'finance', 'medical', 'hardware', 'data entry', 'technical office'];
+        
+        const isTechRole = techKeywords.some(kw => title.includes(kw) || desc.includes(kw));
+        const isExcluded = excludeKeywords.some(kw => title.includes(kw));
         const isSenior = title.includes('senior') || title.includes('lead') || title.includes('principal') || title.includes('5+') || title.includes('6+') || title.includes('7+');
         
-        if (isMatch && !isSenior) {
+        const isMatch = isTechRole && !isExcluded && !isSenior;
+        
+        if (isMatch) {
           let aqs_score = 75;
           let strengths = ['Local fallback match'];
           let risks = ['AI evaluation offline (rate limit)'];

@@ -440,8 +440,8 @@ h1, h2, h3, h4 {
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
 .modal-content {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  background: var(--bg-surface-elevated);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 16px;
   width: 90%;
   max-width: 800px;
@@ -460,7 +460,7 @@ h1, h2, h3, h4 {
   gap: 20px;
   position: sticky;
   top: 0;
-  background: rgba(22, 27, 34, 0.95);
+  background: var(--bg-surface-elevated);
   backdrop-filter: blur(8px);
   z-index: 10;
   align-items: flex-start;
@@ -482,28 +482,38 @@ h1, h2, h3, h4 {
 
 .modal-tabs {
   display: flex;
-  gap: 24px;
-  padding: 0 32px;
+  gap: 12px;
+  padding: 16px 32px;
   border-bottom: 1px solid var(--border-color);
-  background: var(--bg-card);
+  background: rgba(12, 15, 34, 0.8);
+  overflow-x: auto;
+  scrollbar-width: none; /* Firefox */
+}
+.modal-tabs::-webkit-scrollbar {
+  display: none; /* Chrome, Safari */
 }
 
 .modal-tab {
-  padding: 16px 0;
+  padding: 8px 16px;
   color: var(--text-muted);
   font-weight: 500;
+  font-size: 0.95rem;
   cursor: pointer;
-  border-bottom: 2px solid transparent;
-  transition: all 0.2s;
+  border-radius: 8px;
+  background: transparent;
+  transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
 .modal-tab.active {
-  color: var(--accent-blue);
-  border-bottom-color: var(--accent-blue);
+  color: #fff;
+  background: var(--accent-blue);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .modal-tab:hover:not(.active) {
   color: var(--text-main);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .modal-body {
@@ -534,7 +544,7 @@ h1, h2, h3, h4 {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  background: var(--bg-card);
+  background: var(--bg-surface-elevated);
   position: sticky;
   bottom: 0;
 }

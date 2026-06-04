@@ -146,7 +146,7 @@ const JobModal = ({ job, onClose, onApprove, onDecline, onMarkApplied, onStartIn
         </div>
 
         {/* Tab Selection */}
-        <div className="modal-tabs" style={{ display: 'flex', gap: '8px', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '10px' }}>
+        <div className="modal-tabs">
           <div className={`modal-tab ${activeTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveTab('overview')}>
             Overview
           </div>
@@ -167,7 +167,7 @@ const JobModal = ({ job, onClose, onApprove, onDecline, onMarkApplied, onStartIn
         </div>
 
         {/* Body content based on tab */}
-        <div className="modal-body" style={{ maxHeight: '420px', overflowY: 'auto', padding: '20px 0' }}>
+        <div className="modal-body" style={{ maxHeight: '60vh' }}>
           
           {activeTab === 'overview' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -473,7 +473,7 @@ const JobModal = ({ job, onClose, onApprove, onDecline, onMarkApplied, onStartIn
         </div>
 
         {/* Footer buttons */}
-        <div className="modal-footer" style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '16px' }}>
+        <div className="modal-footer">
           <a href={job.companyLink} target="_blank" rel="noreferrer" className="btn btn-secondary modal-source-btn">
             🔗 View Source Posting
           </a>
