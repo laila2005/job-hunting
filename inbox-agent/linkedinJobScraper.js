@@ -2,7 +2,7 @@ const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 puppeteer.use(StealthPlugin());
 
-async function scrapeLinkedIn() {
+async function scrapeLinkedIn(customQueries) {
   console.log("🌐 Stealth Scraper: Booting up LinkedIn Public Jobs Crawler (Egypt)...");
   let browser = null;
   const jobsMap = new Map();
@@ -12,7 +12,7 @@ async function scrapeLinkedIn() {
     const page = await browser.newPage();
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
 
-    const queries = ['backend', 'c#', '.net', 'python'];
+    const queries = customQueries || ['backend', 'c#', '.net', 'python'];
 
     for (const query of queries) {
       const searchUrl = `https://www.linkedin.com/jobs/search?keywords=${encodeURIComponent(query)}&location=Egypt&geoId=100688841&f_TPR=r2592000`;

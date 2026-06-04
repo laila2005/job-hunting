@@ -104,16 +104,31 @@ async function autoApply() {
   console.log(`🎯 Found ${jobs.length} jobs ready for Auto-Apply.`);
   await updateTelemetry('Applying', `Found ${jobs.length} pending jobs.`);
 
-  // Launch browser pointing to user's local Brave user data directory so it inherits active logins!
-  // Note: The user MUST completely close Brave before running this, or it will crash due to file locks.
-  const browser = await puppeteer.launch({ 
-    headless: false, // We keep it visible so you can see it work!
-    executablePath: 'C:\\Program Files\\BraveSoftware\\Brave-Browser\\Application\\brave.exe',
-    userDataDir: 'C:\\Users\\lolo\\AppData\\Local\\BraveSoftware\\Brave-Browser\\User Data',
-    defaultViewport: null
-  });
-
-  const page = await browser.newPage();
+  let browser;
+  let page;
+  try {
+    // Launch browser pointing to user's local Brave user data directory so it inherits active logins!
+    // Note: The user MUST completely close Brave before running this, or it will crash due to file locks.
+    browser = await puppeteer.launch({ 
+      headless: false, // We keep it visible so you can see it work!
+      executablePath: 'C:\\Program Files\\BraveSoftware\\Brave-Browser\\Application\\brave.exe',
+      userDataDir: 'C:\\Users\\lolo\\AppData\\Local\\BraveSoftware\\Brave-Browser\\User Data',
+      defaultViewport: null
+    });
+    page = await browser.newPage();
+  } catch (err) {
+    console.error("❌ Failed to launch browser in autoApply:", err.message);
+    const isBraveOpen = err.message.includes('already running') || err.message.includes('userDataDir');
+    const userMessage = isBraveOpen 
+      ? 'Brave Browser is open on Laila\'s PC. Please close Brave to allow batch auto-apply.' 
+      : err.message;
+      
+    await updateTelemetry('Error', `Browser Launch Failed: ${userMessage}`);
+    for (const job of jobs) {
+      await supabase.from('jobs').update({ status: 'Action Required', notes: `Launch failed: ${userMessage}` }).eq('id', job.id);
+    }
+    return;
+  }
 
   // Fetch dream companies
   const { data: dreamData } = await supabase.from('dream_companies').select('name');

@@ -48,15 +48,8 @@ const waClient = new Client({
       '--no-sandbox',
       '--disable-setuid-sandbox',
       '--disable-dev-shm-usage',
-      '--disable-accelerated-2d-canvas',
-      '--no-first-run',
-      '--no-zygote',
       '--disable-gpu'
     ]
-  },
-  webVersionCache: {
-    type: 'remote',
-    remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2412.54.html'
   }
 });
 
@@ -83,8 +76,25 @@ const handleIncomingMessage = async (msg) => {
       processedMsgIds.delete(firstKey);
     }
 
-    const senderId = msg.from.replace(/\D/g, '');
-    const recipientId = msg.to.replace(/\D/g, '');
+    let senderJid = msg.from;
+    let recipientJid = msg.to;
+
+    // Resolve Linked Identity (LID) JIDs to standard @c.us JIDs
+    if (senderJid.endsWith('@lid')) {
+      try {
+        const contact = await waClient.getContactById(senderJid);
+        senderJid = contact.id._serialized;
+      } catch (e) {}
+    }
+    if (recipientJid.endsWith('@lid')) {
+      try {
+        const contact = await waClient.getContactById(recipientJid);
+        recipientJid = contact.id._serialized;
+      } catch (e) {}
+    }
+
+    const senderId = senderJid.replace(/\D/g, '');
+    const recipientId = recipientJid.replace(/\D/g, '');
     
     const ALLOWED_NUMBERS = ['201147656669', '201210212792'];
     
@@ -102,6 +112,7 @@ const handleIncomingMessage = async (msg) => {
         const isBotSignature = text.startsWith('📊') ||
                                text.startsWith('🐍') ||
                                text.startsWith('🤖') ||
+                               text.startsWith('📡') ||
                                text.startsWith('✅') ||
                                text.startsWith('❌') ||
                                text.startsWith('📄') ||
@@ -303,7 +314,24 @@ const handleIncomingMessage = async (msg) => {
           }
         } catch (genErr) {
           console.error("❌ Gemini response failed:", genErr.message);
-          replyText = `🤖 Antigravity here! I received your message: "${msg.body}". My conversational core is highly active and monitoring your commands!`;
+          
+          const lowerMsg = msg.body.toLowerCase();
+          if (lowerMsg.includes('how many') || lowerMsg.includes('applied') || lowerMsg.includes('status') || lowerMsg.includes('stat') || lowerMsg.includes('count')) {
+            try {
+              const { data: allJobs } = await supabase.from('jobs').select('status');
+              const total = allJobs ? allJobs.length : 0;
+              const applied = allJobs ? allJobs.filter(j => j.status === 'Applied').length : 0;
+              const interviewing = allJobs ? allJobs.filter(j => j.status === 'Interviewing').length : 0;
+              
+              replyText = `📊 *Job Command Center (Local Fallback):*\n\n• Crawled Positions: *${total}*\n• Applied: *${applied}*\n• Interviewing: *${interviewing}*\n\n_Note: Gemini API is currently rate-limited, but your database is fully synced!_ 🚀`;
+            } catch (dbErr) {
+              replyText = `❌ *Database Error!* I could not fetch your application status.`;
+            }
+          } else if (lowerMsg.includes('help') || lowerMsg.includes('command') || lowerMsg.includes('menu')) {
+            replyText = `🤖 *AI Command Menu (Local Fallback):*\n\n• \`/status\` - Diagnostics & counts\n• \`/search <keyword>\` - Run crawler\n• \`/applied Company | Title | URL\` - Log a manual job\n• \`/help\` - Show this menu`;
+          } else {
+            replyText = `🤖 Antigravity here! I received your message: "${msg.body}". My AI core is temporarily rate-limited, but I'm monitoring. Ask me about your "applied" count or "status"!`;
+          }
         }
       }
       
@@ -606,8 +634,22 @@ async function startEmailListener() {
               // 1. Sync status or ingest manual job to Supabase
               await syncEmailToDatabase(analysis, from);
 
-              // 2. Dispatch WhatsApp Notification to Laila
-              await notifyLaila(analysis.whatsapp_summary);
+              // 2. Filter & Dispatch WhatsApp Notification based on Priority
+              const highPriority = ['interview_invite', 'assessment_request', 'job_offer'];
+              const mediumPriority = ['rejection'];
+              
+              const isHigh = highPriority.includes(analysis.category);
+              const isMedium = mediumPriority.includes(analysis.category);
+              
+              if (isHigh || isMedium) {
+                const priorityHeader = isHigh 
+                  ? `🔴 *[HIGH URGENCY]*\n` 
+                  : `🟡 *[STANDARD UPDATE]*\n`;
+                
+                await notifyLaila(priorityHeader + analysis.whatsapp_summary);
+              } else {
+                console.log(`   ⏭️ Low priority category [${analysis.category}], synced to DB but skipping WhatsApp notification to avoid distraction.`);
+              }
             } else {
               console.log(`   ⏭️ Email not job-related, skipping.`);
             }
@@ -714,6 +756,16 @@ async function pollDashboardCommands() {
 // Start polling CLI commands every 2 seconds
 setInterval(pollDashboardCommands, 2000);
 
+waClient.on('auth_failure', (msg) => {
+  console.error('❌ [WhatsApp] Authentication failure:', msg);
+});
+
+waClient.on('disconnected', (reason) => {
+  console.error('❌ [WhatsApp] Client was logged out:', reason);
+});
+
 // Start everything
 console.log('🚀 Initializing Job Search Autonomous Agent...');
-waClient.initialize();
+waClient.initialize().catch(err => {
+  console.error('❌ [WhatsApp] Initialization error:', err.message);
+});

@@ -23,17 +23,18 @@ async function processJobRealtime(job) {
   console.log(`\n⚡ Real-time trigger received for ${job.company}! Booting browser...`);
   await updateTelemetry('Applying', `Applying to ${job.company} for ${job.title}...`);
 
-  const browser = await puppeteer.launch({ 
-    headless: false, 
-    executablePath: 'C:\\Program Files\\BraveSoftware\\Brave-Browser\\Application\\brave.exe',
-    userDataDir: 'C:\\Users\\lolo\\AppData\\Local\\BraveSoftware\\Brave-Browser\\User Data',
-    defaultViewport: null,
-    args: ['--start-maximized']
-  });
-
-  const page = await browser.newPage();
-
+  let browser;
   try {
+    browser = await puppeteer.launch({ 
+      headless: false, 
+      executablePath: 'C:\\Program Files\\BraveSoftware\\Brave-Browser\\Application\\brave.exe',
+      userDataDir: 'C:\\Users\\lolo\\AppData\\Local\\BraveSoftware\\Brave-Browser\\User Data',
+      defaultViewport: null,
+      args: ['--start-maximized']
+    });
+
+    const page = await browser.newPage();
+
     console.log(`\n⏳ Navigating to ${job.company} portal (${job.title})...`);
     console.log(`   URL: ${job.companyLink}`);
     await page.goto(job.companyLink, { waitUntil: 'domcontentloaded', timeout: 60000 });
@@ -64,7 +65,7 @@ async function processJobRealtime(job) {
     
     await supabase
       .from('jobs')
-      .update({ status: newStatus, appliedDate: new Date().toISOString().split('T')[0] })
+      .update({ status: newStatus, notes: result.message, appliedDate: new Date().toISOString().split('T')[0] })
       .eq('id', job.id);
 
     if (result.success) {
@@ -79,13 +80,27 @@ async function processJobRealtime(job) {
     }
   } catch (err) {
     console.error(`   ❌ Crash while applying to ${job.company}:`, err.message);
-    try {
-      const activePage = (await browser.pages()).pop();
-      await activePage.screenshot({ path: path.join(screenshotDir, `${job.id}-crash.png`), fullPage: true });
-    } catch (e) {}
-    await supabase.from('jobs').update({ status: 'Action Required' }).eq('id', job.id);
+    const isBraveOpen = err.message.includes('already running') || err.message.includes('userDataDir');
+    const userMessage = isBraveOpen 
+      ? 'Brave Browser is open on Laila\'s PC. Please close Brave and retry application.' 
+      : err.message;
+
+    await supabase
+      .from('jobs')
+      .update({ 
+        status: 'Action Required', 
+        notes: `Automation failed: ${userMessage}`
+      })
+      .eq('id', job.id);
+
+    if (browser) {
+      try {
+        const activePage = (await browser.pages()).pop();
+        await activePage.screenshot({ path: path.join(screenshotDir, `${job.id}-crash.png`), fullPage: true });
+      } catch (e) {}
+    }
   } finally {
-    await browser.close();
+    if (browser) await browser.close();
     console.log(`\n✅ Finished processing ${job.company}. Returning to sleep state.`);
     await updateTelemetry('Sleeping', 'Waiting for next manual UI trigger...');
   }

@@ -110,7 +110,37 @@ async function evaluateJobWithAI(jobs) {
         }
       }
     } else {
-      console.error(`   ❌ All 3 evaluation attempts failed for this batch. Skipping chunk.`);
+      console.warn(`   ⚠️ Fallback: Running local rule-based evaluation for batch because Gemini is rate-limited.`);
+      for (const job of jobsWithId) {
+        const title = (job.title || '').toLowerCase();
+        const desc = (job.description || '').toLowerCase();
+        
+        const keywords = ['backend', 'c#', '.net', 'asp.net', 'python', 'node', 'react', 'fullstack', 'software', 'develop', 'engineer', 'iot', 'intern'];
+        const isMatch = keywords.some(kw => title.includes(kw) || desc.includes(kw));
+        const isSenior = title.includes('senior') || title.includes('lead') || title.includes('principal') || title.includes('5+') || title.includes('6+') || title.includes('7+');
+        
+        if (isMatch && !isSenior) {
+          let aqs_score = 75;
+          let strengths = ['Local fallback match'];
+          let risks = ['AI evaluation offline (rate limit)'];
+          
+          if (title.includes('intern') || desc.includes('intern')) {
+            aqs_score = 90;
+            strengths.push('Internship suitable for Year 3 CS student');
+          }
+          if (title.includes('c#') || title.includes('.net')) {
+            strengths.push('Matches core ASP.NET stack');
+          }
+          
+          finalJobs.push({
+            ...job,
+            aqs_score: aqs_score,
+            aqs_strengths: strengths,
+            aqs_risks: risks,
+            recommended_action: 'apply'
+          });
+        }
+      }
     }
     
     // Slight pause to prevent rate-limit throttling
@@ -120,50 +150,54 @@ async function evaluateJobWithAI(jobs) {
   return finalJobs;
 }
 
-async function fetchRealJobs() {
+async function fetchRealJobs(customQueries) {
   console.log("🚀 Sourcing Engine: Activating Live Search...");
   await updateTelemetry('Sourcing', 'Activating live job search...');
   
   try {
-    console.log("🌐 Fetching real remote backend roles from Remotive API...");
     let remotiveJobs = [];
-    try {
-      const response = await fetch('https://remotive.com/api/remote-jobs?category=software-dev&search=backend');
-      const data = await response.json();
-      remotiveJobs = (data.jobs || []).slice(0, 8).map(job => ({
-        title: job.title,
-        company_name: job.company_name || 'Remotive Recruiter',
-        candidate_required_location: job.candidate_required_location || 'Remote',
-        url: job.url,
-        description: job.description ? job.description.replace(/<[^>]*>/g, '').slice(0, 500) : 'Remote Backend Role',
-        salary: job.salary || 'Unlisted',
-        company_logo: job.company_logo || ''
-      }));
-    } catch (e) {
-      console.error("⚠️ Failed to fetch from Remotive:", e.message);
-    }
-
-    console.log("🌐 Fetching premium remote jobs from Arbeitnow API...");
     let arbeitnowJobs = [];
-    try {
-      const response = await fetch('https://www.arbeitnow.com/api/job-board-api');
-      const data = await response.json();
-      arbeitnowJobs = (data.data || []).slice(0, 8).map(job => ({
-        title: job.title,
-        company_name: job.company_name || 'Arbeitnow Recruiter',
-        candidate_required_location: job.location || 'Remote',
-        url: job.url,
-        description: job.description ? job.description.replace(/<[^>]*>/g, '').slice(0, 500) : 'Remote Backend Role',
-        salary: 'Unlisted (Euro/Global standard)',
-        company_logo: ''
-      }));
-    } catch (e) {
-      console.error("⚠️ Failed to fetch from Arbeitnow:", e.message);
+    
+    // Only query global remote APIs if we are NOT running a targeted local query
+    if (!customQueries) {
+      console.log("🌐 Fetching real remote backend roles from Remotive API...");
+      try {
+        const response = await fetch('https://remotive.com/api/remote-jobs?category=software-dev&search=backend');
+        const data = await response.json();
+        remotiveJobs = (data.jobs || []).slice(0, 8).map(job => ({
+          title: job.title,
+          company_name: job.company_name || 'Remotive Recruiter',
+          candidate_required_location: job.candidate_required_location || 'Remote',
+          url: job.url,
+          description: job.description ? job.description.replace(/<[^>]*>/g, '').slice(0, 500) : 'Remote Backend Role',
+          salary: job.salary || 'Unlisted',
+          company_logo: job.company_logo || ''
+        }));
+      } catch (e) {
+        console.error("⚠️ Failed to fetch from Remotive:", e.message);
+      }
+
+      console.log("🌐 Fetching premium remote jobs from Arbeitnow API...");
+      try {
+        const response = await fetch('https://www.arbeitnow.com/api/job-board-api');
+        const data = await response.json();
+        arbeitnowJobs = (data.data || []).slice(0, 8).map(job => ({
+          title: job.title,
+          company_name: job.company_name || 'Arbeitnow Recruiter',
+          candidate_required_location: job.location || 'Remote',
+          url: job.url,
+          description: job.description ? job.description.replace(/<[^>]*>/g, '').slice(0, 500) : 'Remote Backend Role',
+          salary: 'Unlisted (Euro/Global standard)',
+          company_logo: ''
+        }));
+      } catch (e) {
+        console.error("⚠️ Failed to fetch from Arbeitnow:", e.message);
+      }
     }
 
     const [wuzzufJobs, linkedinJobs] = await Promise.all([
-      scrapeWuzzuf(),
-      scrapeLinkedIn()
+      scrapeWuzzuf(customQueries),
+      scrapeLinkedIn(customQueries)
     ]);
 
     const freshJobs = [...remotiveJobs, ...arbeitnowJobs, ...wuzzufJobs, ...linkedinJobs];
@@ -207,10 +241,13 @@ async function fetchRealJobs() {
         location: job.candidate_required_location || 'Remote',
         status: 'Pending Review',
         companyLink: companyLink,
-        aqs_score: job.aqs_score,
-        aqs_strengths: job.aqs_strengths,
-        aqs_risks: job.aqs_risks,
-        recommended_action: job.recommended_action,
+        fitScore: job.aqs_score || 85,
+        atsMatch: job.aqs_score || 80,
+        gapRisk: Array.isArray(job.aqs_risks) ? job.aqs_risks.join(', ') : (job.aqs_risks || 'Low'),
+        responsibilities: job.aqs_strengths || [],
+        companySummary: job.description ? job.description.slice(0, 1000) : 'Live Scraped Job Listing',
+        model: job.candidate_required_location && job.candidate_required_location.toLowerCase().includes('remote') ? 'Remote' : 'On-site',
+        salary: job.salary || 'Unlisted',
         resumeVersion: 'backend_resume.pdf'
       };
 
@@ -249,4 +286,25 @@ async function fetchRealJobs() {
   }
 }
 
-fetchRealJobs();
+// Parse CLI arguments
+const args = process.argv.slice(2);
+let customQueries = null;
+
+// Handle --keyword="..." or --keyword ...
+const keywordArgIdx = args.findIndex(arg => arg.startsWith('--keyword=') || arg === '--keyword' || arg === '-k');
+if (keywordArgIdx !== -1) {
+  const arg = args[keywordArgIdx];
+  let val = '';
+  if (arg.startsWith('--keyword=')) {
+    val = arg.split('=')[1];
+  } else if (keywordArgIdx + 1 < args.length) {
+    val = args[keywordArgIdx + 1];
+  }
+  
+  if (val) {
+    customQueries = val.split(',').map(q => q.trim());
+    console.log(`📡 Sourcing engine configured to scrape custom keywords: ${JSON.stringify(customQueries)}`);
+  }
+}
+
+fetchRealJobs(customQueries);

@@ -28,7 +28,8 @@ async function executeFullPipeline() {
   // Wait a few seconds for DB to settle
   await new Promise(r => setTimeout(r, 5000));
   
-  await runScript('stealthAutoApply.js');
+  // Auto-apply is disabled per user request to apply manually.
+  // await runScript('stealthAutoApply.js');
   console.log("--- BATCH COMPLETE ---");
 }
 
