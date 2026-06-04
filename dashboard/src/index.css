@@ -603,6 +603,23 @@ h1, h2, h3, h4 {
     gap: 6px 10px;
     font-size: 0.8rem;
   }
+  .job-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .job-card-main {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .job-meta {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .job-actions-container {
+    width: 100%;
+    justify-content: flex-end;
+  }
   .modal-tabs {
     padding: 0 20px;
     gap: 16px;

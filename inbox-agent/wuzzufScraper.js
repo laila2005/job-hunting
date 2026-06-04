@@ -23,38 +23,56 @@ async function scrapeWuzzuf(customQueries) {
 
         const jobCards = await page.evaluate(() => {
           const results = [];
-          const cards = document.querySelectorAll('.css-1gatmva, .css-pkv5jc, .css-1v4mvd'); // Common Wuzzuf card classes
+          const cards = document.querySelectorAll('.css-1gatmva, .css-pkv5jc, .css-1v4mvd, [class*="job-card"]'); 
           
-          // If specific classes fail, fallback to all h2 tags containing links
           const elementsToParse = cards.length > 0 ? cards : document.querySelectorAll('h2');
 
           elementsToParse.forEach(card => {
-            let titleEl = card.querySelector('h2 a') || (card.tagName === 'H2' ? card.querySelector('a') : null);
+            // If we are parsing just h2, we need the parent div to get more context
+            const container = card.closest('div') || card;
+            let titleEl = container.querySelector('h2 a') || (container.tagName === 'H2' ? container.querySelector('a') : null);
             if (!titleEl) return;
 
             const title = titleEl.innerText || titleEl.textContent;
             const link = titleEl.href;
             if (!link.includes('/jobs/p/') && !link.includes('/internship/')) return;
 
-            // Try to get company name
-            let companyEl = card.querySelector('.css-17s97q8, .css-d7j1kk a');
-            const company = companyEl ? companyEl.textContent.replace(' -', '').trim() : 'Unknown Company';
+            // Robust Company Extraction
+            const allLinks = Array.from(container.querySelectorAll('a'));
+            let companyEl = allLinks.find(a => a !== titleEl && (a.href.includes('/jobs/careers/') || a.textContent.includes('-')));
+            let company = companyEl ? companyEl.textContent.replace(' -', '').trim() : 'Unknown Company';
+            if (company === 'Unknown Company') {
+               // Fallback: look for the text node right after the title or an element with 'company' in class
+               const possibleCompany = container.querySelector('[class*="company"]');
+               if (possibleCompany) company = possibleCompany.textContent.trim();
+            }
 
-            // Try to get location
-            let locationEl = card.querySelector('.css-5wys0k');
-            const location = locationEl ? locationEl.textContent.trim() : 'Egypt';
+            // Robust Location & Badges
+            const spans = Array.from(container.querySelectorAll('span, a'));
+            const locationEl = spans.find(s => s.textContent.includes('Egypt') || s.textContent.includes('Cairo') || s.textContent.includes('Giza') || s.textContent.includes('Remote'));
+            const location = locationEl ? locationEl.textContent.trim() : 'Cairo, Egypt';
 
-            // Try to get description snippet
-            let descEl = card.querySelector('.css-y4udm8, .css-1lh32fc');
-            const description = descEl ? descEl.textContent.trim() : 'Backend Developer role...';
+            // Extract all badges like "Internship", "Full Time", "Entry Level"
+            const badges = Array.from(container.querySelectorAll('span, a')).filter(el => {
+              const text = el.textContent.trim();
+              return text === 'Internship' || text === 'Full Time' || text === 'Part Time' || text === 'Entry Level' || text === 'Student';
+            }).map(el => el.textContent.trim());
+
+            // Details extraction
+            let descEl = container.querySelector('div[class*="description"], p');
+            let description = descEl ? descEl.textContent.trim() : `Details: ${title} at ${company}. Tags: ${badges.join(', ')}`;
+            
+            // Assume Paid internship if not specified, as Wuzzuf usually explicitly states "Unpaid" if it is.
+            const isUnpaid = container.textContent.toLowerCase().includes('unpaid');
+            const salaryInfo = isUnpaid ? 'Unpaid Internship' : (badges.includes('Internship') ? 'Paid Internship (Expected)' : 'Unlisted');
 
             results.push({
               title,
               company_name: company,
               candidate_required_location: location,
               url: link,
-              description,
-              salary: 'Unlisted',
+              description: description + ` | Badges: ${badges.join(', ')}`,
+              salary: salaryInfo,
               company_logo: ''
             });
           });

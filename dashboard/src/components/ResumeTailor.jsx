@@ -97,8 +97,8 @@ const ResumeTailor = ({ job, onClose }) => {
       const cleanedText = response.text.trim().replace(/```json/g, '').replace(/```/g, '');
       const data = JSON.parse(cleanedText);
       setAtsScore(data.score || 85);
-      setStrengths(data.strengths || ['C# Development', 'Backend Engineering']);
-      setGaps(data.gaps || []);
+      setStrengths(Array.isArray(data.strengths) ? data.strengths : (data.strengths ? [data.strengths] : ['C# Development', 'Backend Engineering']));
+      setGaps(Array.isArray(data.gaps) ? data.gaps : (data.gaps ? [data.gaps] : []));
     } catch (err) {
       console.error(err);
       // Fallback local match based on description words
