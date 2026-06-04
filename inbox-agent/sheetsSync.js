@@ -9,6 +9,15 @@ async function syncToGoogleSheet(jobData) {
   }
 
   try {
+    // Determine the job type
+    const title = (jobData.title || '').toLowerCase();
+    let type = 'Full-time';
+    if (title.includes('intern')) {
+      type = 'Internship';
+    } else if (title.includes('part time') || title.includes('part-time')) {
+      type = 'Part-time';
+    }
+
     const response = await fetch(webhookUrl, {
       method: 'POST',
       headers: {
@@ -21,7 +30,8 @@ async function syncToGoogleSheet(jobData) {
         location: jobData.location,
         status: jobData.status || 'Applied',
         date: jobData.appliedDate || new Date().toISOString().split('T')[0],
-        link: jobData.companyLink || 'Unlisted'
+        link: jobData.companyLink || 'Unlisted',
+        type: type
       })
     });
 
