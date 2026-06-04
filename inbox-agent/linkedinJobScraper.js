@@ -42,9 +42,12 @@ async function scrapeLinkedIn(customQueries) {
             const title = titleEl.textContent.trim();
             const company = companyEl ? companyEl.textContent.trim() : 'Unknown Company';
             let location = locationEl ? locationEl.textContent.trim() : 'Egypt';
+            const locLower = location.toLowerCase();
+            const foreignKeywords = ['canada', 'toronto', 'ontario', 'united states', 'usa', 'us', 'germany', 'uk', 'london', 'berlin', 'markham', 'vancouver', 'montreal', 'calgary', 'alberta', 'quebec', 'europe', 'india', 'warsaw', 'poland', 'krakow'];
+            const isForeign = foreignKeywords.some(fk => locLower.includes(fk));
             
-            // Ensure "Egypt" is explicitly attached if it's just a city
-            if (!location.toLowerCase().includes('egypt')) {
+            // Ensure "Egypt" is explicitly attached if it's just a city and not a foreign location
+            if (!isForeign && !locLower.includes('egypt')) {
               location += ', Egypt';
             }
 

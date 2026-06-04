@@ -51,7 +51,6 @@ const ResumeTailor = ({ job, onClose }) => {
 
   // Initialize Gemini
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-  const ai = new GoogleGenAI({ apiKey });
   const model = 'gemini-2.5-flash';
 
   useEffect(() => {
@@ -90,6 +89,7 @@ const ResumeTailor = ({ job, onClose }) => {
     `;
 
     try {
+      const ai = new GoogleGenAI({ apiKey });
       const response = await ai.models.generateContent({
         model,
         contents: prompt
@@ -138,6 +138,7 @@ const ResumeTailor = ({ job, onClose }) => {
     `;
 
     try {
+      const ai = new GoogleGenAI({ apiKey });
       const response = await ai.models.generateContent({
         model,
         contents: prompt

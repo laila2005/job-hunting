@@ -207,6 +207,24 @@ async function fetchRealJobs(customQueries) {
     const seenUrls = new Set();
     for (const job of freshJobs) {
       if (job.url && !seenUrls.has(job.url)) {
+        const loc = (job.candidate_required_location || '').toLowerCase();
+        
+        // List of foreign indicator keywords
+        const foreignKeywords = [
+          'canada', 'toronto', 'ontario', 'united states', 'usa', 'us', 
+          'germany', 'uk', 'london', 'berlin', 'markham', 'vancouver', 
+          'montreal', 'calgary', 'alberta', 'quebec', 'europe', 'india', 
+          'warsaw', 'poland', 'krakow', 'france', 'paris', 'netherlands', 
+          'amsterdam', 'dubai', 'uae', 'saudi', 'riyadh'
+        ];
+        
+        const isForeign = foreignKeywords.some(fk => loc.includes(fk));
+        
+        if (isForeign) {
+          console.log(`   ⏭️ Filtering out foreign location role: ${job.title} at ${job.company_name || job.company} in ${job.candidate_required_location}`);
+          continue;
+        }
+
         seenUrls.add(job.url);
         uniqueFreshJobs.push(job);
       }
