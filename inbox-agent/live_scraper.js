@@ -215,13 +215,19 @@ async function fetchRealJobs(customQueries) {
           'germany', 'uk', 'london', 'berlin', 'markham', 'vancouver', 
           'montreal', 'calgary', 'alberta', 'quebec', 'europe', 'india', 
           'warsaw', 'poland', 'krakow', 'france', 'paris', 'netherlands', 
-          'amsterdam', 'dubai', 'uae', 'saudi', 'riyadh'
+          'amsterdam', 'dubai', 'uae', 'saudi', 'riyadh', 'tokyo', 'japan', 'asia'
         ];
         
         const isForeign = foreignKeywords.some(fk => loc.includes(fk));
+        const isEgypt = loc.includes('egypt') || loc.includes('cairo') || loc.includes('giza') || loc.includes('alexandria');
         
-        if (isForeign) {
-          console.log(`   ⏭️ Filtering out foreign location role: ${job.title} at ${job.company_name || job.company} in ${job.candidate_required_location}`);
+        // For internships, enforce strictly Egypt/Cairo
+        const titleLower = (job.title || '').toLowerCase();
+        const descLower = (job.description || '').toLowerCase();
+        const isInternship = titleLower.includes('intern') || descLower.includes('intern');
+        
+        if (isForeign || (isInternship && !isEgypt)) {
+          console.log(`   ⏭️ Filtering out foreign or non-local internship: ${job.title} at ${job.company_name || job.company} in ${job.candidate_required_location}`);
           continue;
         }
 

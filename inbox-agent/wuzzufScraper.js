@@ -48,9 +48,10 @@ async function scrapeWuzzuf(customQueries) {
             }
 
             // Robust Location & Badges
-            const spans = Array.from(container.querySelectorAll('span, a'));
-            const locationEl = spans.find(s => s.textContent.includes('Egypt') || s.textContent.includes('Cairo') || s.textContent.includes('Giza') || s.textContent.includes('Remote'));
-            const location = locationEl ? locationEl.textContent.trim() : 'Cairo, Egypt';
+            const spans = Array.from(container.querySelectorAll('span'));
+            // Wuzzuf locations usually have a specific class or contain a comma (City, Country)
+            const locationEl = container.querySelector('.css-5wys0k') || spans.find(s => s.textContent.includes(',') && !s.textContent.includes('To'));
+            const location = locationEl ? locationEl.textContent.trim() : 'Unknown Location';
 
             // Extract all badges like "Internship", "Full Time", "Entry Level"
             const badges = Array.from(container.querySelectorAll('span, a')).filter(el => {
