@@ -20,6 +20,7 @@ const StatCards = ({ jobs }) => {
   const autoTotal = jobs.filter(j => !isManual(j)).length;
   const manualTotal = jobs.filter(j => isManual(j)).length;
   const autoPercent = total === 0 ? 0 : Math.round((autoTotal / total) * 100);
+  const manualPercent = total === 0 ? 0 : 100 - autoPercent;
 
   // Data for Pie Chart
   const statusCounts = jobs.reduce((acc, job) => {
