@@ -291,6 +291,9 @@ async function fetchRealJobs(customQueries) {
         console.log(`   ⏭️ Skipping duplicate: ${job.title} at ${job.company_name || job.company}`);
         continue;
       }
+      
+      dbUrls.add(companyLink);
+      dbSignatures.add(signature);
 
       console.log(`   ✅ MATCH: ${job.title} | Score: ${job.aqs_score}`);
       
