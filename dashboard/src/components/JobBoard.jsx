@@ -57,7 +57,7 @@ const JobBoard = ({ jobs, onApprove, onDecline, onMarkApplied, onStartInterview 
           />
         </div>
         <div className="tabs-container">
-          {['All', 'Pending Review', 'Needs Input', 'Applied', 'Rejected'].map(tab => (
+          {['All', 'Pending Review', 'Apply Manually', 'Applied', 'Rejected'].map(tab => (
             <button 
               key={tab} 
               className={`tab-btn ${activeFilter === tab ? 'active' : ''}`}
@@ -73,17 +73,22 @@ const JobBoard = ({ jobs, onApprove, onDecline, onMarkApplied, onStartInterview 
         {filteredJobs.length === 0 ? (
           <div className="empty-state">No jobs found matching your filters.</div>
         ) : (
-          filteredJobs.map(job => (
+          filteredJobs.map(job => {
+            const isManual = (job.id || '').includes('manual') || (job.source || '') === 'Manual';
+            return (
             <div key={job.id} className="job-card">
               <div className="job-card-main">
                 <div className="job-logo">
                   {job.companyLogo ? <img src={job.companyLogo} alt={job.company} /> : <span style={{fontSize: '24px'}}>🏢</span>}
                 </div>
                 <div className="item-details">
-                  <h3 className="job-title">
+                  <h3 className="job-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                     {job.title}
                     <span className={`status-badge badge-${job.status.toLowerCase().replace(' ', '-')}`}>
                       {job.status}
+                    </span>
+                    <span className="status-badge" style={{ backgroundColor: isManual ? 'var(--accent-purple)' : 'var(--accent-blue)', color: '#fff', fontSize: '11px', opacity: 0.9 }}>
+                      {isManual ? '👤 Manual Add' : '⚡ Auto-Scraped'}
                     </span>
                   </h3>
                   <div className="job-meta">
@@ -128,7 +133,8 @@ const JobBoard = ({ jobs, onApprove, onDecline, onMarkApplied, onStartInterview 
                 <button className="btn btn-secondary review-btn" onClick={() => setSelectedJob(job)}>Review Details</button>
               </div>
             </div>
-          ))
+            );
+          })
         )}
       </div>
 

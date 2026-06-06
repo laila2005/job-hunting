@@ -201,12 +201,14 @@ const handleIncomingMessage = async (msg) => {
         const arg = parts.slice(1).join(' ');
         
         if (cmd === '/status') {
-          const { data: allJobs } = await supabase.from('jobs').select('status');
+          const { data: allJobs } = await supabase.from('jobs').select('status, applied_method');
           const total = allJobs ? allJobs.length : 0;
           const applied = allJobs ? allJobs.filter(j => j.status === 'Applied').length : 0;
+          const appliedManual = allJobs ? allJobs.filter(j => j.status === 'Applied' && j.applied_method === 'Manual').length : 0;
+          const appliedAuto = allJobs ? allJobs.filter(j => j.status === 'Applied' && j.applied_method === 'Automatic').length : 0;
           const interviewing = allJobs ? allJobs.filter(j => j.status === 'Interviewing').length : 0;
           
-          replyText = `📊 *Job Command Center Diagnostics:*\n\n• Crawled Positions: *${total}*\n• Marked as Applied: *${applied}*\n• Interviewing: *${interviewing}*\n\n_System Worker Status: ACTIVE_`;
+          replyText = `📊 *Job Command Center Diagnostics:*\n\n• Crawled Positions: *${total}*\n• Marked as Applied: *${applied}* (Auto: *${appliedAuto}* | Manual: *${appliedManual}*) (Auto: *${appliedAuto}* | Manual: *${appliedManual}*)\n• Interviewing: *${interviewing}*\n\n_System Worker Status: ACTIVE_`;
         } else if (cmd === '/search') {
           const keyword = arg || 'backend';
           const { exec } = require('child_process');
@@ -295,12 +297,14 @@ const handleIncomingMessage = async (msg) => {
           const decision = JSON.parse(raw);
           
           if (decision.intent === 'status') {
-            const { data: allJobs } = await supabase.from('jobs').select('status');
+            const { data: allJobs } = await supabase.from('jobs').select('status, applied_method');
             const total = allJobs ? allJobs.length : 0;
             const applied = allJobs ? allJobs.filter(j => j.status === 'Applied').length : 0;
+          const appliedManual = allJobs ? allJobs.filter(j => j.status === 'Applied' && j.applied_method === 'Manual').length : 0;
+          const appliedAuto = allJobs ? allJobs.filter(j => j.status === 'Applied' && j.applied_method === 'Automatic').length : 0;
             const interviewing = allJobs ? allJobs.filter(j => j.status === 'Interviewing').length : 0;
             
-            replyText = `📊 *Job Command Center Diagnostics:*\n\n• Crawled Positions: *${total}*\n• Marked as Applied: *${applied}*\n• Interviewing: *${interviewing}*\n\n_Everything is synced in real-time, Laila!_ 🚀`;
+            replyText = `📊 *Job Command Center Diagnostics:*\n\n• Crawled Positions: *${total}*\n• Marked as Applied: *${applied}* (Auto: *${appliedAuto}* | Manual: *${appliedManual}*) (Auto: *${appliedAuto}* | Manual: *${appliedManual}*)\n• Interviewing: *${interviewing}*\n\n_Everything is synced in real-time, Laila!_ 🚀`;
           } else if (decision.intent === 'search') {
             const keyword = decision.argument || 'backend';
             const { exec } = require('child_process');
@@ -318,12 +322,14 @@ const handleIncomingMessage = async (msg) => {
           const lowerMsg = msg.body.toLowerCase();
           if (lowerMsg.includes('how many') || lowerMsg.includes('applied') || lowerMsg.includes('status') || lowerMsg.includes('stat') || lowerMsg.includes('count')) {
             try {
-              const { data: allJobs } = await supabase.from('jobs').select('status');
+              const { data: allJobs } = await supabase.from('jobs').select('status, applied_method');
               const total = allJobs ? allJobs.length : 0;
               const applied = allJobs ? allJobs.filter(j => j.status === 'Applied').length : 0;
+          const appliedManual = allJobs ? allJobs.filter(j => j.status === 'Applied' && j.applied_method === 'Manual').length : 0;
+          const appliedAuto = allJobs ? allJobs.filter(j => j.status === 'Applied' && j.applied_method === 'Automatic').length : 0;
               const interviewing = allJobs ? allJobs.filter(j => j.status === 'Interviewing').length : 0;
               
-              replyText = `📊 *Job Command Center (Local Fallback):*\n\n• Crawled Positions: *${total}*\n• Applied: *${applied}*\n• Interviewing: *${interviewing}*\n\n_Note: Gemini API is currently rate-limited, but your database is fully synced!_ 🚀`;
+              replyText = `📊 *Job Command Center (Local Fallback):*\n\n• Crawled Positions: *${total}*\n• Applied: *${applied}* (Auto: *${appliedAuto}* | Manual: *${appliedManual}*)\n• Interviewing: *${interviewing}*\n\n_Note: Gemini API is currently rate-limited, but your database is fully synced!_ 🚀`;
             } catch (dbErr) {
               replyText = `❌ *Database Error!* I could not fetch your application status.`;
             }
@@ -708,9 +714,11 @@ async function pollDashboardCommands() {
       const arg = parts.slice(1).join(' ');
 
       if (cmd === '/status') {
-        const { data: allJobs } = await supabase.from('jobs').select('status');
+        const { data: allJobs } = await supabase.from('jobs').select('status, applied_method');
         const total = allJobs ? allJobs.length : 0;
         const applied = allJobs ? allJobs.filter(j => j.status === 'Applied').length : 0;
+          const appliedManual = allJobs ? allJobs.filter(j => j.status === 'Applied' && j.applied_method === 'Manual').length : 0;
+          const appliedAuto = allJobs ? allJobs.filter(j => j.status === 'Applied' && j.applied_method === 'Automatic').length : 0;
         const interviewing = allJobs ? allJobs.filter(j => j.status === 'Interviewing').length : 0;
         
         await botLog('📊', `Status Diagnostics: ${total} Total, ${applied} Applied, ${interviewing} Interviewing`, 'success');

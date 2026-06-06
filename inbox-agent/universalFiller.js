@@ -2,6 +2,8 @@ require('dotenv').config();
 const { GoogleGenAI } = require('@google/genai');
 const fs = require('fs');
 const path = require('path');
+const { fillLeverForm } = require('./ats_adapters/leverFiller');
+const { fillGreenhouseForm } = require('./ats_adapters/greenhouseFiller');
 const { botLog } = require('./telemetry');
 const { createClient } = require('@supabase/supabase-js');
 
@@ -272,6 +274,32 @@ async function executeAction(page, action) {
 async function handleUniversalApply(page, job) {
   const companyName = job.company;
   console.log(`   [AI Agent] \u{1F9E0} Activating Autonomous Agent for ${companyName}...`);
+  
+  // Custom ATS Adapters Routing
+  const currentUrl = page.url() || '';
+  const isLever = currentUrl.includes('lever.co') || (job.link && job.link.includes('lever.co'));
+  const isGreenhouse = currentUrl.includes('greenhouse.io') || (job.link && job.link.includes('greenhouse.io'));
+  
+  const userData = {
+    firstName: "Lolo",
+    lastName: "User",
+    fullName: "Lolo User",
+    email: "lolo@example.com",
+    phone: "+201000000000",
+    linkedin: "https://linkedin.com/in/lolo",
+    github: "https://github.com/lolo",
+    resumePath: path.join(__dirname, '..', 'lolo_resume.pdf')
+  };
+  
+  if (isLever) {
+     const success = await fillLeverForm(page, userData);
+     return { success, message: success ? 'Lever application successful' : 'Lever application failed' };
+  }
+  
+  if (isGreenhouse) {
+     const success = await fillGreenhouseForm(page, userData);
+     return { success, message: success ? 'Greenhouse application successful' : 'Greenhouse application failed' };
+  }
 
   const profilePath = path.join(__dirname, '..', 'candidate_profile.json');
   if (!fs.existsSync(profilePath)) {
@@ -335,7 +363,7 @@ async function handleUniversalApply(page, job) {
         // Update Supabase to pause the bot
         await supabase.from('jobs').update({
           draft_responses: drafts,
-          status: 'Needs Input'
+          status: 'Apply Manually'
         }).eq('id', job.id);
 
         await botLog('⏸️', `[${companyName}] Auto-apply paused. Waiting for user approval on dashboard...`, 'step');
@@ -376,7 +404,7 @@ async function handleUniversalApply(page, job) {
           
           await supabase.from('jobs').update({
             session_state: sessionState,
-            status: 'Needs Input'
+            status: 'Apply Manually'
           }).eq('id', job.id);
 
           return { success: false, message: 'Cyborg review timeout. Session saved.' };

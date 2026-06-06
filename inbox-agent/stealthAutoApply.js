@@ -161,6 +161,9 @@ async function autoApply() {
       }
 
       const newStatus = result.success ? 'Applied' : 'Action Required';
+      const updateData = { status: newStatus, notes: result.message, appliedDate: new Date().toISOString().split('T')[0] };
+      if (result.success) updateData.applied_method = 'Automatic';
+      
       console.log(`   Result: ${result.message}`);
       
       // FIRE THE ICEBREAKER BOT IF APPLIED SUCCESSFULLY

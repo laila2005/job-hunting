@@ -45,7 +45,7 @@ async function autoApply() {
     // 3. Update Database
     const { error: updateError } = await supabase
       .from('jobs')
-      .update({ status: 'Applied' })
+      .update({ status: 'Applied', applied_method: 'Automatic' })
       .eq('id', job.id);
 
     if (updateError) {

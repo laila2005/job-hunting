@@ -7,7 +7,6 @@ import NetworkingBoard from './components/NetworkingBoard'
 import InterviewAgent from './components/InterviewAgent'
 import LiveTelemetry from './components/LiveTelemetry'
 import ActionCenter from './components/ActionCenter'
-import DreamBoard from './components/DreamBoard'
 import AiCommander from './components/AiCommander'
 import ManualAddModal from './components/ManualAddModal'
 
@@ -295,7 +294,6 @@ function App() {
         <>
           <LiveTelemetry />
           <ActionCenter jobs={jobs} />
-          <DreamBoard />
           <StatCards jobs={jobs} />
           <NetworkingBoard contacts={contacts} onMarkSent={handleMarkSent} />
         </>

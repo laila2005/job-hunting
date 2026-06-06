@@ -7,6 +7,9 @@ const fs = require('fs');
 const path = require('path');
 const { scrapeWuzzuf } = require('./wuzzufScraper');
 const { scrapeLinkedIn } = require('./linkedinJobScraper');
+const { scrapeDeepSearch } = require('./deepSearchScraper');
+const { scrapeHackerNewsInternships } = require('./hnScraper');
+const { scrapeGlassdoor } = require('./glassdoorScraper');
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -115,7 +118,7 @@ async function evaluateJobWithAI(jobs) {
         const title = (job.title || '').toLowerCase();
         const desc = (job.description || '').toLowerCase();
         
-        const techKeywords = ['backend', 'c#', '.net', 'asp.net', 'python', 'node', 'react', 'fullstack', 'software', 'developer', 'programmer', 'computer science', 'frontend'];
+        const techKeywords = ['backend', 'c#', '.net', 'asp.net', 'python', 'node', 'react', 'fullstack', 'software', 'developer', 'programmer', 'computer science', 'frontend', 'internship', 'intern', 'student'];
         const excludeKeywords = ['warehouse', 'mechanical', 'civil', 'architecture', 'electrical', 'marketing', 'sales', 'hr', 'logistics', 'accounting', 'finance', 'medical', 'hardware', 'data entry', 'technical office'];
         
         const isTechRole = techKeywords.some(kw => title.includes(kw) || desc.includes(kw));
@@ -200,12 +203,15 @@ async function fetchRealJobs(customQueries) {
       }
     }
 
-    const [wuzzufJobs, linkedinJobs] = await Promise.all([
+    const [wuzzufJobs, linkedinJobs, deepSearchJobs, hnJobs, glassdoorJobs] = await Promise.all([
       scrapeWuzzuf(customQueries),
-      scrapeLinkedIn(customQueries)
+      scrapeLinkedIn(customQueries),
+      scrapeDeepSearch(customQueries),
+      scrapeHackerNewsInternships(),
+      scrapeGlassdoor(customQueries)
     ]);
 
-    const freshJobs = [...remotiveJobs, ...arbeitnowJobs, ...wuzzufJobs, ...linkedinJobs];
+    const freshJobs = [...remotiveJobs, ...arbeitnowJobs, ...wuzzufJobs, ...linkedinJobs, ...deepSearchJobs, ...hnJobs, ...glassdoorJobs];
     
     // Deduplicate by URL locally first
     const uniqueFreshJobs = [];
@@ -224,9 +230,9 @@ async function fetchRealJobs(customQueries) {
         ];
         
         const isForeign = foreignKeywords.some(fk => loc.includes(fk));
-        const isEgypt = loc.includes('egypt') || loc.includes('cairo') || loc.includes('giza') || loc.includes('alexandria');
+        const isEgypt = loc.includes('egypt') || loc.includes('cairo') || loc.includes('giza') || loc.includes('alexandria') || loc.includes('damietta') || loc.includes('مصر') || loc.includes('egy') || loc.includes('remote') || loc.includes('smart village');
         
-        // For internships, enforce strictly Egypt/Cairo
+        // For internships, enforce strictly Egypt/Cairo/Remote
         const titleLower = (job.title || '').toLowerCase();
         const descLower = (job.description || '').toLowerCase();
         const isInternship = titleLower.includes('intern') || descLower.includes('intern');

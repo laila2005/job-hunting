@@ -3,20 +3,28 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis
 
 const COLORS = {
   'Applied': '#10b981',
-  'Needs Input': '#f59e0b',
+  'Apply Manually': '#f59e0b',
   'Pending Review': '#3b82f6',
   'Rejected': '#ef4444'
 };
 
 const StatCards = ({ jobs }) => {
   const total = jobs.length;
-  const needsInput = jobs.filter(j => (j.status || '').trim().toLowerCase() === 'needs input').length;
+  const needsInput = jobs.filter(j => (j.status || '').trim().toLowerCase() === 'apply manually').length;
   const applied = jobs.filter(j => (j.status || '').trim().toLowerCase() === 'applied').length;
+  
+  const isManual = (j) => (j.id || '').includes('manual') || (j.source || '') === 'Manual';
+  const autoApplied = jobs.filter(j => (j.status || '').trim().toLowerCase() === 'applied' && !isManual(j)).length;
+  const manualApplied = jobs.filter(j => (j.status || '').trim().toLowerCase() === 'applied' && isManual(j)).length;
+  
+  const autoTotal = jobs.filter(j => !isManual(j)).length;
+  const manualTotal = jobs.filter(j => isManual(j)).length;
+  const autoPercent = total === 0 ? 0 : Math.round((autoTotal / total) * 100);
 
   // Data for Pie Chart
   const statusCounts = jobs.reduce((acc, job) => {
     let status = (job.status || '').trim();
-    if (status.toLowerCase() === 'needs input') status = 'Needs Input';
+    if (status.toLowerCase() === 'apply manually') status = 'Apply Manually';
     else if (status.toLowerCase() === 'pending review') status = 'Pending Review';
     else if (status.toLowerCase() === 'applied') status = 'Applied';
     else if (status.toLowerCase() === 'rejected') status = 'Rejected';
@@ -29,10 +37,6 @@ const StatCards = ({ jobs }) => {
     name: status,
     value: statusCounts[status]
   }));
-
-  // Data for Funnel/Progress Bar (Weekly Goal)
-  const weeklyGoal = 20;
-  const progressPercent = Math.min((total / weeklyGoal) * 100, 100);
 
   return (
     <div style={{ marginBottom: 'var(--spacing-2xl)' }}>
@@ -55,7 +59,11 @@ const StatCards = ({ jobs }) => {
           <div className="kpi-content">
             <h3 className="kpi-title">Successfully Applied</h3>
             <p className="kpi-value">{applied}</p>
-            <span className="kpi-badge badge-green">Syncing Live</span>
+            <span className="kpi-badge badge-green" style={{ display: 'inline-flex', gap: '8px' }}>
+              <span>⚡ {autoApplied} Auto</span>
+              <span style={{opacity: 0.5}}>|</span>
+              <span>👤 {manualApplied} Manual</span>
+            </span>
           </div>
           <div className="kpi-icon-wrapper icon-green">
             <svg className="kpi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -66,7 +74,7 @@ const StatCards = ({ jobs }) => {
 
         <div className="kpi-card kpi-blocked">
           <div className="kpi-content">
-            <h3 className="kpi-title">Needs Input (Blocked)</h3>
+            <h3 className="kpi-title">Apply Manually (Blocked)</h3>
             <p className="kpi-value">{needsInput}</p>
             <span className="kpi-badge badge-orange">Action Required</span>
           </div>
@@ -115,18 +123,33 @@ const StatCards = ({ jobs }) => {
           )}
         </div>
 
-        {/* Weekly Goal Tracker */}
+        {/* Application Source Breakdown */}
         <div className="analytics-card weekly-goal-card">
-          <h3 className="analytics-card-title">Weekly Automation Goal</h3>
+          <h3 className="analytics-card-title">Application Source Breakdown</h3>
           
-          <div className="goal-metric-container">
-            <span className="goal-metric-highlight">{total}</span>
-            <span className="goal-metric-divider"> / {weeklyGoal}</span>
-            <p className="goal-metric-caption">Automated job submittals this week</p>
+          <div className="goal-metric-container" style={{ marginTop: '15px' }}>
+            <span className="goal-metric-highlight" style={{ fontSize: '2rem' }}>{autoPercent}%</span>
+            <span className="goal-metric-caption" style={{ marginLeft: '10px' }}>Automated Pipeline</span>
           </div>
           
-          <div className="goal-progress-track">
-            <div className="goal-progress-bar" style={{ width: `${progressPercent}%` }}></div>
+          <div className="goal-progress-track" style={{ height: '24px', display: 'flex', borderRadius: '12px', overflow: 'hidden', marginTop: '20px' }}>
+            <div 
+              style={{ width: `${autoPercent}%`, backgroundColor: 'var(--accent-blue)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '11px', fontWeight: 'bold' }}
+              title="Auto-Scraped Jobs"
+            >
+              {autoTotal > 0 && `⚡ ${autoTotal}`}
+            </div>
+            <div 
+              style={{ width: `${manualPercent}%`, backgroundColor: 'var(--accent-purple)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '11px', fontWeight: 'bold' }}
+              title="Manually Added Jobs"
+            >
+              {manualTotal > 0 && `👤 ${manualTotal}`}
+            </div>
+          </div>
+          
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '12px', fontSize: '13px', color: 'var(--text-muted)' }}>
+            <span><span style={{color: 'var(--accent-blue)'}}>●</span> Auto-Scraped</span>
+            <span><span style={{color: 'var(--accent-purple)'}}>●</span> Manual Add</span>
           </div>
         </div>
 

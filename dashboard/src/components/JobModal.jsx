@@ -172,8 +172,8 @@ const JobModal = ({ job, onClose, onApprove, onDecline, onMarkApplied, onStartIn
           {activeTab === 'overview' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
               
-              {/* Cyborg Review dialog for Needs Input state */}
-              {job.status === 'Needs Input' && (
+              {/* Cyborg Review dialog for Apply Manually state */}
+              {job.status === 'Apply Manually' && (
                 <div style={{
                   background: 'rgba(167, 139, 250, 0.04)',
                   border: '1px solid rgba(167, 139, 250, 0.25)',
@@ -485,7 +485,7 @@ const JobModal = ({ job, onClose, onApprove, onDecline, onMarkApplied, onStartIn
               <button className="btn" style={{ background: 'var(--accent-green)' }} onClick={() => { onApprove(job.id); onClose(); }}>Auto-Apply Now</button>
             </>
           )}
-          {job.status === 'Needs Input' && (
+          {job.status === 'Apply Manually' && (
             <button className="btn btn-secondary" style={{ color: 'var(--accent-blue)', marginRight: '10px' }} onClick={() => { onMarkApplied(job.id); onClose(); }}>✅ Mark as Applied</button>
           )}
           
