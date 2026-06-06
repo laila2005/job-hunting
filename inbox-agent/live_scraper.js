@@ -264,18 +264,30 @@ async function fetchRealJobs(customQueries) {
 
     const finalJobs = await evaluateJobWithAI(uniqueFreshJobs);
 
-    // Fetch existing job URLs from Supabase to prevent duplicate inserts
+    // Fetch existing jobs from Supabase to prevent duplicate inserts
     const { data: existingJobs, error: fetchErr } = await supabase
       .from('jobs')
-      .select('companyLink');
+      .select('companyLink, title, company');
     
-    const dbUrls = new Set((existingJobs || []).map(j => j.companyLink));
+    // Deduplicate by URL
+    const dbUrls = new Set((existingJobs || []).map(j => j.companyLink).filter(Boolean));
+    
+    // Deduplicate by Company + Title
+    const dbSignatures = new Set((existingJobs || []).map(j => {
+      const t = (j.title || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const c = (j.company || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      return `${c}_${t}`;
+    }).filter(s => s !== '_'));
 
     let ingestedCount = 0;
     for (const job of finalJobs) {
       const companyLink = job.url || job.companyLink;
       
-      if (dbUrls.has(companyLink)) {
+      const t = (job.title || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const c = (job.company_name || job.company || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const signature = `${c}_${t}`;
+      
+      if (dbUrls.has(companyLink) || dbSignatures.has(signature)) {
         console.log(`   ⏭️ Skipping duplicate: ${job.title} at ${job.company_name || job.company}`);
         continue;
       }
