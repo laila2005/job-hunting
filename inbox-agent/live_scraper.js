@@ -67,7 +67,7 @@ async function evaluateJobWithAI(jobs) {
       RULES FOR EVALUATION:
       - pass: true if the candidate has strong overlap in backend/fullstack/IoT/ML and fits the tech stack (e.g. C#, ASP.NET, Python, Node, React).
       - Do NOT fail jobs that require 2-4 years of experience, as this candidate's production experience at LM Tech Solutions (MOI and GASCO enterprise systems) makes her fully qualified.
-      - pass: false if it explicitly requires 5+ years of experience (Senior/Staff/Lead) OR is purely frontend/design/WordPress OR has a strict location restriction that excludes candidates based in Egypt.
+      - pass: false if it explicitly requires 5+ years of experience (Senior/Staff/Lead) OR is purely frontend/design/WordPress OR has a strict location restriction that excludes candidates based in Egypt OR is a non-technical role (Sales, HR, Business Development, Marketing, Support, IT Admin).
       - aqs_score: Score out of 100 based on fit with Laila's technical skills (C#, ASP.NET, React, Python), remote feasibility, and career progression potential.
       - recommended_action: 
         - 'skip' if pass is false. 
@@ -118,8 +118,8 @@ async function evaluateJobWithAI(jobs) {
         const title = (job.title || '').toLowerCase();
         const desc = (job.description || '').toLowerCase();
         
-        const techKeywords = ['backend', 'c#', '.net', 'asp.net', 'python', 'node', 'react', 'fullstack', 'software', 'developer', 'programmer', 'computer science', 'frontend', 'internship', 'intern', 'student'];
-        const excludeKeywords = ['warehouse', 'mechanical', 'civil', 'architecture', 'electrical', 'marketing', 'sales', 'hr', 'logistics', 'accounting', 'finance', 'medical', 'hardware', 'data entry', 'technical office'];
+        const techKeywords = ['backend', 'c#', '.net', 'asp.net', 'python', 'node', 'react', 'fullstack', 'software', 'developer', 'programmer', 'computer science', 'engineering'];
+        const excludeKeywords = ['warehouse', 'mechanical', 'civil', 'architecture', 'electrical', 'marketing', 'sales', 'hr', 'logistics', 'accounting', 'finance', 'medical', 'hardware', 'data entry', 'technical office', 'business development', 'support', 'it admin'];
         
         const isTechRole = techKeywords.some(kw => title.includes(kw) || desc.includes(kw));
         const isExcluded = excludeKeywords.some(kw => title.includes(kw));
