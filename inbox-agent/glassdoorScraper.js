@@ -15,7 +15,11 @@ async function scrapeGlassdoor(customQueries) {
     const page = await browser.newPage();
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
     
-    const baseQueries = ['software intern', 'backend intern'];
+    const baseQueries = [
+      'software intern', 'backend intern', 'full stack intern',
+      'junior backend', 'junior software engineer', 'backend trainee',
+      'software trainee', 'fresh graduate software', 'student developer'
+    ];
     const queries = customQueries || baseQueries;
     
     for (const query of queries) {

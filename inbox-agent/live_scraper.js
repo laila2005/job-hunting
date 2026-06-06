@@ -170,9 +170,16 @@ async function fetchRealJobs(customQueries) {
     if (!customQueries) {
       console.log("🌐 Fetching real remote backend roles from Remotive API...");
       try {
-        const response = await fetch('https://remotive.com/api/remote-jobs?category=software-dev&search=backend');
+        const response = await fetch('https://remotive.com/api/remote-jobs?category=software-dev&limit=50');
         const data = await response.json();
-        remotiveJobs = (data.jobs || []).slice(0, 8).map(job => ({
+        // Filter locally for junior/intern
+        const filteredRemotive = (data.jobs || []).filter(j => 
+          j.title.toLowerCase().includes('intern') || 
+          j.title.toLowerCase().includes('junior') ||
+          j.title.toLowerCase().includes('trainee') ||
+          j.title.toLowerCase().includes('student')
+        );
+        remotiveJobs = filteredRemotive.slice(0, 15).map(job => ({
           title: job.title,
           company_name: job.company_name || 'Remotive Recruiter',
           candidate_required_location: job.candidate_required_location || 'Remote',
@@ -189,7 +196,13 @@ async function fetchRealJobs(customQueries) {
       try {
         const response = await fetch('https://www.arbeitnow.com/api/job-board-api');
         const data = await response.json();
-        arbeitnowJobs = (data.data || []).slice(0, 8).map(job => ({
+        const filteredArbeitnow = (data.data || []).filter(j => 
+          j.title.toLowerCase().includes('intern') || 
+          j.title.toLowerCase().includes('junior') ||
+          j.title.toLowerCase().includes('trainee') ||
+          j.title.toLowerCase().includes('student')
+        );
+        arbeitnowJobs = filteredArbeitnow.slice(0, 15).map(job => ({
           title: job.title,
           company_name: job.company_name || 'Arbeitnow Recruiter',
           candidate_required_location: job.location || 'Remote',

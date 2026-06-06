@@ -12,7 +12,13 @@ async function scrapeWuzzuf(customQueries) {
     const page = await browser.newPage();
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
 
-    const queries = customQueries || ['software internship', 'backend internship', 'full stack internship', 'junior backend', 'junior full stack', 'c# internship', '.net internship', 'python internship'];
+    const queries = customQueries || [
+      'software internship', 'backend internship', 'full stack internship', 
+      'junior backend', 'junior full stack', 'c# internship', '.net internship', 
+      'python internship', 'backend trainee', 'software engineering intern', 
+      'junior software engineer', 'fresh graduate software', 'summer internship software', 
+      'node.js intern', 'C# trainee', 'student developer'
+    ];
 
     for (const query of queries) {
       const searchUrl = `https://wuzzuf.net/search/jobs/?q=${encodeURIComponent(query)}`;

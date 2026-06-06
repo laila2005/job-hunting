@@ -19,8 +19,14 @@ async function scrapeDeepSearch(customQueries) {
       'software intern',
       'backend intern',
       'full stack intern',
-      'student developer',
-      'junior software'
+      'software internship',
+      'backend internship',
+      'junior backend developer',
+      'junior software engineer',
+      'backend trainee',
+      'software trainee',
+      'fresh graduate software',
+      'student developer'
     ];
     
     const queries = customQueries || baseQueries;

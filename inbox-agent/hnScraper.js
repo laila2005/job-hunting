@@ -47,7 +47,7 @@ async function scrapeHackerNewsInternships() {
         const text = commentData.text.toLowerCase();
         
         // Filter for internships AND (remote OR Egypt) AND tech roles
-        if ((text.includes('intern') || text.includes('internship') || text.includes('student')) && 
+        if ((text.includes('intern') || text.includes('internship') || text.includes('student') || text.includes('junior') || text.includes('trainee') || text.includes('entry level')) && 
             (text.includes('remote') || text.includes('egypt') || text.includes('anywhere')) &&
             (text.includes('backend') || text.includes('software') || text.includes('full stack') || text.includes('engineer'))) {
             
