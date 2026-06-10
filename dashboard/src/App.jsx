@@ -9,6 +9,8 @@ import LiveTelemetry from './components/LiveTelemetry'
 import ActionCenter from './components/ActionCenter'
 import AiCommander from './components/AiCommander'
 import ManualAddModal from './components/ManualAddModal'
+import CareerPartner from './components/CareerPartner'
+import NetworkingCRM from './components/NetworkingCRM'
 
 // Initialize Supabase Client
 const supabaseUrl = 'https://wpxtstbquvbsiqgoqwma.supabase.co'
@@ -196,6 +198,12 @@ function App() {
               🎓 Internships
             </button>
             <button 
+              className={`tab-btn ${activeTab === 'strategy' ? 'active' : ''}`}
+              onClick={() => setActiveTab('strategy')}
+            >
+              🧠 Career Strategy
+            </button>
+            <button 
               className={`tab-btn ${activeTab === 'commander' ? 'active' : ''}`}
               onClick={() => setActiveTab('commander')}
             >
@@ -220,6 +228,8 @@ function App() {
         <InterviewAgent job={interviewJob} onBack={() => setInterviewJob(null)} />
       ) : activeTab === 'commander' ? (
         <AiCommander supabase={supabase} />
+      ) : activeTab === 'strategy' ? (
+        <CareerPartner supabase={supabase} />
       ) : activeTab === 'fulltime' ? (
         <div className="jobs-section animate-fade-in" style={{ marginTop: '20px' }}>
           <div className="glass-panel" style={{ padding: '20px', marginBottom: '25px', borderRadius: '16px' }}>
@@ -295,7 +305,7 @@ function App() {
           <LiveTelemetry />
           <ActionCenter jobs={jobs} />
           <StatCards jobs={jobs} />
-          <NetworkingBoard contacts={contacts} onMarkSent={handleMarkSent} />
+          <NetworkingCRM supabase={supabase} />
         </>
       )}
       {showAddModal && (
