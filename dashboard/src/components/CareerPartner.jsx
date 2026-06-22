@@ -82,8 +82,8 @@ const CareerPartner = ({ supabase }) => {
                 <PolarGrid stroke="rgba(255,255,255,0.1)" />
                 <PolarAngleAxis dataKey="subject" tick={{ fill: 'var(--text-muted)', fontSize: 12 }} />
                 <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
-                <Radar name="Laila" dataKey="Laila" stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />
-                <Radar name="Market" dataKey="Market" stroke="#82ca9d" fill="#82ca9d" fillOpacity={0.3} />
+                <Radar name="Laila" dataKey="laila_score" stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />
+                <Radar name="Market" dataKey="market_score" stroke="#82ca9d" fill="#82ca9d" fillOpacity={0.3} />
               </RadarChart>
             </ResponsiveContainer>
           </div>
