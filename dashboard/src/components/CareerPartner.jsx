@@ -6,24 +6,31 @@ const CareerPartner = ({ supabase }) => {
   const [actionItems, setActionItems] = useState([]);
 
   useEffect(() => {
-    fetch('http://localhost:3001/api/strategy/skills')
-      .then(res => res.json())
-      .then(data => setSkillData(data))
-      .catch(err => console.error(err));
-
-    fetch('http://localhost:3001/api/strategy/actions')
-      .then(res => res.json())
-      .then(data => setActionItems(data))
-      .catch(err => console.error(err));
+    fetchData();
   }, []);
 
-  const toggleAction = async (id) => {
+  const fetchData = async () => {
     try {
-      const res = await fetch(`http://localhost:3001/api/strategy/actions/${id}/toggle`, { method: 'POST' });
-      const updatedAction = await res.json();
-      setActionItems(prev => prev.map(a => a.id === id ? updatedAction : a));
+      const { data: skills } = await supabase.from('skill_metrics').select('*').order('id');
+      const { data: actions } = await supabase.from('action_items').select('*').order('id');
+      if (skills) setSkillData(skills);
+      if (actions) setActionItems(actions);
+    } catch (err) {
+      console.error('Failed to fetch strategy data:', err);
+    }
+  };
+
+  const toggleAction = async (id, currentStatus) => {
+    try {
+      const newStatus = currentStatus === 'completed' ? 'pending' : 'completed';
+      
+      // Optimistic update
+      setActionItems(prev => prev.map(a => a.id === id ? { ...a, status: newStatus } : a));
+      
+      await supabase.from('action_items').update({ status: newStatus }).eq('id', id);
     } catch (err) {
       console.error(err);
+      fetchData(); // Revert on failure
     }
   };
 

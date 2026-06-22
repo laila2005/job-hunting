@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-function AiCommander() {
+function AiCommander({ supabase }) {
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -8,6 +8,22 @@ function AiCommander() {
 
   useEffect(() => {
     fetchChatHistory();
+
+    // Subscribe to realtime updates for this specific table
+    const channel = supabase
+      .channel('realtime-agent-chat')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'agent_chat' },
+        (payload) => {
+          setMessages((prev) => [...prev, payload.new]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   useEffect(() => {
@@ -16,9 +32,12 @@ function AiCommander() {
 
   const fetchChatHistory = async () => {
     try {
-      const res = await fetch('http://localhost:3001/api/commander/chat');
-      const data = await res.json();
-      setMessages(data || []);
+      const { data, error } = await supabase
+        .from('agent_chat')
+        .select('*')
+        .order('created_at', { ascending: true })
+        .limit(100);
+      if (!error) setMessages(data || []);
     } catch (error) {
       console.error('Error fetching chat history:', error);
     }
@@ -35,23 +54,8 @@ function AiCommander() {
     const userText = inputValue;
     setInputValue('');
 
-    // Optimistically add user message to UI
-    const optimisticUserMsg = { role: 'user', content: userText, created_at: new Date().toISOString() };
-    setMessages(prev => [...prev, optimisticUserMsg]);
-
     try {
-      const res = await fetch('http://localhost:3001/api/commander/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: userText })
-      });
-      const data = await res.json();
-      
-      // Update UI with the actual messages from the server
-      setMessages(prev => {
-        const filtered = prev.filter(m => m !== optimisticUserMsg);
-        return [...filtered, data.userMessage, data.aiMessage];
-      });
+      await supabase.from('agent_chat').insert([{ role: 'user', content: userText }]);
     } catch (error) {
       console.error('Failed to send message:', error);
       alert(`Failed to send message: ${error.message}`);

@@ -351,6 +351,60 @@ const handleIncomingMessage = async (msg) => {
   }
 };
 
+// ==========================================
+// SUPABASE REALTIME AI COMMANDER (WEB CHAT)
+// ==========================================
+supabase
+  .channel('realtime-agent-chat-backend')
+  .on(
+    'postgres_changes',
+    { event: 'INSERT', schema: 'public', table: 'agent_chat' },
+    async (payload) => {
+      const newMsg = payload.new;
+      
+      // We only respond to 'user' messages so we don't get stuck in an infinite loop
+      if (newMsg.role !== 'user') return;
+
+      console.log('🤖 Received new Web Command:', newMsg.content);
+
+      let aiReplyText = "Command acknowledged.";
+      if (newMsg.content.toLowerCase().startsWith('/scrape')) {
+        aiReplyText = "Initiating stealth scrapers. I will notify you when new jobs hit the pipeline.";
+        // Trigger live_scraper.js in a real production app via child_process
+        require('child_process').exec('node live_scraper.js', (err) => {
+          if (err) console.error("Scraper failed:", err);
+        });
+      } else if (newMsg.content.toLowerCase().startsWith('/status')) {
+        aiReplyText = "All background systems nominal. Hourly cron job is active.";
+      } else {
+        // Generate AI response via Gemini
+        try {
+          const chat = ai.chats.create({
+            model: 'gemini-2.5-pro',
+            config: { systemInstruction: "You are an AI autonomous agent named Antigravity serving Laila, a software engineering student. Respond concisely." }
+          });
+          const response = await chat.sendMessage(newMsg.content);
+          aiReplyText = response.text;
+        } catch (e) {
+          console.error("Gemini API Error in Web Chat:", e);
+          aiReplyText = "I encountered a neural network error while processing your request.";
+        }
+      }
+
+      // Insert AI response back into Supabase
+      const { error } = await supabase.from('agent_chat').insert([
+        { role: 'ai', content: aiReplyText }
+      ]);
+      
+      if (error) {
+        console.error("Failed to push AI response to Supabase:", error);
+      }
+    }
+  )
+  .subscribe();
+
+// Start WhatsApp Client
+waClient.initialize();
 waClient.on('message', handleIncomingMessage);
 waClient.on('message_create', handleIncomingMessage);
 

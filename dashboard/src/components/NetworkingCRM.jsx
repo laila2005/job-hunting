@@ -4,11 +4,13 @@ const NetworkingCRM = ({ supabase }) => {
   const [contacts, setContacts] = useState([]);
 
   useEffect(() => {
-    fetch('http://localhost:3001/api/networking/contacts')
-      .then(res => res.json())
-      .then(data => setContacts(data || []))
-      .catch(err => console.error(err));
+    fetchContacts();
   }, []);
+
+  const fetchContacts = async () => {
+    const { data } = await supabase.from('networking_contacts').select('*').order('id');
+    if (data) setContacts(data);
+  };
 
   const handleAddContact = async () => {
     const name = prompt("Enter contact name:");
@@ -18,13 +20,13 @@ const NetworkingCRM = ({ supabase }) => {
     const role = prompt("Enter role:") || 'Unknown';
     
     try {
-      const res = await fetch('http://localhost:3001/api/networking/contacts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, company, role, status: 'To Contact', lastContact: '-', notes: '' })
-      });
-      const newContact = await res.json();
-      setContacts(prev => [...prev, newContact]);
+      const newContact = { name, company, role, status: 'To Contact', last_contact: '-', notes: '' };
+      
+      // Optimistic update
+      setContacts(prev => [...prev, { ...newContact, id: Date.now() }]);
+      
+      await supabase.from('networking_contacts').insert([newContact]);
+      fetchContacts();
     } catch (err) {
       console.error(err);
       alert('Failed to add contact.');
