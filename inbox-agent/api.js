@@ -30,6 +30,11 @@ let defaultDb = {
   ],
   chatMessages: [
     { role: 'ai', content: 'Secure Portal Established. Welcome, Laila. Type a command or message to direct your autonomous agent.', created_at: new Date().toISOString() }
+  ],
+  contacts: [
+    { id: 1, name: 'Ahmed Khaled', company: 'Microsoft', role: 'Senior Software Engineer', status: 'Reached Out', lastContact: '2026-06-08', notes: 'Alumni from ERU. Asked about internship openings.' },
+    { id: 2, name: 'Sara Youssef', company: 'Valeo', role: 'Engineering Manager', status: 'Coffee Chat Scheduled', lastContact: '2026-06-09', notes: 'Meeting on Tuesday at 4 PM to discuss automotive IoT.' },
+    { id: 3, name: 'Omar Tarek', company: 'Si-Ware Systems', role: 'Backend Developer', status: 'To Contact', lastContact: '-', notes: 'Works on the team I am applying to.' }
   ]
 };
 
@@ -38,6 +43,7 @@ let db;
 if (fs.existsSync(dbPath)) {
   db = JSON.parse(fs.readFileSync(dbPath, 'utf-8'));
   if (!db.chatMessages) db.chatMessages = defaultDb.chatMessages;
+  if (!db.contacts) db.contacts = defaultDb.contacts;
 } else {
   db = defaultDb;
   fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
@@ -86,9 +92,10 @@ app.post('/api/commander/chat', async (req, res) => {
         model: 'gemini-2.5-pro',
         config: { systemInstruction: "You are an AI autonomous agent named Antigravity serving Laila, a software engineering student. Respond concisely." }
       });
-      const response = await chat.sendMessage({ content });
+      const response = await chat.sendMessage(content);
       aiReplyText = response.text;
     } catch (e) {
+      console.error("Gemini API Error:", e);
       aiReplyText = "I encountered a neural network error while processing your request.";
     }
   }
@@ -132,6 +139,24 @@ Ask ONE question at a time. Do not give the answers away. If she answers poorly,
     console.error('Interview API Error:', error);
     res.status(500).json({ error: error.message });
   }
+});
+
+// Networking CRM API
+app.get('/api/networking/contacts', (req, res) => res.json(db.contacts));
+
+app.post('/api/networking/contacts', (req, res) => {
+  const newContact = {
+    id: Date.now(),
+    name: req.body.name || 'Unknown Contact',
+    company: req.body.company || 'Unknown Company',
+    role: req.body.role || 'Unknown Role',
+    status: req.body.status || 'To Contact',
+    lastContact: req.body.lastContact || '-',
+    notes: req.body.notes || ''
+  };
+  db.contacts.push(newContact);
+  saveDb();
+  res.json(newContact);
 });
 
 const PORT = 3001;

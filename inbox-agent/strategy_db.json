@@ -62,5 +62,42 @@
       "text": "Highlight your production IoT experience aggressively in interviews. It puts you in the top 1% of students.",
       "status": "completed"
     }
+  ],
+  "chatMessages": [
+    {
+      "role": "ai",
+      "content": "Secure Portal Established. Welcome, Laila. Type a command or message to direct your autonomous agent.",
+      "created_at": "2026-06-22T17:57:35.119Z"
+    },
+    {
+      "role": "user",
+      "content": "/status",
+      "created_at": "2026-06-22T17:58:54.037Z"
+    },
+    {
+      "role": "ai",
+      "content": "All background systems nominal. Hourly cron job is active.",
+      "created_at": "2026-06-22T17:58:54.037Z"
+    },
+    {
+      "role": "user",
+      "content": "/scrape python",
+      "created_at": "2026-06-22T17:59:00.451Z"
+    },
+    {
+      "role": "ai",
+      "content": "Initiating stealth scrapers. I will notify you when new jobs hit the pipeline.",
+      "created_at": "2026-06-22T17:59:00.451Z"
+    },
+    {
+      "role": "user",
+      "content": "/help",
+      "created_at": "2026-06-22T17:59:07.227Z"
+    },
+    {
+      "role": "ai",
+      "content": "I encountered a neural network error while processing your request.",
+      "created_at": "2026-06-22T17:59:07.229Z"
+    }
   ]
 }

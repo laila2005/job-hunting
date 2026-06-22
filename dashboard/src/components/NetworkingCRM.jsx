@@ -1,11 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const NetworkingCRM = ({ supabase }) => {
-  const [contacts] = useState([
-    { id: 1, name: 'Ahmed Khaled', company: 'Microsoft', role: 'Senior Software Engineer', status: 'Reached Out', lastContact: '2026-06-08', notes: 'Alumni from ERU. Asked about internship openings.' },
-    { id: 2, name: 'Sara Youssef', company: 'Valeo', role: 'Engineering Manager', status: 'Coffee Chat Scheduled', lastContact: '2026-06-09', notes: 'Meeting on Tuesday at 4 PM to discuss automotive IoT.' },
-    { id: 3, name: 'Omar Tarek', company: 'Si-Ware Systems', role: 'Backend Developer', status: 'To Contact', lastContact: '-', notes: 'Works on the team I am applying to.' }
-  ]);
+  const [contacts, setContacts] = useState([]);
+
+  useEffect(() => {
+    fetch('http://localhost:3001/api/networking/contacts')
+      .then(res => res.json())
+      .then(data => setContacts(data || []))
+      .catch(err => console.error(err));
+  }, []);
+
+  const handleAddContact = async () => {
+    const name = prompt("Enter contact name:");
+    if (!name) return;
+    
+    const company = prompt("Enter company:") || 'Unknown';
+    const role = prompt("Enter role:") || 'Unknown';
+    
+    try {
+      const res = await fetch('http://localhost:3001/api/networking/contacts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, company, role, status: 'To Contact', lastContact: '-', notes: '' })
+      });
+      const newContact = await res.json();
+      setContacts(prev => [...prev, newContact]);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to add contact.');
+    }
+  };
 
   return (
     <div className="networking-crm-section animate-fade-in" style={{ marginTop: '20px' }}>
@@ -17,7 +41,7 @@ const NetworkingCRM = ({ supabase }) => {
       <div className="glass-panel" style={{ borderRadius: '16px', overflow: 'hidden' }}>
         <div style={{ padding: '20px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h3 style={{ color: 'var(--text-main)', margin: 0 }}>Active Connections</h3>
-          <button className="btn btn-primary" style={{ padding: '8px 16px', fontSize: '14px' }}>+ Add Contact</button>
+          <button className="btn btn-primary" onClick={handleAddContact} style={{ padding: '8px 16px', fontSize: '14px' }}>+ Add Contact</button>
         </div>
         
         <div style={{ overflowX: 'auto' }}>
