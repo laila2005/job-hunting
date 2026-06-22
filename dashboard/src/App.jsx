@@ -209,6 +209,12 @@ function App() {
             >
               🤖 AI Commander
             </button>
+            <button 
+              className={`tab-btn ${activeTab === 'interview' ? 'active' : ''}`}
+              onClick={() => setActiveTab('interview')}
+            >
+              🎤 Mock Interview
+            </button>
           </div>
           <button className="btn btn-gradient" onClick={() => setShowAddModal(true)}>
             <svg className="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -226,6 +232,8 @@ function App() {
         </div>
       ) : interviewJob ? (
         <InterviewAgent job={interviewJob} onBack={() => setInterviewJob(null)} />
+      ) : activeTab === 'interview' ? (
+        <InterviewSimulator supabase={supabase} />
       ) : activeTab === 'commander' ? (
         <AiCommander supabase={supabase} />
       ) : activeTab === 'strategy' ? (

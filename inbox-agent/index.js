@@ -403,6 +403,82 @@ supabase
   )
   .subscribe();
 
+// ==========================================
+// SUPABASE REALTIME MOCK INTERVIEW
+// ==========================================
+supabase
+  .channel('realtime-interview-backend')
+  .on(
+    'postgres_changes',
+    { event: 'INSERT', schema: 'public', table: 'interview_sessions' },
+    async (payload) => {
+      const newMsg = payload.new;
+      
+      // Only process user messages to avoid infinite loops
+      if (newMsg.role !== 'user') return;
+
+      console.log('🎤 Received new Interview Answer:', newMsg.content);
+
+      try {
+        // Fetch the last 5 messages to provide context to Gemini
+        const { data: history } = await supabase
+          .from('interview_sessions')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(5);
+
+        const context = history ? history.reverse().map(m => `${m.role === 'ai' ? 'Interviewer' : 'Candidate'}: ${m.content}`).join('\n') : '';
+
+        const systemInstruction = `You are a strict Senior Backend Engineering Manager at a top-tier tech company. You are currently interviewing a candidate named Laila for a Backend Engineering Internship.
+The candidate just answered your previous question. 
+Context of the interview so far:
+${context}
+
+Your task:
+1. Grade her most recent answer strictly out of 100 based on technical accuracy, clarity, and use of the STAR method if applicable.
+2. Provide 1-2 short sentences of constructive feedback.
+3. Ask the NEXT technical interview question. Focus on topics like ASP.NET Core, C#, Docker, Message Brokers (RabbitMQ), or System Architecture.
+
+You MUST format your EXACT response strictly as a JSON object with two keys:
+{
+  "score": <integer from 0 to 100>,
+  "feedback_and_next_question": "<string containing your feedback and the next question>"
+}`;
+
+        const chat = ai.chats.create({
+          model: 'gemini-2.5-pro',
+          config: { 
+            systemInstruction: systemInstruction,
+            responseMimeType: "application/json"
+          }
+        });
+
+        const response = await chat.sendMessage(newMsg.content);
+        const jsonResult = JSON.parse(response.text);
+
+        // Insert the AI's feedback and next question into Supabase
+        const { error } = await supabase.from('interview_sessions').insert([
+          { 
+            role: 'ai', 
+            content: jsonResult.feedback_and_next_question,
+            score: jsonResult.score
+          }
+        ]);
+        
+        if (error) {
+          console.error("Failed to push Interview AI response to Supabase:", error);
+        }
+
+      } catch (e) {
+        console.error("Gemini API Error in Mock Interview:", e);
+        await supabase.from('interview_sessions').insert([
+          { role: 'ai', content: "I'm having network difficulties and can't process your answer right now. Please try answering again.", score: 0 }
+        ]);
+      }
+    }
+  )
+  .subscribe();
+
 // Start WhatsApp Client
 waClient.initialize();
 waClient.on('message', handleIncomingMessage);
