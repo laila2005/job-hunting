@@ -4,6 +4,7 @@ import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Responsi
 const CareerPartner = ({ supabase }) => {
   const [skillData, setSkillData] = useState([]);
   const [actionItems, setActionItems] = useState([]);
+  const [dailyChallenge, setDailyChallenge] = useState(null);
 
   useEffect(() => {
     fetchData();
@@ -13,8 +14,11 @@ const CareerPartner = ({ supabase }) => {
     try {
       const { data: skills } = await supabase.from('skill_metrics').select('*').order('id');
       const { data: actions } = await supabase.from('action_items').select('*').order('id');
+      const { data: challenges } = await supabase.from('daily_challenges').select('*').order('created_at', { ascending: false }).limit(1);
+      
       if (skills) setSkillData(skills);
       if (actions) setActionItems(actions);
+      if (challenges && challenges.length > 0) setDailyChallenge(challenges[0]);
     } catch (err) {
       console.error('Failed to fetch strategy data:', err);
     }
@@ -91,22 +95,47 @@ const CareerPartner = ({ supabase }) => {
 
       </div>
 
-      {/* Portfolio Health */}
+      {/* Portfolio Health & Daily Challenge */}
       <div className="glass-panel" style={{ padding: '24px', borderRadius: '16px', marginTop: '24px' }}>
-        <h3 style={{ marginBottom: '16px', color: 'var(--text-main)' }}>🚀 Portfolio Recommendations</h3>
+        <h3 style={{ marginBottom: '16px', color: 'var(--text-main)' }}>🚀 Daily Architecture Challenges</h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px' }}>
-          <div style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', padding: '16px', borderRadius: '12px' }}>
-            <h4 style={{ color: '#10b981', marginBottom: '8px' }}>Top Strength</h4>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '14px', lineHeight: '1.5' }}>Unmatched Real-World Impact: Unlike typical Year 3 CS students, your experience shipping enterprise IoT platforms for MOI and GASCO demonstrates exceptional ability to deliver production-ready software.</p>
-          </div>
+          
           <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '16px', borderRadius: '12px' }}>
             <h4 style={{ color: '#ef4444', marginBottom: '8px' }}>Urgent Architecture Gap</h4>
             <p style={{ color: 'var(--text-secondary)', fontSize: '14px', lineHeight: '1.5' }}>Your profile lacks explicit mention of modern DevOps and Event-Driven Architecture. Master Docker, CI/CD (GitHub Actions), and Message Brokers (RabbitMQ/Kafka) immediately.</p>
           </div>
-          <div style={{ background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.2)', padding: '16px', borderRadius: '12px' }}>
-            <h4 style={{ color: '#3b82f6', marginBottom: '8px' }}>Targeted Weekend Project</h4>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '14px', lineHeight: '1.5' }}><strong>High-Throughput IoT Telemetry Ingestion API:</strong> Build a microservice in ASP.NET Core that receives heavy IoT telemetry, processes it via RabbitMQ, and stores it in Postgres. Dockerize it, add xUnit tests, load test it with k6, and set up GitHub Actions. Pin this to your GitHub!</p>
-          </div>
+          
+          {dailyChallenge ? (
+            <div style={{ background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.2)', padding: '16px', borderRadius: '12px', gridColumn: 'span 2' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <h4 style={{ color: '#3b82f6', margin: 0 }}>🧠 Skill Booster: {dailyChallenge.concept}</h4>
+                <span className="status-badge" style={{ backgroundColor: dailyChallenge.status === 'completed' ? 'var(--accent-green)' : 'rgba(59, 130, 246, 0.2)', color: dailyChallenge.status === 'completed' ? '#fff' : '#3b82f6' }}>
+                  {dailyChallenge.status === 'completed' ? 'Completed ✅' : 'Pending ⏳'}
+                </span>
+              </div>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '15px', lineHeight: '1.6', marginBottom: '16px' }}>
+                {dailyChallenge.challenge_text}
+              </p>
+              {dailyChallenge.status !== 'completed' && (
+                <button 
+                  className="btn btn-primary"
+                  onClick={async () => {
+                    await supabase.from('daily_challenges').update({ status: 'completed' }).eq('id', dailyChallenge.id);
+                    fetchData();
+                  }}
+                  style={{ padding: '8px 16px', fontSize: '14px' }}
+                >
+                  Mark as Mastered
+                </button>
+              )}
+            </div>
+          ) : (
+            <div style={{ background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.2)', padding: '16px', borderRadius: '12px' }}>
+              <h4 style={{ color: '#3b82f6', marginBottom: '8px' }}>Targeted Weekend Project</h4>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '14px', lineHeight: '1.5' }}><strong>High-Throughput IoT Telemetry Ingestion API:</strong> Build a microservice in ASP.NET Core that receives heavy IoT telemetry, processes it via RabbitMQ, and stores it in Postgres. Dockerize it, add xUnit tests, load test it with k6, and set up GitHub Actions. Pin this to your GitHub!</p>
+            </div>
+          )}
+          
         </div>
       </div>
     </div>

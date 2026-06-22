@@ -41,7 +41,7 @@ function saveProcessedUIDs() {
 
 // 4. Setup WhatsApp Client
 const waClient = new Client({
-  authStrategy: new LocalAuth(), // Saves session so you don't scan QR every time
+  authStrategy: new LocalAuth({ dataPath: './.wwebjs_auth3' }), // Saves session so you don't scan QR every time
   puppeteer: {
     headless: true,
     args: [
@@ -474,6 +474,75 @@ You MUST format your EXACT response strictly as a JSON object with two keys:
         await supabase.from('interview_sessions').insert([
           { role: 'ai', content: "I'm having network difficulties and can't process your answer right now. Please try answering again.", score: 0 }
         ]);
+      }
+    }
+  )
+  .subscribe();
+
+// ==========================================
+// SUPABASE REALTIME RESUME TAILOR
+// ==========================================
+supabase
+  .channel('realtime-resume-tailor')
+  .on(
+    'postgres_changes',
+    { event: 'INSERT', schema: 'public', table: 'resume_requests' },
+    async (payload) => {
+      const request = payload.new;
+      
+      if (request.status !== 'processing') return;
+
+      console.log(`📄 Received new Resume Tailor request for ${request.job_company}`);
+
+      try {
+        const systemInstruction = `You are an elite Career Coach and ATS (Applicant Tracking System) Expert. 
+Your task is to tailor Laila's generic Markdown Resume to perfectly match the provided Job Description for ${request.job_title} at ${request.job_company}.
+
+Instructions:
+1. Re-write the "Summary" section to aggressively highlight the specific skills mentioned in the job description.
+2. Re-order and tweak the bullet points in the "Experience" section to emphasize relevant technologies (e.g., if the job wants Docker, move Docker experience to the top).
+3. Do NOT invent or lie about experience. Only amplify what is already in her resume.
+4. Output the result entirely in pristine Markdown format.
+5. Do not include any conversational text before or after the markdown.`;
+
+        // We fetch Laila's base CV from a local file or just hardcode a summarized version for the prompt
+        // For robustness, we'll embed a strong base profile here based on her Github/Portfolio analysis.
+        const baseCV = `# Laila
+## Software Engineering Student | Backend Developer
+**Skills:** C#, ASP.NET Core, Python, SQL, REST APIs, Object-Oriented Programming (OOP)
+**Experience:**
+- **Backend Developer (IoT Project)**: Designed and implemented scalable backend architectures for IoT telemetry processing used by MOI and GASCO. Handled significant data streams.
+- **Microservices Enthusiast**: Passionate about breaking down monoliths and building robust, maintainable backend systems.
+**Education:** 3rd Year Computer Science Student, ERU.`;
+
+        const prompt = `Base Resume:\n${baseCV}\n\nTarget Job Description:\n${request.job_description}`;
+
+        const chat = ai.chats.create({
+          model: 'gemini-2.5-pro',
+          config: { systemInstruction: systemInstruction }
+        });
+
+        const response = await chat.sendMessage(prompt);
+        const tailoredCV = response.text;
+
+        // Update the row in Supabase with the completed CV
+        const { error } = await supabase
+          .from('resume_requests')
+          .update({ tailored_cv: tailoredCV, status: 'completed' })
+          .eq('id', request.id);
+        
+        if (error) {
+          console.error("Failed to update tailored resume in Supabase:", error);
+        } else {
+          console.log(`✅ Resume for ${request.job_company} tailored successfully.`);
+        }
+
+      } catch (e) {
+        console.error("Gemini API Error in Resume Tailor:", e);
+        await supabase
+          .from('resume_requests')
+          .update({ tailored_cv: "Error generating resume. Please try again later.", status: 'failed' })
+          .eq('id', request.id);
       }
     }
   )

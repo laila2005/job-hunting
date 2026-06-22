@@ -109,54 +109,54 @@ const ResumeTailor = ({ job, onClose }) => {
   };
 
   const generateTailoredCV = async () => {
-    if (!apiKey) return;
     setTailoring(true);
+    setTailoredText('');
     
-    const prompt = `
-      You are "Antigravity", Laila's elite AI career cockpit.
-      Tailor Laila's work experience bullets and professional summary to align 100% with the ATS keywords for the ${job.title} position at ${job.company}.
-      
-      TRUTH CONSTRAINTS:
-      - Never invent false credentials, companies, projects, or degree statuses.
-      - Keep her actual companies: LM Tech Solutions (Nov 2025 - Present) and Media Gate Company (Aug 2025 - Oct 2025).
-      - Maintain her real production achievements (RMS 3.0 IoT server using C# / Modbus / SNMP for Ministry of Interior & GASCO).
-      
-      ATS OPTIMIZATION RULES:
-      - Emphasize and weave in matching keywords to bridge these gaps: ${gaps.join(', ')}.
-      - Rephrase bullet points to highlight high-concurrency async handling, memory constraints, and database performance if appropriate.
-      
-      Laila's Original Profile:
-      ${JSON.stringify(CANDIDATE_PROFILE)}
-      
-      Job Description Context:
-      ${job.companySummary || 'Technical backend role.'}
-      
-      Format: Return a clean, premium Markdown output containing:
-      1. A beautifully optimized **Professional Summary** tailored to the role.
-      2. Optimized Work Experience bullets for **LM Tech Solutions** and **Media Gate Company** highlighting exact technologies and outcomes.
-      Do not include any conversational intro/outro text. Start directly with the Markdown headings.
-    `;
-
     try {
-      const ai = new GoogleGenAI({ apiKey });
-      const response = await ai.models.generateContent({
-        model,
-        contents: prompt
-      });
-      const text = response.text.trim();
-      setTailoredText(text);
-      
-      // Persist to database in `notes` or a new field if possible
-      await supabase.from('jobs').update({
-        notes: text,
-        atsMatch: atsScore
-      }).eq('id', job.id);
-      
+      // 1. Insert request into Supabase
+      const { data, error } = await supabase.from('resume_requests').insert([{
+        job_title: job.title,
+        job_company: job.company,
+        job_description: job.companySummary || 'Technical role.',
+        status: 'processing'
+      }]).select();
+
+      if (error) throw error;
+      const requestId = data[0].id;
+
+      // 2. Subscribe to that specific row to wait for the backend to finish
+      const channel = supabase
+        .channel(`resume_waiter_${requestId}`)
+        .on(
+          'postgres_changes',
+          { event: 'UPDATE', schema: 'public', table: 'resume_requests', filter: `id=eq.${requestId}` },
+          (payload) => {
+            const updatedRow = payload.new;
+            if (updatedRow.status === 'completed') {
+              setTailoredText(updatedRow.tailored_cv);
+              setTailoring(false);
+              
+              // Optionally persist to the job's notes so it stays on the dashboard
+              supabase.from('jobs').update({
+                notes: updatedRow.tailored_cv,
+                atsMatch: atsScore
+              }).eq('id', job.id).then();
+              
+              supabase.removeChannel(channel);
+            } else if (updatedRow.status === 'failed') {
+              setTailoredText("Error generating tailored resume. Please verify your background daemon.");
+              setTailoring(false);
+              supabase.removeChannel(channel);
+            }
+          }
+        )
+        .subscribe();
+
     } catch (err) {
       console.error(err);
-      setTailoredText("Error generating tailored resume. Please verify your Gemini connection.");
+      setTailoredText("Error connecting to Supabase database.");
+      setTailoring(false);
     }
-    setTailoring(false);
   };
 
   const handleCopy = () => {
