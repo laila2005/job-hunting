@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
+const { GoogleGenAI } = require('@google/genai');
 require('dotenv').config();
 
 const app = express();
@@ -9,6 +10,7 @@ app.use(cors());
 app.use(express.json());
 
 const dbPath = path.join(__dirname, 'strategy_db.json');
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 // Initial State
 let defaultDb = {
@@ -25,6 +27,9 @@ let defaultDb = {
     { id: 2, type: 'critical', text: 'Skill Gap Detected: Implement Message Brokers (RabbitMQ/Kafka) & Automated Testing (xUnit) in your backend projects.', status: 'pending' },
     { id: 3, type: 'warning', text: 'Resume Update: Add quantifiable scale metrics (e.g., "Handled 10,000 RPM") to your GASCO/MOI experience.', status: 'pending' },
     { id: 4, type: 'success', text: 'Highlight your production IoT experience aggressively in interviews. It puts you in the top 1% of students.', status: 'completed' }
+  ],
+  chatMessages: [
+    { role: 'ai', content: 'Secure Portal Established. Welcome, Laila. Type a command or message to direct your autonomous agent.', created_at: new Date().toISOString() }
   ]
 };
 
@@ -32,6 +37,7 @@ let defaultDb = {
 let db;
 if (fs.existsSync(dbPath)) {
   db = JSON.parse(fs.readFileSync(dbPath, 'utf-8'));
+  if (!db.chatMessages) db.chatMessages = defaultDb.chatMessages;
 } else {
   db = defaultDb;
   fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
@@ -52,6 +58,46 @@ app.post('/api/strategy/actions/:id/toggle', (req, res) => {
   } else {
     res.status(404).json({ error: 'Action not found' });
   }
+});
+
+// AiCommander Chat API
+app.get('/api/commander/chat', (req, res) => res.json(db.chatMessages));
+
+app.post('/api/commander/chat', async (req, res) => {
+  const { content } = req.body;
+  if (!content) return res.status(400).json({ error: 'Message content required' });
+
+  // Add user message
+  const userMsg = { role: 'user', content, created_at: new Date().toISOString() };
+  db.chatMessages.push(userMsg);
+  saveDb();
+
+  // Process command
+  let aiReplyText = "Command acknowledged.";
+  if (content.toLowerCase().startsWith('/scrape')) {
+    aiReplyText = "Initiating stealth scrapers. I will notify you when new jobs hit the pipeline.";
+    // In a real app, this would trigger live_scraper.js
+  } else if (content.toLowerCase().startsWith('/status')) {
+    aiReplyText = "All background systems nominal. Hourly cron job is active.";
+  } else {
+    // Generate AI response
+    try {
+      const chat = ai.chats.create({
+        model: 'gemini-2.5-pro',
+        config: { systemInstruction: "You are an AI autonomous agent named Antigravity serving Laila, a software engineering student. Respond concisely." }
+      });
+      const response = await chat.sendMessage({ content });
+      aiReplyText = response.text;
+    } catch (e) {
+      aiReplyText = "I encountered a neural network error while processing your request.";
+    }
+  }
+
+  const aiMsg = { role: 'ai', content: aiReplyText, created_at: new Date().toISOString() };
+  db.chatMessages.push(aiMsg);
+  saveDb();
+
+  res.json({ userMessage: userMsg, aiMessage: aiMsg });
 });
 
 // AI Mock Interview Simulator Endpoint
