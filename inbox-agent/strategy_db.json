@@ -1,0 +1,66 @@
+{
+  "skillMetrics": [
+    {
+      "subject": "ASP.NET Core & C#",
+      "Laila": 95,
+      "Market": 95,
+      "fullMark": 100
+    },
+    {
+      "subject": "React.js & TS",
+      "Laila": 85,
+      "Market": 90,
+      "fullMark": 100
+    },
+    {
+      "subject": "Python (AI/Backend)",
+      "Laila": 85,
+      "Market": 88,
+      "fullMark": 100
+    },
+    {
+      "subject": "System Arch & APIs",
+      "Laila": 80,
+      "Market": 85,
+      "fullMark": 100
+    },
+    {
+      "subject": "DB Management",
+      "Laila": 75,
+      "Market": 80,
+      "fullMark": 100
+    },
+    {
+      "subject": "Cloud & CI/CD",
+      "Laila": 40,
+      "Market": 85,
+      "fullMark": 100
+    }
+  ],
+  "actionItems": [
+    {
+      "id": 1,
+      "type": "critical",
+      "text": "Skill Gap Detected: Master Docker & CI/CD. The market expects cloud readiness. Build a GitHub Actions pipeline today.",
+      "status": "pending"
+    },
+    {
+      "id": 2,
+      "type": "critical",
+      "text": "Skill Gap Detected: Implement Message Brokers (RabbitMQ/Kafka) & Automated Testing (xUnit) in your backend projects.",
+      "status": "pending"
+    },
+    {
+      "id": 3,
+      "type": "warning",
+      "text": "Resume Update: Add quantifiable scale metrics (e.g., \"Handled 10,000 RPM\") to your GASCO/MOI experience.",
+      "status": "pending"
+    },
+    {
+      "id": 4,
+      "type": "success",
+      "text": "Highlight your production IoT experience aggressively in interviews. It puts you in the top 1% of students.",
+      "status": "completed"
+    }
+  ]
+}

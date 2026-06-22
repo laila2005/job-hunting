@@ -1,22 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
 
 const CareerPartner = ({ supabase }) => {
-  const [skillData] = useState([
-    { subject: 'ASP.NET Core & C#', Laila: 95, Market: 95, fullMark: 100 },
-    { subject: 'React.js & TS', Laila: 85, Market: 90, fullMark: 100 },
-    { subject: 'Python (AI/Backend)', Laila: 85, Market: 88, fullMark: 100 },
-    { subject: 'System Arch & APIs', Laila: 80, Market: 85, fullMark: 100 },
-    { subject: 'DB Management', Laila: 75, Market: 80, fullMark: 100 },
-    { subject: 'Cloud & CI/CD', Laila: 40, Market: 85, fullMark: 100 },
-  ]);
+  const [skillData, setSkillData] = useState([]);
+  const [actionItems, setActionItems] = useState([]);
 
-  const actionItems = [
-    { id: 1, type: 'critical', text: 'Skill Gap Detected: Master Docker & CI/CD. The market expects cloud readiness. Build a GitHub Actions pipeline today.', status: 'pending' },
-    { id: 2, type: 'critical', text: 'Skill Gap Detected: Implement Message Brokers (RabbitMQ/Kafka) & Automated Testing (xUnit) in your backend projects.', status: 'pending' },
-    { id: 3, type: 'warning', text: 'Resume Update: Add quantifiable scale metrics (e.g., "Handled 10,000 RPM") to your GASCO/MOI experience.', status: 'pending' },
-    { id: 4, type: 'success', text: 'Highlight your production IoT experience aggressively in interviews. It puts you in the top 1% of students.', status: 'completed' }
-  ];
+  useEffect(() => {
+    fetch('http://localhost:3001/api/strategy/skills')
+      .then(res => res.json())
+      .then(data => setSkillData(data))
+      .catch(err => console.error(err));
+
+    fetch('http://localhost:3001/api/strategy/actions')
+      .then(res => res.json())
+      .then(data => setActionItems(data))
+      .catch(err => console.error(err));
+  }, []);
+
+  const toggleAction = async (id) => {
+    try {
+      const res = await fetch(`http://localhost:3001/api/strategy/actions/${id}/toggle`, { method: 'POST' });
+      const updatedAction = await res.json();
+      setActionItems(prev => prev.map(a => a.id === id ? updatedAction : a));
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   return (
     <div className="career-partner-section animate-fade-in" style={{ marginTop: '20px' }}>
@@ -44,7 +53,7 @@ const CareerPartner = ({ supabase }) => {
                 alignItems: 'flex-start',
                 gap: '12px'
               }}>
-                <input type="checkbox" checked={item.status === 'completed'} readOnly style={{ marginTop: '4px', cursor: 'pointer' }} />
+                <input type="checkbox" checked={item.status === 'completed'} readOnly onClick={() => toggleAction(item.id)} style={{ marginTop: '4px', cursor: 'pointer' }} />
                 <span style={{ color: item.status === 'completed' ? 'var(--text-muted)' : 'var(--text-main)', textDecoration: item.status === 'completed' ? 'line-through' : 'none', lineHeight: '1.5' }}>
                   {item.text}
                 </span>
