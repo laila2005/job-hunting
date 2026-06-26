@@ -11,10 +11,14 @@ import AiCommander from './components/AiCommander'
 import ManualAddModal from './components/ManualAddModal'
 import CareerPartner from './components/CareerPartner'
 import NetworkingCRM from './components/NetworkingCRM'
+import ApplicationTracker from './components/ApplicationTracker'
+import CoverLetterGenerator from './components/CoverLetterGenerator'
+import DreamBoard from './components/DreamBoard'
+import DailyBriefing from './components/DailyBriefing'
 
 // Initialize Supabase Client
-const supabaseUrl = 'https://wpxtstbquvbsiqgoqwma.supabase.co'
-const supabaseAnonKey = 'sb_publishable_IwP7F-cxFhXEMwZCDOuyuw_-V33gBSh'
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://wpxtstbquvbsiqgoqwma.supabase.co'
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_IwP7F-cxFhXEMwZCDOuyuw_-V33gBSh'
 const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 function App() {
@@ -209,11 +213,29 @@ function App() {
             >
               🤖 AI Commander
             </button>
-            <button 
+            <button
               className={`tab-btn ${activeTab === 'interview' ? 'active' : ''}`}
               onClick={() => setActiveTab('interview')}
             >
               🎤 Mock Interview
+            </button>
+            <button
+              className={`tab-btn ${activeTab === 'tracker' ? 'active' : ''}`}
+              onClick={() => setActiveTab('tracker')}
+            >
+              📋 Tracker
+            </button>
+            <button
+              className={`tab-btn ${activeTab === 'coverletter' ? 'active' : ''}`}
+              onClick={() => setActiveTab('coverletter')}
+            >
+              ✍️ Cover Letter
+            </button>
+            <button
+              className={`tab-btn ${activeTab === 'dreamboard' ? 'active' : ''}`}
+              onClick={() => setActiveTab('dreamboard')}
+            >
+              💎 Dream Board
             </button>
           </div>
           <button className="btn btn-gradient" onClick={() => setShowAddModal(true)}>
@@ -238,6 +260,12 @@ function App() {
         <AiCommander supabase={supabase} />
       ) : activeTab === 'strategy' ? (
         <CareerPartner supabase={supabase} />
+      ) : activeTab === 'tracker' ? (
+        <ApplicationTracker supabase={supabase} jobs={jobs} />
+      ) : activeTab === 'coverletter' ? (
+        <CoverLetterGenerator jobs={jobs} />
+      ) : activeTab === 'dreamboard' ? (
+        <DreamBoard supabase={supabase} jobs={jobs} />
       ) : activeTab === 'fulltime' ? (
         <div className="jobs-section animate-fade-in" style={{ marginTop: '20px' }}>
           <div className="glass-panel" style={{ padding: '20px', marginBottom: '25px', borderRadius: '16px' }}>
@@ -310,6 +338,7 @@ function App() {
         </div>
       ) : (
         <>
+          <DailyBriefing jobs={jobs} />
           <LiveTelemetry />
           <ActionCenter jobs={jobs} />
           <StatCards jobs={jobs} />
