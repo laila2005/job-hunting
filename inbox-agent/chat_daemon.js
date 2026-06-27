@@ -148,6 +148,50 @@ Rules:
     }
   }
 
+  if (cmd === '/interview') {
+    const topicMatch = arg.match(/\[topic=([^\]]+)\]/);
+    const topic = topicMatch ? topicMatch[1] : 'backend engineering';
+    const prevStart  = arg.indexOf('\n\nPREV:');
+    const answStart  = arg.indexOf('\n\nANSWER:');
+    const prevHistory = prevStart !== -1 ? arg.slice(prevStart + 7, answStart !== -1 ? answStart : undefined).trim() : '';
+    const userAnswer  = answStart !== -1 ? arg.slice(answStart + 9).trim() : '';
+    const p = candidateProfile;
+
+    let prompt;
+    if (!userAnswer) {
+      prompt = `You are conducting a rigorous mock technical interview for ${p.name || 'Laila'}, a ${p.current_role || 'software engineer'} with production deployments to MOI and GASCO (government clients in Egypt).
+
+Topic area: ${topic}
+
+Ask ONE focused, challenging technical interview question appropriate for a junior-to-mid level candidate. Questions should be specific (not vague). No hints, no answer. Format exactly:
+
+QUESTION: <your question here>`;
+    } else {
+      prompt = `You are a senior engineering manager grading a mock interview answer.
+
+Candidate: ${p.name || 'Laila'} — ${p.current_role || 'Software Engineer at LM Tech Solutions'}
+Topic: ${topic}
+
+Interview so far:
+${prevHistory}
+
+Candidate just answered: "${userAnswer}"
+
+Grade strictly but fairly. Format exactly:
+SCORE: <number>/100
+FEEDBACK: <1–2 sentences — what was good, what was missing or imprecise>
+QUESTION: <next interview question on the same topic>`;
+    }
+
+    try {
+      const response = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt });
+      return `[INTERVIEW_RESPONSE]\n${response.text.trim()}`;
+    } catch (err) {
+      console.error('❌ Interview generation failed:', err.message);
+      return `[INTERVIEW_RESPONSE]\n⚠️ AI unavailable: ${err.message}`;
+    }
+  }
+
   if (cmd === '/weekly-brief') {
     console.log('📱 Weekly brief triggered — forwarding to WhatsApp...');
     const briefBody = arg.trim();
