@@ -1,16 +1,22 @@
 import React, { useState, useEffect } from 'react';
 
 const INTERVIEW_TIPS = [
-  'Use the STAR method (Situation, Task, Action, Result) for every behavioral question.',
-  'Research the company\'s tech stack before the interview — mention it naturally.',
-  'Prepare 2 questions to ask the interviewer. "What does success look like in 90 days?" is always strong.',
-  'For system design: start with requirements, then high-level architecture, then drill down.',
-  'Practice explaining your most complex project out loud in under 90 seconds.',
-  'Before a technical round, warm up with 2 easy LeetCode problems to get into the flow.',
-  'Confidence tip: interviewers are rooting for you to succeed. They want to hire.',
-  'Mention your MOI / GASCO IoT work early — real production deployments stand out at internship level.',
-  'If you don\'t know the answer, think out loud. "I\'d approach this by..." shows problem-solving.',
-  'Follow up within 24 hours after every interview with a thank-you email — most candidates skip this.',
+  'Lead with MOI + GASCO in your intro: "I built an IoT platform in production for two government clients." That sentence alone separates you from 99% of student candidates.',
+  'For .NET roles: know the difference between ASP.NET Core middleware, dependency injection, and IHostedService — these come up constantly.',
+  'For Node.js/Python roles: be ready to explain async/await vs promises, event loop mechanics, and how you\'d handle backpressure in a data pipeline.',
+  'Prepare your RMS 3.0 story in under 90 seconds: what it does, the challenge (concurrent Modbus/SNMP/HTTP), how you solved it (Strategy/Factory OOP), and the impact (MOI + GASCO production).',
+  'System design: always clarify scale first — "How many devices? How many concurrent users?" Then layer: API → Service layer → DB → Caching.',
+  'For FastAPI/Python roles: Inqaz is a strong portfolio piece — a CV pipeline with REST API processing live camera feeds and dispatching to national emergency services.',
+  'Prepare 2 questions per interview. "What does the on-call rotation look like for an engineer at my level?" shows maturity beyond student positioning.',
+  'SQL round prep: practice window functions (ROW_NUMBER, RANK, LAG), GROUP BY + HAVING, and be ready to explain your SQL Server schema design decisions from RMS 3.0.',
+  'Use the STAR method for every behavioral answer — Situation, Task, Action, Result. Structure is how interviewers score you.',
+  'Your English is fluent — use it confidently in international and remote interviews. Turkish proficiency is a bonus for Turkish tech companies.',
+  'Follow up within 24 hours of every interview with a specific thank-you email referencing one technical topic you discussed. 95% of candidates skip this.',
+  'Grad-CAM and MobileNetV2 on your resume attract AI-team interviewers. Be ready to explain transfer learning and why it outperformed your custom CNN (68% F1-score).',
+  'For full-stack roles: offer to demo the AI Job-Hunting Platform live. The Supabase realtime + background daemon architecture is genuinely impressive to show.',
+  'When asked about weaknesses, name a specific technology gap you\'re actively closing with a concrete resource — not a fake strength in disguise.',
+  'Before a technical round, warm up with 2 medium LeetCode problems. Solving easy ones first rebuilds pattern recognition confidence.',
+  'Research the company\'s actual tech stack before the interview — mention one specific technology they use and connect it to your experience.',
 ];
 
 const FOLLOWUP_DAYS = 7;

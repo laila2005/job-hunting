@@ -105,20 +105,39 @@ I will evaluate matches using your profile context and alert you on WhatsApp the
     const bodyStart = arg.indexOf('\n\n');
     const body = bodyStart !== -1 ? arg.slice(bodyStart + 2).trim() : '';
 
-    const profile = candidateProfile;
-    const prompt = `You are writing a cover letter on behalf of ${profile.name || 'Laila Mohamed Fikry'}.
+    const p = candidateProfile;
+    const eduSummary = (p.education || []).map(e => `${e.degree} at ${e.university} (${e.duration})`).join('; ') || 'CS student at El Sewedy University of Technology (2025–2027)';
+    const skillsSummary = [
+      ...(p.technical_skills?.primary_languages || ['C#', 'Python', 'JavaScript', 'TypeScript']),
+      ...(p.technical_skills?.backend || ['ASP.NET Core', 'Node.js', 'FastAPI']).slice(0, 4),
+      ...(p.technical_skills?.frontend || ['React.js', 'Next.js']).slice(0, 2),
+      ...(p.technical_skills?.databases || ['SQL Server', 'PostgreSQL']).slice(0, 2),
+    ].join(', ');
+    const projectsSummary = (p.projects || []).slice(0, 3).map(pr => `${pr.name} (${pr.client || ''})`).join('; ');
+    const differentiators = (p.key_differentiators || []).slice(0, 3).join('; ');
 
-Candidate profile:
-- Degree: ${profile.education || '3rd-year Computer Science student'}
-- Current role: ${profile.current_role || 'Lead Software Engineer at LM Tech Solutions'}
-- Key projects: ${(profile.projects || ['RMS 3.0 IoT platform for GASCO and Ministry of Interior']).slice(0, 3).join(', ')}
-- Skills: ${(profile.skills || ['C#', 'ASP.NET', 'Node.js', 'React', 'Python', 'PostgreSQL']).join(', ')}
-- Goal: Secure a ${jobTitle} role at ${company}
+    const prompt = `You are writing a cover letter on behalf of ${p.name || 'Laila Mohamed Fikry'}.
 
-Job description / context:
+CANDIDATE PROFILE:
+- Name: ${p.name}
+- Current role: ${p.current_role || 'Lead Software Engineer at LM Tech Solutions'}
+- Education: ${eduSummary}
+- Key skills: ${skillsSummary}
+- Notable projects: ${projectsSummary}
+- Key differentiators: ${differentiators}
+- Location: ${p.location || 'Cairo, Egypt'} | Available: ${p.preferences?.available || 'immediately, alongside studies'}
+- Target role: ${jobTitle} at ${company}
+
+JOB DESCRIPTION / CONTEXT:
 ${body || '(No job description provided — write a general strong cover letter for this role.)'}
 
-Write a ${tone.toLowerCase()} cover letter (3-4 paragraphs, no placeholder brackets) tailored to ${company} for the ${jobTitle} position. Be specific, genuine, and highlight real achievements. Do not use generic filler phrases.`;
+Write a ${tone.toLowerCase()} cover letter (3–4 paragraphs, no placeholder brackets) tailored to ${company} for the ${jobTitle} position.
+Rules:
+- Open with a specific hook referencing the company or role, not "I am writing to apply"
+- Mention the MOI/GASCO government deployment early — it is the strongest differentiator at student level
+- Be specific about which skills match this particular role
+- Close with a clear call to action
+- Do NOT use generic filler phrases. Do NOT use brackets or placeholders.`;
 
     try {
       const response = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt });
@@ -174,24 +193,28 @@ async function queryGemini(userMessage) {
     .map(j => `- ${j.title} at ${j.company} [Status: ${j.status}]`)
     .join('\n');
 
-  const prompt = `
-    You are "Antigravity", Laila's elite AI career commander agent. You operate her autonomous job hunting OS.
-    Laila is currently in Year 3 of her CS degree but has built enterprise-grade IoT platforms (RMS 3.0) for GASCO and the Ministry of Interior, Stripe integrations, and advanced Computer Vision emergency systems.
+  const p = candidateProfile;
+  const prompt = `You are "Antigravity", Laila's elite AI career commander. You operate her autonomous job-hunting OS.
 
-    Laila's technical stack: C#, ASP.NET, Python, Node.js, React, SQL Server, PostgreSQL, Deep Learning (CNN, MobileNetV2, Grad-CAM).
-    Her target: Junior Backend Developer or Full Stack positions with high EGP compensation (20k-30k) or global remote roles.
+LAILA'S PROFILE:
+- Name: ${p.name || 'Laila Mohamed Fikry'} | Location: ${p.location || 'Cairo, Egypt'}
+- Current role: ${p.current_role || 'Lead Software Engineer at LM Tech Solutions'}
+- Education: CS student at El Sewedy University of Technology (expected 2027); transferred from Egyptian Russian University (2023–2025); ALX Africa 15-month intensive (30+ production projects)
+- Stack: C#, ASP.NET Core, Python, Node.js, FastAPI, React, Next.js, TypeScript, PostgreSQL, SQL Server, Supabase, Docker, WebRTC, TensorFlow/CNN, Google Gemini API
+- Key wins: RMS 3.0 IoT platform deployed at MOI + GASCO (production, national infrastructure); Inqaz emergency AI system; Zagel real-time messaging; PetPulse marketplace; Crash Detection CNN (68% F1); Stripe + Bunny CDN integrations for paying clients
+- Languages: Arabic (Native), English (Fluent), Turkish (Proficient)
+- Target: Backend/Full-Stack roles — 20,000–35,000 EGP/mo local OR $2,500–$5,500/mo remote; also open to multinational internships
 
-    Current Recent Database Jobs:
-    ${jobsContext}
+RECENT PIPELINE JOBS:
+${jobsContext}
 
-    Laila's Message: "${userMessage}"
+Laila's message: "${userMessage}"
 
-    Guidelines:
-    1. Respond as a professional, senior software engineering teammate. Keep your tone direct, supportive, and extremely clean.
-    2. Be brief (1-3 paragraphs) to fit comfortably in a chat window. Use emojis and markdown bold markers naturally.
-    3. Ground your knowledge in her real achievements—never fabricate responsibilities.
-    4. Inform her of active commands (like /status, /search) if relevant to her request.
-  `;
+RESPOND AS:
+- A senior software engineering teammate — direct, supportive, no fluff
+- 1–3 short paragraphs max; use **bold** and emojis naturally
+- Always ground advice in her real stack and achievements — never fabricate
+- Mention slash commands (/status, /search, /cover-letter) when relevant`;
 
   try {
     const response = await ai.models.generateContent({

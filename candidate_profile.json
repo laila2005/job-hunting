@@ -1,52 +1,69 @@
 {
   "name": "Laila Mohamed Fikry",
-  "location": "Badr City, Cairo, Egypt",
+  "location": "Cairo, Egypt",
   "email": "laila.mohamed.fikry@gmail.com",
   "phone": "+20 121 021 2792",
   "linkedin": "https://www.linkedin.com/in/laila-mohamed23/",
   "github": "https://github.com/laila2005",
-  "portfolio": "Portfolio",
-  "professional_summary": "Full Stack Developer and Software Engineer currently in Year 3 of a Computer Science degree, with production experience most candidates do not reach until years into their careers. Built and deployed enterprise IoT systems serving the Ministry of Interior (MOI) and the Egyptian Natural Gas Holding Company (GASCO), trained deep learning models for real-world emergency response, and shipped full-stack web applications for paying clients – all while studying. Proficient in C#, ASP.NET, Python, React.js, and REST API design across the full software development lifecycle (SDLC). Actively seeking a software engineering internship where I can contribute immediately and keep growing fast.",
+  "portfolio": "https://github.com/laila2005",
+  "current_role": "Lead Software Engineer at LM Tech Solutions",
+  "positioning": "Backend / Full-Stack developer with production experience most candidates don't reach until years into their careers — all while completing a CS degree",
+  "professional_summary": "Software Engineer with production experience building enterprise-grade systems — including an Industrial IoT platform deployed to Egyptian government clients (MOI, GASCO), AI-powered backends, and real-time communication platforms. Proficient in C#, ASP.NET, Python, JavaScript/TypeScript, React, Node.js, and FastAPI. Open to remote full-time backend/fullstack roles and multinational internships — available to contribute immediately alongside studies.",
   "education": [
     {
       "degree": "Bachelor of Science in Computer Science",
-      "university": "El Sewedy University of Technology – Polytechnic of Egypt",
-      "duration": "2025 - Present",
-      "expected_graduation": "2027",
-      "status": "Student"
+      "university": "El Sewedy University of Technology",
+      "duration": "2025 – 2027 (Expected)",
+      "status": "Current",
+      "year_label": "4th year overall (2nd at El Sewedy)"
     },
     {
       "degree": "Bachelor of Science in Computer Science (Transferred)",
       "university": "Egyptian Russian University",
-      "duration": "2023 - 2025",
+      "duration": "2023 – 2025",
       "status": "Transferred"
     }
   ],
-  "preferences": {
-    "work_model": ["Remote", "Hybrid", "On-site"],
-    "hybrid_max_commute_hours": 1.5,
-    "preferred_locations": ["New Cairo", "Nearby areas", "Remote"],
-    "remote_rule": "Accepts candidates working from Egypt",
-    "job_families": ["Software Engineer", "Backend Developer", "Full Stack Developer", "Internship"],
-    "salary_range_egp": {
-      "full_time_junior": [20000, 30000],
-      "internship": [8000, 12000]
-    },
-    "preferred_company_types": [
-      "International companies",
-      "AI-tool friendly",
-      "Modern engineering practices"
-    ],
-    "application_mode": "Review-Before-Submit"
-  },
+  "coursework": [
+    "Data Structures & Algorithms", "Operating Systems", "Software Engineering",
+    "AI", "OOP", "UI/UX Design", "Mobile Application Development",
+    "Advanced Web Development", "DevOps", "Software Testing", "Cloud Computing"
+  ],
   "technical_skills": {
-    "languages": ["C#", "C", "C++", "Python", "Java", "JavaScript", "SQL", "Bash"],
-    "backend": ["ASP.NET", "Node.js", "Express.js", "RESTful API Design", "Custom Windows Services"],
-    "frontend": ["React.js", "Next.js", "Tailwind CSS", "HTML5", "CSS3", "JavaScript"],
-    "ai_ml": ["TensorFlow", "Keras", "Convolutional Neural Networks (CNN)", "Transfer Learning", "MobileNetV2", "Grad-CAM", "Computer Vision", "Deep Learning"],
-    "iot_protocols": ["SNMP", "Modbus", "HTTP", "Hardware Integration", "Industrial Device Communication"],
-    "databases": ["SQL Server", "PostgreSQL", "MySQL", "MongoDB"],
-    "tools": ["Git", "Version Control", "MSBuild", "Linux (Ubuntu)", "Bash Scripting", "Agile", "Scrum", "SDLC"]
+    "primary_languages": ["C#", "Python", "JavaScript", "TypeScript", "SQL"],
+    "secondary_languages": ["C", "C++", "Java", "Bash"],
+    "backend": [
+      "ASP.NET Core", "Node.js", "Express.js", "FastAPI",
+      "RESTful API Design", "Custom Windows Services", "MSBuild",
+      "WebSockets", "Background Daemons", "Webhook Integration"
+    ],
+    "frontend": [
+      "React.js", "Next.js", "Vite", "TypeScript",
+      "Tailwind CSS", "Bootstrap 5", "HTML5/CSS3",
+      "Responsive Design", "RTL/Arabic i18n", "Leaflet.js"
+    ],
+    "mobile": [
+      "React Native", "Native App Wrappers", "Cross-Platform Development",
+      "WebView Integration", "Push Notifications", "Offline-First Architecture"
+    ],
+    "databases": [
+      "SQL Server", "PostgreSQL", "Supabase", "MySQL", "MongoDB"
+    ],
+    "ai_ml": [
+      "TensorFlow", "Keras", "CNN", "MobileNetV2", "Transfer Learning",
+      "Grad-CAM", "Computer Vision", "Google Gemini API", "OpenCV", "Streamlit"
+    ],
+    "protocols_security": [
+      "Modbus", "SNMP", "HTTP", "TCP Sockets", "WebRTC",
+      "AES-256", "SHA-256", "JWT", "OAuth", "Industrial Device Communication"
+    ],
+    "integrations": [
+      "Stripe API", "Bunny CDN", "Google Sheets API", "Google Gemini API", "Twilio"
+    ],
+    "devops": [
+      "Git", "GitHub", "CI/CD", "Vercel", "Docker",
+      "Hugging Face Spaces", "Playwright (E2E Testing)", "Linux", "Bash Scripting"
+    ]
   },
   "work_experience": [
     {
@@ -54,98 +71,203 @@
       "location": "Cairo, Egypt",
       "title": "Lead Software Engineer",
       "duration": "Nov 2025 – Present",
+      "type": "Full-Time",
       "bullets": [
-        "Architected RMS 3.0 Enterprise IoT Platform: Led end-to-end software development of the Remote Monitoring System (RMS 3.0), an industrial IoT platform for critical power infrastructure including rectifiers, solar systems, inverters, and rectiverters, with a scalable architecture designed for future universal device integration",
-        "Engineered Unified Polling Service: Built a fault-tolerant backend service in C# and ASP.NET using MSBuild to handle concurrent device communication and real-time data ingestion across Modbus, HTTP, and SNMP protocols, following object-oriented programming best practices",
-        "Led Production Enterprise Deployments: Overseeing testing and production rollout of RMS 3.0 for major national clients including the Ministry of Interior (MOI) and the Egyptian Natural Gas Holding Company (GASCO), enhancing SQL Server database architecture to meet strict enterprise specifications",
-        "Developed Real-Time Operational Dashboards: Built a scalable full-stack frontend using React.js and Tailwind CSS to visualize live power metrics, providing Network Operations Center (NOC) teams with visual alerts, condition reports, and performance tracking"
+        "Architected RMS 3.0 — full-stack Industrial IoT platform (C#/ASP.NET backend + React.js/Tailwind frontend) monitoring critical power infrastructure: rectifiers, solar systems, inverters, rectiverters",
+        "Built fault-tolerant Unified Polling Service handling concurrent Modbus, HTTP, and SNMP device communication with real-time data ingestion; OOP design (Strategy, Factory) enables universal device onboarding without refactoring",
+        "Led production rollouts for Ministry of Interior (MOI) and GASCO — redesigned SQL Server schemas for enterprise security, compliance, and high-throughput operations",
+        "Developed real-time React.js/Tailwind NOC dashboard with live power metrics, visual alerts, and performance reports for field operators"
       ]
     },
     {
       "company": "Media Gate Company",
       "location": "Cairo, Egypt",
-      "title": "Freelance Full Stack Developer",
-      "duration": "August 2025 – Oct 2025",
+      "title": "Freelance Backend/Full-Stack Developer",
+      "duration": "Aug – Oct 2025",
+      "type": "Freelance",
       "bullets": [
-        "Engineered Payment and Admin Workflows: Integrated the Stripe API to process subscription payments for bagijob.com, and built a comprehensive admin dashboard with automated revenue calculations and real-time approval notifications",
-        "Optimized Media Delivery Performance: Accelerated video upload speeds and delivery by integrating Bunny Content Delivery Network (CDN), and improved frontend performance through custom scroll-aware video autoplay and pause functionality",
-        "Resolved Complex State Management Issues: Fixed persistent dark mode preferences across sessions, standardized responsive ad card layouts, and built dynamic redirect flows for mobile and desktop payment outcomes"
+        "Integrated Stripe API for subscription billing on bagijob.com; built automated revenue-calculation engine with real-time admin approval notification system",
+        "Engineered Bunny CDN pipeline for optimized video delivery; implemented scroll-aware video autoplay/pause and dynamic server-side mobile/desktop payment redirect flows",
+        "Resolved complex cross-session state persistence bugs affecting dark-mode preferences across devices; standardized responsive ad card layouts"
       ]
     },
     {
       "company": "ALX Africa",
       "location": "Remote",
-      "title": "Software Engineering Intensive Training Program",
-      "duration": "October 2023 – July 2025",
+      "title": "Software Engineering Intensive Program",
+      "duration": "Oct 2023 – Jul 2025",
+      "type": "Training",
       "bullets": [
-        "Completed a 15-month intensive full-stack development and systems engineering program covering the complete software development lifecycle",
-        "Built and deployed 30+ production-style projects using Python, C, JavaScript, and SQL with version control via Git",
-        "Designed RESTful APIs and full-stack web applications using React.js, Node.js, Express.js, and MongoDB",
-        "Worked extensively in Linux environments using Bash scripting and Agile and Scrum workflows"
+        "15-month intensive covering full SDLC; built 30+ production-style projects using Python, C, JavaScript, and SQL",
+        "Designed RESTful APIs using Node.js, Express.js, and MongoDB in Linux/Bash environments",
+        "Practiced Agile/Scrum workflows and collaborative engineering across distributed teams"
       ]
     }
   ],
   "projects": [
     {
-      "name": "Inqaz-app – Egypt Emergency AI Response System",
-      "tech": "Full-Stack AI Platform – Python, Computer Vision, REST API, Web Frontend",
-      "date": "Jan 2026",
-      "bullets": [
-        "Architected an end-to-end emergency response platform using computer vision to detect accidents and disasters from live mobile camera footage, classify scene severity, and automatically dispatch emergency services in real time",
-        "Designed and built a full-stack web interface for live camera ingestion, AI-powered incident triage, and GPS-coordinated automated dispatch alerts to Ministry of Interior emergency line (122) and Ambulance services (123)",
-        "Led all system architecture decisions across the computer vision pipeline, backend REST API, and frontend dispatch dashboard"
+      "id": "rms",
+      "name": "RMS 3.0 — Industrial IoT Backend Platform",
+      "tech": "C#, ASP.NET, MSBuild, SQL Server, Modbus, SNMP, HTTP",
+      "client": "Ministry of Interior (MOI) & GASCO — in production",
+      "highlights": [
+        "Enterprise backend polling industrial devices concurrently with fault tolerance and protocol abstraction",
+        "Scalable OOP architecture (Strategy/Factory) designed for zero-refactor universal device onboarding",
+        "Enhanced SQL Server schema for enterprise security and high-throughput national power infrastructure data"
       ]
     },
     {
-      "name": "Crash Detection and Classification Model",
-      "tech": "Deep Learning, CNN, Transfer Learning, Grad-CAM, Python, Streamlit",
-      "date": "Dec 2025",
-      "bullets": [
-        "Trained two deep learning models on 3,000 real-world traffic images: a custom Convolutional Neural Network (CNN) built from scratch, and a MobileNetV2 transfer learning model achieving 68% F1-score on entirely unseen test data",
-        "Applied Grad-CAM explainability to generate thermal heatmaps identifying exact regions of vehicle structural damage detected by the model, making AI decisions interpretable for emergency operators",
-        "Deployed a production-ready web application on Streamlit Community Cloud with live camera ingestion, real-time classification, metric tracking, and simulated emergency dispatch"
+      "id": "inqaz",
+      "name": "Inqaz — Emergency AI Response System",
+      "tech": "Python, FastAPI, Computer Vision, React, REST API",
+      "client": "Academic / National Emergency Services (122/123)",
+      "highlights": [
+        "End-to-end emergency platform: real-time CV detecting accidents from live mobile footage",
+        "AI severity classification + GPS-coordinated auto-dispatch to national emergency services",
+        "Led all system architecture across the CV pipeline, backend REST API, and dispatch dashboard"
       ]
     },
     {
+      "id": "crash_model",
+      "name": "Crash Detection & Classification Model",
+      "tech": "Python, CNN, MobileNetV2, TensorFlow, Grad-CAM, Streamlit",
+      "client": "Academic / Research",
+      "highlights": [
+        "Two deep learning models trained on 3,000 real-world traffic images — MobileNetV2 achieved 68% F1-score",
+        "Grad-CAM thermal heatmaps make AI decisions interpretable for emergency operators",
+        "Deployed production-ready Streamlit app with live camera inference and emergency dispatch simulation"
+      ]
+    },
+    {
+      "id": "zagel",
+      "name": "Zagel — Real-Time Messaging Platform",
+      "tech": "FastAPI, Next.js, TypeScript, WebRTC, PostgreSQL, Docker",
+      "client": "Personal / Production",
+      "highlights": [
+        "Full architectural migration to FastAPI + Next.js; WebRTC voice/video, offline messaging, read receipts, voice recording, compliance APIs",
+        "Docker containerization; TypeScript + ESLint CI pipeline; deployed on Hugging Face Spaces"
+      ]
+    },
+    {
+      "id": "chat",
       "name": "Secure Real-Time Chat System",
-      "tech": "Python, TCP Sockets, AES-256 Encryption, Multi-threading",
-      "date": "Dec 2025",
-      "bullets": [
-        "Developed a real-time encrypted messaging system using TCP sockets with multi-user support and a multi-threaded server architecture",
-        "Implemented AES-256 encryption for end-to-end message security and SHA-256 hashing for user authentication with persistent data storage"
+      "tech": "Python, TCP Sockets, AES-256, SHA-256, Multi-threading",
+      "client": "Academic / Systems Programming",
+      "highlights": [
+        "Multi-threaded TCP server with AES-256 end-to-end encryption and SHA-256 authentication hashing",
+        "Concurrent multi-user support with persistent storage — demonstrates systems-level networking and security"
       ]
     },
     {
-      "name": "Tech-Road – Workforce Readiness Platform (Digitopia Competition)",
-      "tech": "Full-Stack Web Development, System Architecture, REST API Design",
-      "date": "August 2025",
-      "bullets": [
-        "Built a full-stack web platform bridging academic learning with real-world workforce requirements, developed under competition conditions",
-        "Served as Team Leader and Backend Developer, responsible for overall system architecture, REST API design, and backend implementation"
+      "id": "dashboard",
+      "name": "AI Job-Hunting Platform (this system)",
+      "tech": "React, Vite, Supabase/PostgreSQL, Node.js, Google Gemini API, Python scrapers",
+      "client": "Personal Project",
+      "highlights": [
+        "Multi-source job scrapers (Wuzzuf + ATS) with Gemini-powered semantic deduplication",
+        "Background daemon for continuous processing; PostgreSQL schema for profiles, matches, CRM, and analytics",
+        "Real-time Mock Interview Simulator, Resume Tailor, networking CRM, 16-tab AI dashboard"
+      ]
+    },
+    {
+      "id": "petpulse",
+      "name": "PetPulse — Pet-Care Marketplace",
+      "tech": "React, Vite, Tailwind CSS, Leaflet.js, Supabase, Node.js Serverless",
+      "client": "Personal / Production",
+      "highlights": [
+        "Multi-sided marketplace connecting vets, trainers, pet shops, adoption, mating, subscription boxes across Egypt",
+        "Arabic-localized admin dashboard; Leaflet location search; AI chatbot integration",
+        "Business/financial modeling (MRR projections, pitch deck) — demonstrates product thinking alongside engineering"
+      ]
+    },
+    {
+      "id": "techroad",
+      "name": "Tech-Road — Workforce Readiness Platform",
+      "tech": "Full-Stack Web, REST API Design, System Architecture",
+      "client": "Digitopia Competition",
+      "highlights": [
+        "Full-stack platform bridging academic learning with real-world workforce requirements, built under competition conditions",
+        "Team Leader + Backend Developer: system architecture, REST API design, and backend implementation"
       ]
     }
   ],
+  "resume_versions": {
+    "dotnet_backend": "Laila_Fikry_Backend_Engineer_DotNet.docx",
+    "nodejs_backend": "Laila_Fikry_Backend_Engineer_NodeJS.docx",
+    "fullstack": "Laila_Fikry_FullStack_Developer.docx",
+    "mobile": "Laila_Fikry_Mobile_Developer.docx",
+    "general": "Laila_Fikry_Software_Engineer.docx"
+  },
+  "resume_routing": {
+    "C#": "dotnet_backend",
+    "ASP.NET": "dotnet_backend",
+    ".NET": "dotnet_backend",
+    "Node.js": "nodejs_backend",
+    "Python": "nodejs_backend",
+    "FastAPI": "nodejs_backend",
+    "React": "fullstack",
+    "Full Stack": "fullstack",
+    "Next.js": "fullstack",
+    "Mobile": "mobile",
+    "React Native": "mobile",
+    "Flutter": "mobile",
+    "default": "general"
+  },
+  "preferences": {
+    "work_model": ["Remote", "Hybrid", "On-site"],
+    "preferred_locations": ["Cairo", "New Cairo", "Remote (global)"],
+    "job_families": [
+      "Backend Developer", "Full Stack Developer", "Software Engineer",
+      "Node.js Developer", "ASP.NET Developer", "Mobile Developer", "Internship"
+    ],
+    "salary_range_egp": {
+      "full_time_junior": [20000, 35000],
+      "internship": [6000, 12000]
+    },
+    "salary_range_usd_remote": {
+      "full_time_junior": [2500, 5500],
+      "internship": [800, 2000]
+    },
+    "preferred_company_types": [
+      "International / multinational",
+      "AI-tool friendly",
+      "Modern engineering practices",
+      "Remote-friendly",
+      "Egypt-accessible"
+    ],
+    "application_mode": "Review-Before-Submit",
+    "available": "Immediately, alongside studies"
+  },
   "volunteering": {
-    "organization": "Computality Community – HR Team",
+    "organization": "Computality Community — HR Team",
     "location": "Cairo, Egypt",
     "duration": "2023 – 2024",
-    "description": "Conducted interviews, managed records for 60+ members, and organized university technology events"
+    "description": "Conducted interviews, managed records for 60+ members, organized university technology events"
   },
   "languages": [
     "Arabic (Native)",
     "English (Fluent)",
     "Turkish (Proficient)"
   ],
+  "key_differentiators": [
+    "Government-client production deployments (MOI + GASCO) while still a student",
+    "End-to-end ownership: architected, built, and shipped to real users",
+    "Breadth: IoT, AI/CV, real-time comms, e-commerce payments — all in production",
+    "3 distinct resume variants ready for .NET, Node.js, Full Stack, Mobile, and General roles",
+    "ALX Africa 15-month intensive — 30+ production-style projects",
+    "English fluent + Turkish proficient — international-ready"
+  ],
   "agent_rules": {
-    "cv_truth_constraint": "Do not add any bullet, metric, tool, project, or responsibility unless it already exists in my source materials or I explicitly confirm it.",
-    "student_positioning_rule": "Present me as a strong early-career engineer with substantial hands-on project depth, strong English communication, and readiness for international and remote collaboration.",
+    "cv_truth_constraint": "Do not add any bullet, metric, tool, project, or responsibility unless it already exists in this profile or Laila explicitly confirms it.",
+    "student_positioning_rule": "Present Laila as a strong early-career engineer with substantial hands-on project depth, strong English communication, and readiness for international and remote collaboration.",
+    "tone": "Professional, direct, genuine. Avoid generic filler phrases. Highlight real government deployments early.",
     "preference_boost_rule": [
       "remote and Egypt-friendly",
-      "hybrid near New Cairo",
       "backend or full-stack oriented",
-      "international",
+      "international / multinational companies",
       "AI-tool friendly",
-      "flexible enough for a student schedule"
+      "flexible for a student schedule",
+      "C# / .NET or Node.js / Python backend roles"
     ]
   }
 }

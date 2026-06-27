@@ -1,10 +1,54 @@
 import React, { useState, useRef } from 'react';
 
 const PROJECTS = [
-  { id: 'rms', name: 'RMS 3.0 — IoT Platform', stack: 'C#, ASP.NET, SQL Server, SignalR, MQTT', client: 'GASCO & Ministry of Interior', desc: 'Enterprise IoT fleet management system deployed for two government entities. Real-time telemetry, alerts, and device management.' },
-  { id: 'cv', name: 'Computer Vision Emergency System', stack: 'Python, CNN, MobileNetV2, Grad-CAM, OpenCV', client: 'Academic / Research', desc: 'Deep learning system for emergency scene detection using gradient-weighted class activation maps.' },
-  { id: 'stripe', name: 'Stripe Payment Integration', stack: 'Node.js, Stripe API, React', client: 'LM Tech Solutions', desc: 'Full payment flow with webhooks, subscription management, and receipt generation.' },
-  { id: 'dashboard', name: 'AI Career Dashboard', stack: 'React, Vite, Supabase, Node.js, Gemini', client: 'Personal Project', desc: 'Autonomous job hunting OS with AI-powered scrapers, cover letter generation, and real-time pipeline tracking.' },
+  {
+    id: 'rms', name: 'RMS 3.0 — Industrial IoT Platform',
+    stack: 'C#, ASP.NET Core, MSBuild, SQL Server, Modbus, SNMP, HTTP',
+    client: 'Ministry of Interior (MOI) & GASCO — in production',
+    desc: 'Enterprise backend polling industrial devices concurrently with fault tolerance and protocol abstraction (Strategy/Factory OOP). Deployed to two Egyptian government clients handling critical national power infrastructure. Enhanced SQL Server schema for enterprise security and compliance.',
+  },
+  {
+    id: 'inqaz', name: 'Inqaz — Emergency AI Response System',
+    stack: 'Python, FastAPI, Computer Vision, CNN, MobileNetV2, React, REST API',
+    client: 'Academic / National Emergency Services (122/123)',
+    desc: 'End-to-end emergency platform: real-time computer vision pipeline detecting accidents from live mobile footage, AI severity classification, GPS-coordinated auto-dispatch to national emergency services. Led full system architecture across CV pipeline, backend REST API, and frontend dispatch dashboard.',
+  },
+  {
+    id: 'crash', name: 'Crash Detection & Classification Model',
+    stack: 'Python, CNN, MobileNetV2, TensorFlow, Grad-CAM, Streamlit',
+    client: 'Academic / Research',
+    desc: 'Two deep learning models trained on 3,000 real-world traffic images — MobileNetV2 achieved 68% F1-score on unseen test data. Grad-CAM thermal heatmaps make AI decisions interpretable for emergency operators. Deployed production-ready Streamlit app with live camera inference and dispatch simulation.',
+  },
+  {
+    id: 'zagel', name: 'Zagel — Real-Time Messaging Platform',
+    stack: 'FastAPI, Next.js, TypeScript, WebRTC, PostgreSQL, Docker',
+    client: 'Personal / Production',
+    desc: 'Full architectural migration to FastAPI + Next.js. Built WebRTC signaling for voice/video calls, offline message queue, read receipts, voice recording, and compliance APIs. Docker containerization + TypeScript/ESLint CI pipeline. Deployed on Hugging Face Spaces.',
+  },
+  {
+    id: 'dashboard', name: 'AI Job-Hunting Platform',
+    stack: 'React, Vite, Supabase/PostgreSQL, Node.js, Google Gemini API, Python scrapers',
+    client: 'Personal Project',
+    desc: 'Autonomous career OS: multi-source job scrapers (Wuzzuf + ATS sites) with Gemini-powered semantic deduplication, background daemon for continuous processing, real-time Mock Interview Simulator, Resume Tailor, networking CRM, and 16-tab AI dashboard.',
+  },
+  {
+    id: 'petpulse', name: 'PetPulse — Pet-Care Marketplace',
+    stack: 'React, Vite, Tailwind CSS, Leaflet.js, Supabase, Node.js Serverless',
+    client: 'Personal / Production',
+    desc: 'Multi-sided marketplace connecting vets, trainers, pet shops, adoption, mating matches, and subscription boxes across Egypt. Leaflet location search, Arabic-localized admin dashboard, AI chatbot integration, serverless Node.js backend, and business financial modeling (MRR projections, pitch deck).',
+  },
+  {
+    id: 'chat', name: 'Secure Real-Time Chat System',
+    stack: 'Python, TCP Sockets, AES-256, SHA-256, Multi-threading',
+    client: 'Academic / Systems Programming',
+    desc: 'Multi-threaded TCP server with AES-256 end-to-end encryption, SHA-256 authentication hashing, concurrent multi-user support, and persistent data storage. Demonstrates systems-level networking and security fundamentals.',
+  },
+  {
+    id: 'techroad', name: 'Tech-Road — Workforce Readiness Platform',
+    stack: 'Full-Stack Web, REST API Design, System Architecture',
+    client: 'Digitopia Competition',
+    desc: 'Full-stack platform bridging academic learning with real-world workforce requirements, built under competition conditions. Team Leader and Backend Developer — responsible for overall system architecture, REST API design, and backend implementation.',
+  },
 ];
 
 const OUTPUT_TYPES = [

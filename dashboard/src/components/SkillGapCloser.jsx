@@ -1,14 +1,30 @@
 import React, { useState, useRef } from 'react';
 
 const MY_SKILLS = [
-  'c#', 'asp.net', '.net', 'node.js', 'nodejs', 'react', 'python', 'javascript', 'typescript',
-  'sql server', 'postgresql', 'supabase', 'mongodb', 'redis',
-  'rest api', 'graphql', 'docker', 'git', 'github', 'linux',
-  'html', 'css', 'tailwind', 'bootstrap',
-  'deep learning', 'cnn', 'computer vision', 'tensorflow', 'pytorch', 'opencv',
-  'iot', 'mqtt', 'signalr', 'websockets',
-  'stripe', 'twilio', 'jwt', 'oauth',
-  'azure', 'vercel', 'nginx',
+  // Languages
+  'c#', 'python', 'javascript', 'typescript', 'java', 'c', 'c++', 'sql', 'bash',
+  // Backend
+  'asp.net', 'asp.net core', '.net', 'node.js', 'nodejs', 'express.js', 'express',
+  'fastapi', 'rest api', 'restful api', 'websockets', 'webhooks', 'msbuild',
+  // Frontend
+  'react', 'react.js', 'next.js', 'vite', 'tailwind', 'tailwind css', 'bootstrap',
+  'html', 'html5', 'css', 'css3', 'responsive design', 'leaflet',
+  // Mobile
+  'react native',
+  // Databases
+  'sql server', 'postgresql', 'postgres', 'supabase', 'mysql', 'mongodb',
+  // AI / ML
+  'tensorflow', 'keras', 'cnn', 'mobilenetv2', 'transfer learning', 'grad-cam',
+  'computer vision', 'opencv', 'deep learning', 'gemini', 'google gemini', 'streamlit',
+  // Protocols / Security
+  'modbus', 'snmp', 'tcp', 'tcp sockets', 'webrtc', 'aes-256', 'sha-256', 'jwt', 'oauth',
+  // Integrations
+  'stripe', 'bunny cdn', 'google sheets api',
+  // DevOps
+  'git', 'github', 'docker', 'vercel', 'ci/cd', 'linux', 'playwright',
+  'hugging face', 'bash scripting',
+  // Other
+  'agile', 'scrum', 'oop',
 ];
 
 const COMMON_SKILLS = [
