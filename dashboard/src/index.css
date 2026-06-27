@@ -73,6 +73,10 @@
   padding: 0;
 }
 
+html, body {
+  overflow-x: hidden;
+}
+
 body {
   margin: 0;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -92,6 +96,15 @@ h1, h2, h3, h4 {
   color: var(--text-main);
   line-height: 1.25;
   letter-spacing: -0.015em;
+}
+
+/* Glass panel — shared card surface */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-lg);
 }
 
 /* Layout Container */
