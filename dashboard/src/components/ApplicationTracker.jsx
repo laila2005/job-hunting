@@ -25,6 +25,11 @@ const ApplicationTracker = ({ supabase, jobs }) => {
   const [editingNote, setEditingNote] = useState(null);
   const [noteText, setNoteText] = useState('');
   const [syncing, setSyncing] = useState(false);
+  const [draftingFor, setDraftingFor] = useState(null); // app.id being drafted
+  const [emailDraft, setEmailDraft] = useState('');
+  const [draftLoading, setDraftLoading] = useState(false);
+  const [draftCopied, setDraftCopied] = useState(false);
+  const draftChannelRef = React.useRef(null);
 
   // Seed from jobs already marked Applied
   useEffect(() => {
@@ -98,6 +103,43 @@ const ApplicationTracker = ({ supabase, jobs }) => {
       last_updated: new Date().toISOString(),
     });
     setSyncing(false);
+  };
+
+  const draftFollowUp = async (app) => {
+    setDraftingFor(app.id);
+    setEmailDraft('');
+    setDraftLoading(true);
+    setDraftCopied(false);
+
+    if (draftChannelRef.current) supabase.removeChannel(draftChannelRef.current);
+
+    const command = `/cover-letter [tone=Professional] [company=${app.company}] [title=${app.title}]\n\n[FOLLOW_UP_EMAIL] This is a follow-up email, not a cover letter. I applied ${daysSince(app.applied_date)} days ago and haven't heard back. Write a short, polite 3-sentence follow-up email to the hiring team at ${app.company} for the ${app.title} role. Reference that I applied on ${app.applied_date}. Keep it warm and professional.`;
+
+    let resolved = false;
+    const timeout = setTimeout(() => {
+      if (!resolved) { resolved = true; setDraftLoading(false); setEmailDraft('⚠️ No response from daemon. Make sure your local daemon is running.'); }
+      if (draftChannelRef.current) supabase.removeChannel(draftChannelRef.current);
+    }, 60000);
+
+    draftChannelRef.current = supabase
+      .channel(`followup-draft-${Date.now()}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'agent_chat' }, (payload) => {
+        const msg = payload.new;
+        const text = msg.message || msg.content || '';
+        const sender = msg.sender || msg.role || '';
+        if (sender !== 'agent') return;
+        if (!text.startsWith('[COVER_LETTER_RESPONSE]')) return;
+        if (!resolved) {
+          resolved = true;
+          clearTimeout(timeout);
+          setDraftLoading(false);
+          setEmailDraft(text.replace('[COVER_LETTER_RESPONSE]', '').trim());
+          supabase.removeChannel(draftChannelRef.current);
+        }
+      })
+      .subscribe();
+
+    await supabase.from('agent_chat').insert([{ role: 'user', sender: 'user', content: command, message: command }]);
   };
 
   const saveNote = async (app) => {
@@ -260,6 +302,13 @@ const ApplicationTracker = ({ supabase, jobs }) => {
                       background: 'rgba(139,92,246,0.15)', color: 'var(--accent-purple)',
                       border: '1px solid rgba(139,92,246,0.3)', cursor: 'pointer'
                     }}>📝 Note</button>
+                    {isOverdue && (
+                      <button onClick={() => draftingFor === app.id ? setDraftingFor(null) : draftFollowUp(app)} style={{
+                        padding: '5px 12px', borderRadius: '8px', fontSize: '0.78rem',
+                        background: 'rgba(251,191,36,0.15)', color: '#fbbf24',
+                        border: '1px solid rgba(251,191,36,0.35)', cursor: 'pointer'
+                      }}>✉️ Draft Follow-Up</button>
+                    )}
                     {canAdvance && (
                       <button onClick={() => advanceStage(app)} style={{
                         padding: '5px 12px', borderRadius: '8px', fontSize: '0.78rem',
@@ -298,6 +347,28 @@ const ApplicationTracker = ({ supabase, jobs }) => {
                     📝 {app.notes}
                   </div>
                 ) : null}
+
+                {/* Follow-Up Email Draft Panel */}
+                {draftingFor === app.id && (
+                  <div style={{ marginTop: '14px', padding: '14px', background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.25)', borderRadius: '10px' }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: '700', color: '#fbbf24', letterSpacing: '0.06em', marginBottom: '8px' }}>
+                      ✉️ FOLLOW-UP EMAIL DRAFT
+                    </div>
+                    {draftLoading ? (
+                      <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>⟳ Generating via Antigravity daemon...</div>
+                    ) : emailDraft ? (
+                      <>
+                        <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', color: 'var(--text-main)', fontSize: '0.85rem', lineHeight: '1.6', fontFamily: 'inherit', margin: '0 0 10px' }}>{emailDraft}</pre>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button onClick={() => { navigator.clipboard.writeText(emailDraft); setDraftCopied(true); setTimeout(() => setDraftCopied(false), 2000); }} style={{ padding: '5px 14px', borderRadius: '8px', fontSize: '0.78rem', cursor: 'pointer', background: draftCopied ? 'rgba(16,185,129,0.15)' : 'rgba(251,191,36,0.15)', color: draftCopied ? 'var(--accent-green)' : '#fbbf24', border: `1px solid ${draftCopied ? 'rgba(16,185,129,0.3)' : 'rgba(251,191,36,0.3)'}` }}>
+                            {draftCopied ? '✓ Copied!' : '📋 Copy Email'}
+                          </button>
+                          <button onClick={() => setDraftingFor(null)} style={{ padding: '5px 12px', borderRadius: '8px', fontSize: '0.78rem', cursor: 'pointer', background: 'transparent', color: 'var(--text-muted)', border: '1px solid var(--border-color)' }}>Close</button>
+                        </div>
+                      </>
+                    ) : null}
+                  </div>
+                )}
 
                 {/* Stage Progress Bar */}
                 <div style={{ marginTop: '12px', display: 'flex', gap: '4px' }}>

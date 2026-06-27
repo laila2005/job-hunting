@@ -46,8 +46,63 @@ const getGreeting = () => {
   return 'Good evening';
 };
 
-const DailyBriefing = ({ jobs = [] }) => {
+const ScoreSparkline = ({ scores }) => {
+  if (!scores || scores.length < 2) return null;
+  const W = 120, H = 36, pad = 4;
+  const min = Math.min(...scores);
+  const max = Math.max(...scores);
+  const range = max - min || 1;
+  const pts = scores.map((s, i) => {
+    const x = pad + (i / (scores.length - 1)) * (W - pad * 2);
+    const y = H - pad - ((s - min) / range) * (H - pad * 2);
+    return `${x},${y}`;
+  }).join(' ');
+  const latest = scores[scores.length - 1];
+  const prev = scores[scores.length - 2];
+  const trend = latest >= prev ? '↑' : '↓';
+  const trendColor = latest >= prev ? '#10b981' : '#ef4444';
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', padding: '8px 12px', border: '1px solid var(--border-color)' }}>
+      <div>
+        <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: '700', letterSpacing: '0.06em', marginBottom: '2px' }}>INTERVIEW SCORE</div>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+          <span style={{ fontSize: '1.2rem', fontWeight: '700', color: trendColor }}>{latest}</span>
+          <span style={{ fontSize: '0.8rem', color: trendColor }}>{trend}</span>
+          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>/100</span>
+        </div>
+      </div>
+      <svg width={W} height={H} style={{ flexShrink: 0 }}>
+        <polyline points={pts} fill="none" stroke={trendColor} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" opacity="0.8"/>
+        {scores.map((s, i) => {
+          const x = pad + (i / (scores.length - 1)) * (W - pad * 2);
+          const y = H - pad - ((s - min) / range) * (H - pad * 2);
+          return i === scores.length - 1 ? <circle key={i} cx={x} cy={y} r="3" fill={trendColor}/> : null;
+        })}
+      </svg>
+      <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{scores.length} sessions</div>
+    </div>
+  );
+};
+
+const DailyBriefing = ({ supabase, jobs = [] }) => {
   const [streak] = useState(getStreak);
+  const [interviewScores, setInterviewScores] = useState([]);
+
+  useEffect(() => {
+    if (!supabase) return;
+    supabase
+      .from('interview_sessions')
+      .select('score, created_at')
+      .eq('role', 'agent')
+      .not('score', 'is', null)
+      .order('created_at', { ascending: true })
+      .limit(20)
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          setInterviewScores(data.map(r => r.score));
+        }
+      });
+  }, [supabase]);
   const tip = INTERVIEW_TIPS[getTipIndex()];
 
   const topJobs = [...jobs]
@@ -103,6 +158,13 @@ const DailyBriefing = ({ jobs = [] }) => {
         )}
         <StatPill icon="📊" value={jobs.length} label="Total Tracked" color="var(--accent-purple)" />
       </div>
+
+      {/* Interview score sparkline */}
+      {interviewScores.length >= 2 && (
+        <div style={{ marginBottom: '16px' }}>
+          <ScoreSparkline scores={interviewScores} />
+        </div>
+      )}
 
       {/* Overdue alerts */}
       {overdueJobs.length > 0 && (

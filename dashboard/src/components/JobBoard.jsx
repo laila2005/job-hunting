@@ -111,6 +111,7 @@ const JobBoard = ({ jobs, onApprove, onDecline, onMarkApplied, onStartInterview 
                         📅 Scraped: {formatDate(job.created_at)}
                       </span>
                     )}
+                    <ResumeTag title={job.title} resumeVersion={job.resumeVersion} />
                   </div>
                 </div>
               </div>
@@ -149,6 +150,25 @@ const JobBoard = ({ jobs, onApprove, onDecline, onMarkApplied, onStartInterview 
         />
       )}
     </div>
+  );
+};
+
+const RESUME_RULES = [
+  { keywords: ['backend', 'back-end', 'back end', 'node', 'api', 'django', 'flask', 'spring', 'asp.net'], label: '📄 Backend Resume', color: '#3b82f6' },
+  { keywords: ['fullstack', 'full-stack', 'full stack', 'react', 'next.js', 'vue', 'angular'], label: '📄 Fullstack Resume', color: '#8b5cf6' },
+  { keywords: ['intern', 'internship', 'junior', 'graduate', 'entry'], label: '📄 Internship Resume', color: '#10b981' },
+  { keywords: ['data', 'ml', 'machine learning', 'ai ', 'python', 'analyst'], label: '📄 Data/AI Resume', color: '#f59e0b' },
+];
+
+const ResumeTag = ({ title = '', resumeVersion }) => {
+  const t = title.toLowerCase();
+  const match = RESUME_RULES.find(r => r.keywords.some(k => t.includes(k)));
+  const label = resumeVersion ? `📄 ${resumeVersion}` : (match ? match.label : '📄 General Resume');
+  const color = match ? match.color : '#6b7280';
+  return (
+    <span style={{ fontSize: '0.72rem', fontWeight: '600', color, background: `${color}18`, padding: '2px 8px', borderRadius: '10px', border: `1px solid ${color}33` }}>
+      {label}
+    </span>
   );
 };
 

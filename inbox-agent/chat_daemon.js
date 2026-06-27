@@ -92,6 +92,43 @@ _Diagnostics complete._`);
 I will evaluate matches using your profile context and alert you on WhatsApp the moment new recommendations are inserted!`;
   }
   
+  if (cmd === '/cover-letter') {
+    // Parse inline params: [tone=X] [company=X] [title=X]
+    const toneMatch = arg.match(/\[tone=([^\]]+)\]/);
+    const companyMatch = arg.match(/\[company=([^\]]+)\]/);
+    const titleMatch = arg.match(/\[title=([^\]]+)\]/);
+    const tone = toneMatch ? toneMatch[1] : 'Professional';
+    const company = companyMatch ? companyMatch[1] : 'the company';
+    const jobTitle = titleMatch ? titleMatch[1] : 'Software Engineer';
+
+    // Everything after the params line is the job description / extra context
+    const bodyStart = arg.indexOf('\n\n');
+    const body = bodyStart !== -1 ? arg.slice(bodyStart + 2).trim() : '';
+
+    const profile = candidateProfile;
+    const prompt = `You are writing a cover letter on behalf of ${profile.name || 'Laila Mohamed Fikry'}.
+
+Candidate profile:
+- Degree: ${profile.education || '3rd-year Computer Science student'}
+- Current role: ${profile.current_role || 'Lead Software Engineer at LM Tech Solutions'}
+- Key projects: ${(profile.projects || ['RMS 3.0 IoT platform for GASCO and Ministry of Interior']).slice(0, 3).join(', ')}
+- Skills: ${(profile.skills || ['C#', 'ASP.NET', 'Node.js', 'React', 'Python', 'PostgreSQL']).join(', ')}
+- Goal: Secure a ${jobTitle} role at ${company}
+
+Job description / context:
+${body || '(No job description provided — write a general strong cover letter for this role.)'}
+
+Write a ${tone.toLowerCase()} cover letter (3-4 paragraphs, no placeholder brackets) tailored to ${company} for the ${jobTitle} position. Be specific, genuine, and highlight real achievements. Do not use generic filler phrases.`;
+
+    try {
+      const response = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt });
+      return `[COVER_LETTER_RESPONSE]\n${response.text.trim()}`;
+    } catch (err) {
+      console.error('❌ Cover letter generation failed:', err.message);
+      return `[COVER_LETTER_RESPONSE]\n⚠️ Failed to generate cover letter: ${err.message}`;
+    }
+  }
+
   if (cmd === '/logs') {
     return `📝 *Active Worker Logs:*
     

@@ -15,6 +15,7 @@ import ApplicationTracker from './components/ApplicationTracker'
 import CoverLetterGenerator from './components/CoverLetterGenerator'
 import DreamBoard from './components/DreamBoard'
 import DailyBriefing from './components/DailyBriefing'
+import NotificationManager from './components/NotificationManager'
 
 // Initialize Supabase Client
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://wpxtstbquvbsiqgoqwma.supabase.co'
@@ -263,7 +264,7 @@ function App() {
       ) : activeTab === 'tracker' ? (
         <ApplicationTracker supabase={supabase} jobs={jobs} />
       ) : activeTab === 'coverletter' ? (
-        <CoverLetterGenerator jobs={jobs} />
+        <CoverLetterGenerator supabase={supabase} jobs={jobs} />
       ) : activeTab === 'dreamboard' ? (
         <DreamBoard supabase={supabase} jobs={jobs} />
       ) : activeTab === 'fulltime' ? (
@@ -338,13 +339,14 @@ function App() {
         </div>
       ) : (
         <>
-          <DailyBriefing jobs={jobs} />
+          <DailyBriefing supabase={supabase} jobs={jobs} />
           <LiveTelemetry />
           <ActionCenter jobs={jobs} />
           <StatCards jobs={jobs} />
           <NetworkingCRM supabase={supabase} />
         </>
       )}
+      <NotificationManager supabase={supabase} />
       {showAddModal && (
         <ManualAddModal 
           onClose={() => setShowAddModal(false)} 
