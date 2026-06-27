@@ -1,10 +1,48 @@
 import React, { useState, useMemo } from 'react';
 import JobModal from './JobModal';
 
+// Locations within Laila's commute range (East / North Cairo)
+const NEAR_ME_KEYWORDS = [
+  'new cairo', 'fifth settlement', '5th settlement', '5th settelment', 'التجمع',
+  'nasr city', 'مدينة نصر', 'maadi', 'المعادي', 'heliopolis', 'مصر الجديدة',
+  'shorouk', 'الشروق', 'rehab', 'الرحاب', 'mostakbal', 'المستقبل',
+  'north 90', 'south 90', 'zahraa', 'hyde park', 'katameya', 'القطامية',
+  'obour', 'العبور', 'badr', 'بدر',
+];
+
+// Remote / work-from-home signals
+const REMOTE_KEYWORDS = ['remote', 'work from home', 'wfh', 'fully remote', 'anywhere', 'distributed'];
+
+// US-only signals in location or notes
+const US_ONLY_KEYWORDS = [
+  'united states', ', usa', '- usa', '(usa)', 'new york, ny', 'san francisco',
+  'los angeles', ', ca', ', ny', ', tx', ', fl', ', wa', ', il',
+  'chicago', 'boston', 'seattle', 'austin', 'denver', 'atlanta',
+  'us only', 'us citizens only', 'must reside in the us', 'authorized to work in the us',
+  'must be located in the us', 'based in the us',
+];
+
+const locStr = job => `${job.location || ''} ${job.model || ''} ${job.notes || ''} ${job.companySummary || ''}`.toLowerCase();
+
+const isRemoteJob  = job => REMOTE_KEYWORDS.some(k => locStr(job).includes(k));
+const isUSOnly     = job => US_ONLY_KEYWORDS.some(k => locStr(job).includes(k));
+const isNearMe     = job => {
+  const s = locStr(job);
+  if (isUSOnly(job)) return false;
+  if (isRemoteJob(job)) return true;
+  if (NEAR_ME_KEYWORDS.some(k => s.includes(k))) return true;
+  // Accept generic "cairo" only when not hinting at distant districts
+  const farDistricts = ['sheikh zayed', 'الشيخ زايد', '6 october', 'sixth of october', 'giza', 'الجيزة', '6th october', 'imbaba', 'dokki', 'mohandeseen', 'haram', 'faisal', 'hadayek'];
+  if (s.includes('cairo') && !farDistricts.some(k => s.includes(k))) return true;
+  return false;
+};
+
 const JobBoard = ({ jobs, onApprove, onDecline, onMarkApplied, onStartInterview }) => {
   const [selectedJob, setSelectedJob] = useState(null);
   const [activeFilter, setActiveFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [nearMeOnly, setNearMeOnly] = useState(false);
+  const [hideUSOnly, setHideUSOnly] = useState(true);
 
   const formatDate = (dateStr) => {
     if (!dateStr) return '';
@@ -22,15 +60,16 @@ const JobBoard = ({ jobs, onApprove, onDecline, onMarkApplied, onStartInterview 
       .filter(job => {
         const normStatus = (job.status || '').trim().toLowerCase();
         const normFilter = activeFilter.trim().toLowerCase();
-        
-        // Exclude applied and rejected jobs from "All" tab view to keep pipeline clean
+
         if (normFilter === 'all') {
           if (normStatus === 'applied' || normStatus === 'rejected') return false;
         } else {
           if (normStatus !== normFilter) return false;
         }
-        
+
         if (searchQuery && !job.company.toLowerCase().includes(searchQuery.toLowerCase()) && !job.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+        if (nearMeOnly && !isNearMe(job)) return false;
+        if (hideUSOnly && isUSOnly(job)) return false;
         return true;
       })
       .sort((a, b) => {
@@ -39,7 +78,10 @@ const JobBoard = ({ jobs, onApprove, onDecline, onMarkApplied, onStartInterview 
         if (dateB - dateA !== 0) return dateB - dateA;
         return (b.fitScore || 0) - (a.fitScore || 0);
       });
-  }, [jobs, activeFilter, searchQuery]);
+  }, [jobs, activeFilter, searchQuery, nearMeOnly, hideUSOnly]);
+
+  const usOnlyCount  = useMemo(() => jobs.filter(isUSOnly).length, [jobs]);
+  const nearMeCount  = useMemo(() => jobs.filter(isNearMe).length, [jobs]);
 
   return (
     <div>
@@ -48,18 +90,48 @@ const JobBoard = ({ jobs, onApprove, onDecline, onMarkApplied, onStartInterview 
           <svg className="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
           </svg>
-          <input 
-            type="text" 
-            placeholder="Search jobs by company or title..." 
+          <input
+            type="text"
+            placeholder="Search jobs by company or title..."
             className="search-input job-search-input-with-icon"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
+
+        {/* Location smart filters */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', padding: '8px 0 2px' }}>
+          <span style={{ fontSize: '0.68rem', fontWeight: '700', color: 'var(--text-muted)', letterSpacing: '0.08em' }}>LOCATION:</span>
+
+          <button onClick={() => setNearMeOnly(v => !v)} style={{
+            padding: '4px 12px', borderRadius: '20px', fontSize: '0.75rem', cursor: 'pointer', fontWeight: '600',
+            border: nearMeOnly ? '1px solid #10b981' : '1px solid var(--border-color)',
+            background: nearMeOnly ? 'rgba(16,185,129,0.12)' : 'transparent',
+            color: nearMeOnly ? '#10b981' : 'var(--text-muted)',
+          }}>
+            📍 Near Me {nearMeCount > 0 && <span style={{ opacity: 0.75, fontWeight: '400' }}>({nearMeCount})</span>}
+          </button>
+
+          <button onClick={() => setHideUSOnly(v => !v)} style={{
+            padding: '4px 12px', borderRadius: '20px', fontSize: '0.75rem', cursor: 'pointer', fontWeight: '600',
+            border: hideUSOnly ? '1px solid #ef4444' : '1px solid var(--border-color)',
+            background: hideUSOnly ? 'rgba(239,68,68,0.1)' : 'transparent',
+            color: hideUSOnly ? '#ef4444' : 'var(--text-muted)',
+          }}>
+            🚫 Hide US-Only {usOnlyCount > 0 && <span style={{ opacity: 0.75, fontWeight: '400' }}>({usOnlyCount} hidden)</span>}
+          </button>
+
+          {(nearMeOnly || hideUSOnly) && (
+            <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+              Showing {filteredJobs.length} of {jobs.filter(j => !['applied','rejected'].includes((j.status||'').toLowerCase())).length} active jobs
+            </span>
+          )}
+        </div>
+
         <div className="tabs-container">
           {['All', 'Pending Review', 'Apply Manually', 'Applied', 'Rejected'].map(tab => (
-            <button 
-              key={tab} 
+            <button
+              key={tab}
               className={`tab-btn ${activeFilter === tab ? 'active' : ''}`}
               onClick={() => setActiveFilter(tab)}
             >
