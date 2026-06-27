@@ -27,35 +27,35 @@ import WeeklyBrief from './components/WeeklyBrief'
 
 const NAV_GROUPS = [
   {
-    label: 'PIPELINE',
+    label: 'PIPELINE', color: '#3B82F6',
     items: [
-      { id: 'telemetry', icon: '📊', label: 'Telemetry' },
-      { id: 'fulltime',  icon: '💼', label: 'Full-Time' },
-      { id: 'parttime',  icon: '⏳', label: 'Part-Time' },
-      { id: 'internships', icon: '🎓', label: 'Internships' },
-      { id: 'radar',     icon: '🌍', label: 'Global Radar' },
+      { id: 'telemetry',   label: 'Telemetry' },
+      { id: 'fulltime',    label: 'Full-Time' },
+      { id: 'parttime',    label: 'Part-Time' },
+      { id: 'internships', label: 'Internships' },
+      { id: 'radar',       label: 'Global Radar' },
     ],
   },
   {
-    label: 'AI TOOLS',
+    label: 'AI TOOLS', color: '#8B5CF6',
     items: [
-      { id: 'commander',   icon: '🤖', label: 'AI Commander' },
-      { id: 'coverletter', icon: '✍️', label: 'Cover Letter' },
-      { id: 'company',     icon: '🏢', label: 'Company Intel' },
-      { id: 'skillgap',    icon: '🧠', label: 'Skill Gap' },
-      { id: 'negotiate',   icon: '🤝', label: 'Negotiate' },
-      { id: 'coach',       icon: '🎯', label: 'Interview Coach' },
-      { id: 'weekly',      icon: '📱', label: 'Weekly Brief' },
+      { id: 'commander',   label: 'AI Commander' },
+      { id: 'coverletter', label: 'Cover Letter' },
+      { id: 'company',     label: 'Company Intel' },
+      { id: 'skillgap',    label: 'Skill Gap' },
+      { id: 'negotiate',   label: 'Negotiate' },
+      { id: 'coach',       label: 'Interview Coach' },
+      { id: 'weekly',      label: 'Weekly Brief' },
     ],
   },
   {
-    label: 'CAREER',
+    label: 'CAREER', color: '#10B981',
     items: [
-      { id: 'interview',  icon: '🎤', label: 'Mock Interview' },
-      { id: 'tracker',    icon: '📋', label: 'App Tracker' },
-      { id: 'dreamboard', icon: '💎', label: 'Dream Board' },
-      { id: 'salary',     icon: '💰', label: 'Salary Intel' },
-      { id: 'strategy',   icon: '🔭', label: 'Career Strategy' },
+      { id: 'interview',  label: 'Mock Interview' },
+      { id: 'tracker',    label: 'App Tracker' },
+      { id: 'dreamboard', label: 'Dream Board' },
+      { id: 'salary',     label: 'Salary Intel' },
+      { id: 'strategy',   label: 'Career Strategy' },
     ],
   },
 ]
@@ -261,15 +261,18 @@ function App() {
       </div>
     );
 
+    // ── Default: Telemetry ──
     return (
-      <>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
         <DaemonHealthBanner supabase={supabase} />
         <DailyBriefing supabase={supabase} jobs={jobs} />
-        <LiveTelemetry />
-        <ActionCenter jobs={jobs} />
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+          <LiveTelemetry />
+          <ActionCenter jobs={jobs} />
+        </div>
         <StatCards jobs={jobs} />
         <NetworkingCRM supabase={supabase} />
-      </>
+      </div>
     );
   };
 
@@ -277,43 +280,52 @@ function App() {
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-dark)' }}>
       {/* ── Sidebar ── */}
       <aside style={{
-        width: '220px', flexShrink: 0, display: 'flex', flexDirection: 'column',
-        background: 'rgba(12,15,34,0.95)', borderRight: '1px solid var(--border-color)',
+        width: '200px', flexShrink: 0, display: 'flex', flexDirection: 'column',
+        background: '#080b1a', borderRight: '1px solid rgba(255,255,255,0.06)',
         position: 'fixed', top: 0, left: 0, height: '100vh', overflowY: 'auto', zIndex: 100,
-        padding: '0 0 24px',
+        padding: '0 0 20px',
       }}>
         {/* Logo */}
-        <div style={{ padding: '20px 16px 16px', borderBottom: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '0.85rem', fontWeight: '800', color: 'var(--text-main)', letterSpacing: '-0.01em', lineHeight: 1.2 }}>
-            Job Search<br />
-            <span style={{ color: 'var(--accent-blue)' }}>Command Center</span>
+        <div style={{ padding: '18px 16px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ fontSize: '0.78rem', fontWeight: '700', color: 'var(--text-main)', letterSpacing: '0.01em', lineHeight: 1.3 }}>
+            Job Search
+            <div style={{ color: 'var(--accent-blue)', fontWeight: '800' }}>Command Center</div>
           </div>
-          <div style={{ marginTop: '6px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: isLoading ? '#f59e0b' : 'var(--accent-green)', display: 'inline-block', flexShrink: 0 }}></span>
-            <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>{isLoading ? 'Syncing...' : 'Live Connected'}</span>
+          <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+            <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: isLoading ? '#f59e0b' : '#10B981', display: 'inline-block', flexShrink: 0, boxShadow: isLoading ? 'none' : '0 0 4px #10B981' }}></span>
+            <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: '500' }}>{isLoading ? 'Syncing...' : 'Live'}</span>
           </div>
         </div>
 
         {/* Nav groups */}
-        <nav style={{ flex: 1, padding: '12px 8px' }}>
+        <nav style={{ flex: 1, padding: '10px 8px 0' }}>
           {NAV_GROUPS.map(group => (
-            <div key={group.label} style={{ marginBottom: '20px' }}>
-              <div style={{ fontSize: '0.6rem', fontWeight: '700', color: 'var(--text-muted)', letterSpacing: '0.1em', padding: '0 8px', marginBottom: '4px' }}>
+            <div key={group.label} style={{ marginBottom: '18px' }}>
+              <div style={{
+                fontSize: '0.58rem', fontWeight: '700', letterSpacing: '0.12em',
+                padding: '0 10px', marginBottom: '3px',
+                color: group.color, opacity: 0.7,
+              }}>
                 {group.label}
               </div>
               {group.items.map(item => {
                 const active = activeTab === item.id;
                 return (
                   <button key={item.id} onClick={() => setActiveTab(item.id)} style={{
-                    display: 'flex', alignItems: 'center', gap: '10px', width: '100%',
-                    padding: '8px 10px', borderRadius: '8px', border: 'none', cursor: 'pointer',
-                    background: active ? 'rgba(59,130,246,0.15)' : 'transparent',
-                    color: active ? 'var(--accent-blue)' : 'var(--text-secondary)',
-                    fontWeight: active ? '600' : '400', fontSize: '0.82rem',
-                    textAlign: 'left', transition: 'all 0.15s ease',
-                    borderLeft: active ? '2px solid var(--accent-blue)' : '2px solid transparent',
+                    display: 'flex', alignItems: 'center', gap: '8px', width: '100%',
+                    padding: '7px 10px', borderRadius: '6px', border: 'none', cursor: 'pointer',
+                    background: active ? `${group.color}18` : 'transparent',
+                    color: active ? group.color : 'var(--text-muted)',
+                    fontWeight: active ? '600' : '400', fontSize: '0.8rem',
+                    textAlign: 'left', transition: 'background 0.12s, color 0.12s',
+                    borderLeft: `2px solid ${active ? group.color : 'transparent'}`,
+                    marginBottom: '1px',
                   }}>
-                    <span style={{ fontSize: '0.95rem', flexShrink: 0 }}>{item.icon}</span>
+                    <span style={{
+                      width: '5px', height: '5px', borderRadius: '50%', flexShrink: 0,
+                      background: active ? group.color : 'rgba(255,255,255,0.15)',
+                      transition: 'background 0.12s',
+                    }} />
                     {item.label}
                   </button>
                 );
@@ -323,18 +335,19 @@ function App() {
         </nav>
 
         {/* Add job button */}
-        <div style={{ padding: '0 10px' }}>
-          <button className="btn btn-gradient" onClick={() => setShowAddModal(true)} style={{ width: '100%', justifyContent: 'center', fontSize: '0.82rem', padding: '9px 12px' }}>
-            <svg className="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: '14px', height: '14px' }}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
-            Manual Add
+        <div style={{ padding: '0 8px' }}>
+          <button onClick={() => setShowAddModal(true)} style={{
+            width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid rgba(59,130,246,0.3)',
+            background: 'rgba(59,130,246,0.08)', color: 'var(--accent-blue)', cursor: 'pointer',
+            fontSize: '0.78rem', fontWeight: '600', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+          }}>
+            <span style={{ fontSize: '1rem', lineHeight: 1 }}>+</span> Manual Add
           </button>
         </div>
       </aside>
 
       {/* ── Main content ── */}
-      <main style={{ marginLeft: '220px', flex: 1, minWidth: 0, padding: '28px 32px', maxWidth: 'calc(100vw - 220px)' }}>
+      <main style={{ marginLeft: '200px', flex: 1, minWidth: 0, padding: '24px 28px', maxWidth: 'calc(100vw - 200px)' }}>
         {renderContent()}
       </main>
 
