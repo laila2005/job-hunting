@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import candidateProfile from '../../candidate_profile.json';
 
 const TONES = ['Professional', 'Enthusiastic', 'Concise'];
 
