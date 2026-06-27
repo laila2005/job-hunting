@@ -22,6 +22,15 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 const candidateProfilePath = path.join(__dirname, '..', 'candidate_profile.json');
 const candidateProfile = fs.readFileSync(candidateProfilePath, 'utf-8');
 
+function pickResume(title = '', description = '') {
+  const t = (title + ' ' + description).toLowerCase();
+  if (/\bc#\b|\.net|asp\.net|dotnet/.test(t))                         return 'Laila_Fikry_Backend_Engineer_DotNet.docx';
+  if (/\bnode(\.js)?\b|express|fastapi|flask|django/.test(t))         return 'Laila_Fikry_Backend_Engineer_NodeJS.docx';
+  if (/react|next\.js|full.?stack|front.?end/.test(t))                return 'Laila_Fikry_FullStack_Developer.docx';
+  if (/\bmobile\b|react native|android|ios|flutter/.test(t))          return 'Laila_Fikry_Mobile_Developer.docx';
+  return 'Laila_Fikry_Software_Engineer.docx';
+}
+
 async function evaluateJobWithAI(jobs) {
   if (!jobs || jobs.length === 0) return [];
 
@@ -36,44 +45,66 @@ async function evaluateJobWithAI(jobs) {
     const jobsWithId = chunk.map((job, idx) => ({ id: idx, ...job }));
 
     const prompt = `
-      You are an expert technical recruiter and career strategist evaluating job descriptions.
-      
-      We are matching jobs for this specific candidate:
-      Candidate Profile:
-      ${candidateProfile}
+You are a senior technical recruiter matching jobs for a specific candidate. Be strict and precise.
 
-      Here is the batch of jobs to evaluate:
-      ${JSON.stringify(jobsWithId.map(j => ({ 
-        id: j.id, 
-        title: j.title, 
-        company: j.company_name, 
-        location: j.candidate_required_location, 
-        description: j.description, 
-        salary: j.salary 
-      })))}
+CANDIDATE: Laila Mohamed Fikry
+- Location: New Cairo / 5th Settlement, Cairo, Egypt
+- Role: Lead Software Engineer (LM Tech Solutions) — deployed RMS 3.0 IoT platform to MOI + GASCO (national government infrastructure)
+- Stack: C#, ASP.NET Core, Python, FastAPI, Node.js, React, Next.js, TypeScript, PostgreSQL, SQL Server, Docker, WebRTC, TensorFlow/CNN
+- Level: Junior-to-Mid (2+ years production exp; qualifies for roles asking 2-4 yrs)
+- Salary target: 20,000–35,000 EGP/month local OR $2,500–$5,500 USD/month remote
+- Preferred locations: New Cairo, 5th Settlement, Nasr City, Maadi, Heliopolis, Shorouk, Rehab, Mostakbal City — OR fully remote (no residency restriction)
 
-      For EACH job, output a JSON array in this exact format:
-      [
-        {
-          "id": number,
-          "pass": boolean, 
-          "aqs_score": number (0-100),
-          "aqs_strengths": ["string"],
-          "aqs_risks": ["string"],
-          "recommended_action": "apply" | "network" | "skip" | "dream_company"
-        }
-      ]
-      
-      RULES FOR EVALUATION:
-      - pass: true if the candidate has strong overlap in backend/fullstack/IoT/ML and fits the tech stack (e.g. C#, ASP.NET, Python, Node, React).
-      - Do NOT fail jobs that require 2-4 years of experience, as this candidate's production experience at LM Tech Solutions (MOI and GASCO enterprise systems) makes her fully qualified.
-      - pass: false if it explicitly requires 5+ years of experience (Senior/Staff/Lead) OR is purely frontend/design/WordPress OR has a strict location restriction that excludes candidates based in Egypt OR is a non-technical role (Sales, HR, Business Development, Marketing, Support, IT Admin).
-      - aqs_score: Score out of 100 based on fit with Laila's technical skills (C#, ASP.NET, React, Python), remote feasibility, and career progression potential.
-      - recommended_action: 
-        - 'skip' if pass is false. 
-        - 'dream_company' if it is a prominent international/multinational company offering high/premium salaries (USD, Euro, or top-tier EGP) and is EITHER fully remote OR hybrid near New Cairo.
-        - 'network' if it's a high-tier company requiring a referral. 
-        - 'apply' if it's a good match but not a dream company.
+${candidateProfile}
+
+JOBS TO EVALUATE:
+${JSON.stringify(jobsWithId.map(j => ({ id: j.id, title: j.title, company: j.company_name, location: j.candidate_required_location, description: j.description, salary: j.salary })))}
+
+OUTPUT: JSON array only — no markdown, no explanation.
+[{ "id": number, "pass": boolean, "aqs_score": number, "aqs_strengths": ["string"], "aqs_risks": ["string"], "recommended_action": "apply"|"network"|"skip"|"dream_company" }]
+
+=== HARD FAIL (pass: false, aqs_score: 0, recommended_action: "skip") ===
+1. Requires 5+ years explicitly (Senior/Staff/Principal/Lead title with no junior/graduate track)
+2. Non-tech role: Sales, HR, Marketing, Business Dev, Graphic Design, Support, IT Admin, Data Entry, Finance, Accounting
+3. Purely frontend/UI/design/WordPress with no backend component
+4. Equity-only compensation — no base salary, "founder equity", unpaid, "sweat equity", volunteer
+5. Requires US citizenship / US residency / must be located in the US for remote work
+6. Physical office only in far Egypt: Sheikh Zayed, 6 October, Mohandeseen, Dokki, Haram, Imbaba, Faisal, Boulaq — with no remote/hybrid option
+
+=== DO NOT FAIL (pass: true if tech fit exists) ===
+- Roles requiring 2–4 years: Laila's MOI/GASCO production deployment fully covers this
+- Remote roles with worldwide/Egypt eligibility: excellent fit
+- Internships and junior roles: high priority
+
+=== SCORING GUIDE (aqs_score 0–100) ===
+Tech stack match (max 40 pts):
+  - Core match (C#/ASP.NET or Node.js/Express or FastAPI/Python): +35
+  - Good match (React/TypeScript/Next.js/PostgreSQL/Docker): +30
+  - Partial match (general backend/fullstack/software): +20
+  - Weak match (only adjacent tech): +10
+
+Location fit (max 25 pts):
+  - Fully remote, no US restriction: +25
+  - Near Me (New Cairo/5th Settlement/Nasr City/Maadi/Heliopolis/Shorouk/Rehab): +25
+  - Generic Cairo without far-district hints: +15
+  - Hybrid with remote days near Cairo: +15
+  - Far Egypt only (Sheikh Zayed/Giza/6 October) no remote: +0
+
+Salary alignment (max 20 pts):
+  - Salary clearly meets or exceeds target: +20
+  - Salary unlisted (assume acceptable): +12
+  - Salary clearly below target or equity-only: +0
+
+Career level fit (max 15 pts):
+  - Junior/Internship/Graduate/Entry-level: +15
+  - Mid-level (2–4 yrs): +12
+  - Mixed (junior preferred but not required): +10
+
+=== RECOMMENDED ACTION ===
+- "dream_company": multinational/international brand (Google, Microsoft, Amazon, Vodafone, Oracle, SAP, Siemens, IBM, Booking, Shopify, etc.) AND salary ≥ 25,000 EGP/mo or ≥ $3,000/mo AND remote-eligible or Near Me
+- "network": well-known company but unclear path without referral
+- "apply": solid match, straightforward application
+- "skip": pass is false
     `;
 
     let attempts = 3;
@@ -116,38 +147,58 @@ async function evaluateJobWithAI(jobs) {
       console.warn(`   ⚠️ Fallback: Running local rule-based evaluation for batch because Gemini is rate-limited.`);
       for (const job of jobsWithId) {
         const title = (job.title || '').toLowerCase();
-        const desc = (job.description || '').toLowerCase();
-        
-        const techKeywords = ['backend', 'c#', '.net', 'asp.net', 'python', 'node', 'react', 'fullstack', 'software', 'developer', 'programmer', 'computer science', 'engineering'];
-        const excludeKeywords = ['warehouse', 'mechanical', 'civil', 'architecture', 'electrical', 'marketing', 'sales', 'hr', 'logistics', 'accounting', 'finance', 'medical', 'hardware', 'data entry', 'technical office', 'business development', 'support', 'it admin'];
-        
+        const desc  = (job.description || '').toLowerCase();
+        const loc   = (job.candidate_required_location || '').toLowerCase();
+        const sal   = (job.salary || '').toLowerCase();
+        const combined = `${title} ${desc} ${loc} ${sal}`;
+
+        // Hard exclusions
+        const excludeKeywords = ['warehouse', 'mechanical', 'civil', 'electrical', 'marketing', 'sales',
+          'hr ', 'human resources', 'logistics', 'accounting', 'finance', 'medical', 'hardware',
+          'data entry', 'business development', 'support engineer', 'it admin', 'graphic design',
+          'wordpress', 'content writer', 'seo', 'social media'];
+        const isEquityOnly = ['equity only', 'equity-only', 'no salary', 'unpaid', 'sweat equity',
+          'volunteer', 'cofounder equity', 'co-founder equity'].some(k => combined.includes(k));
+        const isUSOnly = ['us only', 'us citizens only', 'must reside in the us',
+          'authorized to work in the us', 'must be located in the us'].some(k => combined.includes(k));
+        const isSenior = /\b(senior|lead|principal|staff|head of|vp |cto|cio)\b/.test(title) &&
+          !title.includes('intern') && !title.includes('junior');
+        const isFarEgypt = ['sheikh zayed', '6 october', 'sixth of october', 'mohandeseen',
+          'dokki', 'haram', 'imbaba', 'faisal', 'boulaq'].some(k => combined.includes(k));
+
+        if (excludeKeywords.some(k => title.includes(k)) || isEquityOnly || isUSOnly || isSenior || isFarEgypt) continue;
+
+        const techKeywords = ['backend', 'c#', '.net', 'asp.net', 'python', 'fastapi', 'node',
+          'express', 'react', 'typescript', 'next.js', 'fullstack', 'full-stack', 'software',
+          'developer', 'engineer', 'programmer', 'computer science', 'docker', 'postgresql', 'api'];
+
         const isTechRole = techKeywords.some(kw => title.includes(kw) || desc.includes(kw));
-        const isExcluded = excludeKeywords.some(kw => title.includes(kw));
-        const isSenior = title.includes('senior') || title.includes('lead') || title.includes('principal') || title.includes('5+') || title.includes('6+') || title.includes('7+');
-        
-        const isMatch = isTechRole && !isExcluded && !isSenior;
-        
-        if (isMatch) {
-          let aqs_score = 75;
-          let strengths = ['Local fallback match'];
-          let risks = ['AI evaluation offline (rate limit)'];
-          
-          if (title.includes('intern') || desc.includes('intern')) {
-            aqs_score = 90;
-            strengths.push('Internship suitable for Year 3 CS student');
-          }
-          if (title.includes('c#') || title.includes('.net')) {
-            strengths.push('Matches core ASP.NET stack');
-          }
-          
-          finalJobs.push({
-            ...job,
-            aqs_score: aqs_score,
-            aqs_strengths: strengths,
-            aqs_risks: risks,
-            recommended_action: 'apply'
-          });
+        if (!isTechRole) continue;
+
+        // Score
+        let aqs_score = 60;
+        const strengths = ['Fallback rule match'];
+        const risks = ['AI evaluation offline — manual review recommended'];
+
+        if (title.includes('c#') || title.includes('.net') || title.includes('asp.net')) { aqs_score += 20; strengths.push('Core C#/ASP.NET stack match'); }
+        if (title.includes('node') || title.includes('fastapi') || title.includes('python'))  { aqs_score += 15; strengths.push('Python/Node backend match'); }
+        if (title.includes('react') || title.includes('typescript') || title.includes('next')) { aqs_score += 10; strengths.push('Frontend stack match'); }
+        if (title.includes('intern') || desc.includes('internship')) { aqs_score = Math.max(aqs_score, 82); strengths.push('Internship — high priority'); }
+        if (loc.includes('remote') && !isUSOnly) { aqs_score += 8; strengths.push('Remote eligible'); }
+        if (['new cairo','5th settlement','nasr city','maadi','heliopolis','shorouk','rehab'].some(k => loc.includes(k))) {
+          aqs_score += 8; strengths.push('Near preferred location');
         }
+
+        aqs_score = Math.min(aqs_score, 95);
+
+        // Resume routing
+        let resumeVersion = 'Laila_Fikry_Software_Engineer.docx';
+        if (title.includes('c#') || title.includes('.net') || title.includes('asp.net')) resumeVersion = 'Laila_Fikry_Backend_Engineer_DotNet.docx';
+        else if (title.includes('node') || title.includes('express') || title.includes('fastapi')) resumeVersion = 'Laila_Fikry_Backend_Engineer_NodeJS.docx';
+        else if (title.includes('react') || title.includes('fullstack') || title.includes('full-stack') || title.includes('next')) resumeVersion = 'Laila_Fikry_FullStack_Developer.docx';
+        else if (title.includes('mobile') || title.includes('react native')) resumeVersion = 'Laila_Fikry_Mobile_Developer.docx';
+
+        finalJobs.push({ ...job, aqs_score, aqs_strengths: strengths, aqs_risks: risks, recommended_action: 'apply', _resumeVersion: resumeVersion });
       }
     }
     
@@ -233,25 +284,43 @@ async function fetchRealJobs(customQueries) {
       if (job.url && !seenUrls.has(job.url)) {
         const loc = (job.candidate_required_location || '').toLowerCase();
         
-        // List of foreign indicator keywords
+        // Hard-coded foreign country/city signals (avoid substring 'us' — too broad)
         const foreignKeywords = [
-          'canada', 'toronto', 'ontario', 'united states', 'usa', 'us', 
-          'germany', 'uk', 'london', 'berlin', 'markham', 'vancouver', 
-          'montreal', 'calgary', 'alberta', 'quebec', 'europe', 'india', 
-          'warsaw', 'poland', 'krakow', 'france', 'paris', 'netherlands', 
-          'amsterdam', 'dubai', 'uae', 'saudi', 'riyadh', 'tokyo', 'japan', 'asia'
+          'canada', 'toronto', 'ontario', 'vancouver', 'montreal', 'calgary', 'alberta', 'quebec',
+          'united states', 'united kingdom', 'usa', '(us)', '- us', ', us',
+          'new york', 'san francisco', 'los angeles', 'chicago', 'seattle', 'austin', 'boston',
+          'germany', 'berlin', 'munich', 'uk', 'london', 'manchester',
+          'france', 'paris', 'netherlands', 'amsterdam', 'poland', 'warsaw', 'krakow',
+          'india', 'bangalore', 'mumbai', 'europe', 'asia', 'japan', 'tokyo',
+          'saudi', 'riyadh', 'dubai', 'uae', 'abu dhabi',
         ];
-        
+
+        // Far Egyptian districts Laila cannot commute to (no remote option)
+        const farEgyptKeywords = [
+          'sheikh zayed', 'الشيخ زايد', '6 october', '6th october', 'sixth of october',
+          'mohandeseen', 'المهندسين', 'dokki', 'الدقي', 'haram', 'الهرم',
+          'imbaba', 'إمبابة', 'faisal', 'فيصل', 'boulaq', 'بولاق',
+        ];
+
         const isForeign = foreignKeywords.some(fk => loc.includes(fk));
-        const isEgypt = loc.includes('egypt') || loc.includes('cairo') || loc.includes('giza') || loc.includes('alexandria') || loc.includes('damietta') || loc.includes('مصر') || loc.includes('egy') || loc.includes('remote') || loc.includes('smart village');
-        
-        // For internships, enforce strictly Egypt/Cairo/Remote
+        const isEquityOnly = ['equity only','equity-only','no salary','unpaid','sweat equity','volunteer'].some(k =>
+          `${(job.title||'')} ${(job.description||'')} ${(job.salary||'')}`.toLowerCase().includes(k));
+
+        // Accepted Egypt/remote locations
+        const isEgypt = loc.includes('egypt') || loc.includes('cairo') || loc.includes('alexandria') ||
+          loc.includes('damietta') || loc.includes('مصر') || loc.includes('egy') ||
+          loc.includes('remote') || loc.includes('smart village');
+
+        // Far Egyptian district only (no remote/hybrid mention)
+        const isFarEgyptOnly = farEgyptKeywords.some(k => loc.includes(k)) &&
+          !loc.includes('remote') && !loc.includes('hybrid');
+
         const titleLower = (job.title || '').toLowerCase();
-        const descLower = (job.description || '').toLowerCase();
+        const descLower  = (job.description || '').toLowerCase();
         const isInternship = titleLower.includes('intern') || descLower.includes('intern');
-        
-        if (isForeign || (isInternship && !isEgypt)) {
-          console.log(`   ⏭️ Filtering out foreign or non-local internship: ${job.title} at ${job.company_name || job.company} in ${job.candidate_required_location}`);
+
+        if (isForeign || isEquityOnly || isFarEgyptOnly || (isInternship && !isEgypt)) {
+          console.log(`   ⏭️ Pre-filter skip: ${job.title} at ${job.company_name || job.company} [${job.candidate_required_location}]`);
           continue;
         }
 
@@ -311,7 +380,7 @@ async function fetchRealJobs(customQueries) {
         companySummary: job.description ? job.description.slice(0, 1000) : 'Live Scraped Job Listing',
         model: job.candidate_required_location && job.candidate_required_location.toLowerCase().includes('remote') ? 'Remote' : 'On-site',
         salary: job.salary || 'Unlisted',
-        resumeVersion: 'backend_resume.pdf'
+        resumeVersion: pickResume(job.title, job.description)
       };
 
       console.log(`   📥 Ingesting to Database...`);
