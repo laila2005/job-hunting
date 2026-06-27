@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
 
 function InterviewSimulator({ supabase }) {
   const [messages, setMessages] = useState([]);
@@ -61,7 +60,7 @@ function InterviewSimulator({ supabase }) {
   };
 
   return (
-    <div style={{ padding: '24px', maxWidth: '900px', margin: '0 auto', display: 'flex', flexDirection: 'column', height: 'calc(100vh - 180px)' }}>
+    <div style={{ maxWidth: '900px', margin: '0 auto', display: 'flex', flexDirection: 'column', height: 'calc(100vh - 80px)' }}>
       <div style={{ marginBottom: '24px' }}>
         <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--text-main)', marginBottom: '8px' }}>
           🎤 Mock Interview Simulator
@@ -78,10 +77,8 @@ function InterviewSimulator({ supabase }) {
           {messages.map((msg, idx) => {
             const isUser = msg.role === 'user';
             return (
-              <motion.div 
+              <div
                 key={idx}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
                 style={{
                   alignSelf: isUser ? 'flex-end' : 'flex-start',
                   maxWidth: '80%',
@@ -106,7 +103,7 @@ function InterviewSimulator({ supabase }) {
                 }}>
                   {msg.content}
                 </div>
-              </motion.div>
+              </div>
             );
           })}
           {isSending && (
