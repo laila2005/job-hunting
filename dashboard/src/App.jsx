@@ -16,6 +16,10 @@ import CoverLetterGenerator from './components/CoverLetterGenerator'
 import DreamBoard from './components/DreamBoard'
 import DailyBriefing from './components/DailyBriefing'
 import NotificationManager from './components/NotificationManager'
+import CompanyIntelligence from './components/CompanyIntelligence'
+import SkillGapCloser from './components/SkillGapCloser'
+import SalaryIntelligence from './components/SalaryIntelligence'
+import DaemonHealthBanner from './components/DaemonHealthBanner'
 
 // Initialize Supabase Client
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://wpxtstbquvbsiqgoqwma.supabase.co'
@@ -238,6 +242,24 @@ function App() {
             >
               💎 Dream Board
             </button>
+            <button
+              className={`tab-btn ${activeTab === 'company' ? 'active' : ''}`}
+              onClick={() => setActiveTab('company')}
+            >
+              🏢 Company Intel
+            </button>
+            <button
+              className={`tab-btn ${activeTab === 'skillgap' ? 'active' : ''}`}
+              onClick={() => setActiveTab('skillgap')}
+            >
+              🧠 Skill Gap
+            </button>
+            <button
+              className={`tab-btn ${activeTab === 'salary' ? 'active' : ''}`}
+              onClick={() => setActiveTab('salary')}
+            >
+              💰 Salary
+            </button>
           </div>
           <button className="btn btn-gradient" onClick={() => setShowAddModal(true)}>
             <svg className="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -267,6 +289,12 @@ function App() {
         <CoverLetterGenerator supabase={supabase} jobs={jobs} />
       ) : activeTab === 'dreamboard' ? (
         <DreamBoard supabase={supabase} jobs={jobs} />
+      ) : activeTab === 'company' ? (
+        <CompanyIntelligence supabase={supabase} jobs={jobs} />
+      ) : activeTab === 'skillgap' ? (
+        <SkillGapCloser supabase={supabase} jobs={jobs} />
+      ) : activeTab === 'salary' ? (
+        <SalaryIntelligence jobs={jobs} />
       ) : activeTab === 'fulltime' ? (
         <div className="jobs-section animate-fade-in" style={{ marginTop: '20px' }}>
           <div className="glass-panel" style={{ padding: '20px', marginBottom: '25px', borderRadius: '16px' }}>
@@ -339,6 +367,7 @@ function App() {
         </div>
       ) : (
         <>
+          <DaemonHealthBanner supabase={supabase} />
           <DailyBriefing supabase={supabase} jobs={jobs} />
           <LiveTelemetry />
           <ActionCenter jobs={jobs} />
