@@ -24,6 +24,7 @@ import InterviewCoach from './components/InterviewCoach'
 import GlobalJobRadar from './components/GlobalJobRadar'
 import OfferNegotiationAI from './components/OfferNegotiationAI'
 import WeeklyBrief from './components/WeeklyBrief'
+import InterviewSimulator from './components/InterviewSimulator'
 
 const NAV_GROUPS = [
   {
@@ -72,6 +73,18 @@ function App() {
   const [interviewJob, setInterviewJob] = useState(null);
   const [activeTab, setActiveTab] = useState('telemetry');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    const onResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (!mobile) setSidebarOpen(false);
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   useEffect(() => {
     fetchJobs();
@@ -266,7 +279,7 @@ function App() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
         <DaemonHealthBanner supabase={supabase} />
         <DailyBriefing supabase={supabase} jobs={jobs} />
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '20px' }}>
           <LiveTelemetry />
           <ActionCenter jobs={jobs} />
         </div>
@@ -278,23 +291,76 @@ function App() {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-dark)' }}>
+
+      {/* ── Mobile header bar ── */}
+      {isMobile && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, height: '52px',
+          background: '#080b1a', borderBottom: '1px solid rgba(255,255,255,0.07)',
+          display: 'flex', alignItems: 'center', padding: '0 16px', zIndex: 200,
+          gap: '12px',
+        }}>
+          <button
+            onClick={() => setSidebarOpen(v => !v)}
+            style={{
+              background: 'transparent', border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: '6px', color: 'var(--text-muted)', cursor: 'pointer',
+              width: '34px', height: '34px', display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center', gap: '4px', flexShrink: 0,
+            }}
+          >
+            <span style={{ display: 'block', width: '14px', height: '1.5px', background: 'currentColor', borderRadius: '1px' }} />
+            <span style={{ display: 'block', width: '14px', height: '1.5px', background: 'currentColor', borderRadius: '1px' }} />
+            <span style={{ display: 'block', width: '14px', height: '1.5px', background: 'currentColor', borderRadius: '1px' }} />
+          </button>
+          <div style={{ fontSize: '0.78rem', fontWeight: '700', color: 'var(--text-main)' }}>
+            Job Search <span style={{ color: 'var(--accent-blue)' }}>Command Center</span>
+          </div>
+          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '5px' }}>
+            <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: isLoading ? '#f59e0b' : '#10B981', display: 'inline-block', boxShadow: isLoading ? 'none' : '0 0 4px #10B981' }} />
+            <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>{isLoading ? 'Syncing...' : 'Live'}</span>
+          </div>
+        </div>
+      )}
+
+      {/* ── Mobile overlay ── */}
+      {isMobile && sidebarOpen && (
+        <div
+          onClick={() => setSidebarOpen(false)}
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)',
+            backdropFilter: 'blur(2px)', zIndex: 149,
+          }}
+        />
+      )}
+
       {/* ── Sidebar ── */}
       <aside style={{
         width: '200px', flexShrink: 0, display: 'flex', flexDirection: 'column',
         background: '#080b1a', borderRight: '1px solid rgba(255,255,255,0.06)',
-        position: 'fixed', top: 0, left: 0, height: '100vh', overflowY: 'auto', zIndex: 100,
+        position: 'fixed', top: 0, left: 0, height: '100vh', overflowY: 'auto', zIndex: 150,
         padding: '0 0 20px',
+        transform: isMobile ? (sidebarOpen ? 'translateX(0)' : 'translateX(-100%)') : 'translateX(0)',
+        transition: 'transform 0.22s cubic-bezier(0.4, 0, 0.2, 1)',
       }}>
         {/* Logo */}
-        <div style={{ padding: '18px 16px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-          <div style={{ fontSize: '0.78rem', fontWeight: '700', color: 'var(--text-main)', letterSpacing: '0.01em', lineHeight: 1.3 }}>
-            Job Search
-            <div style={{ color: 'var(--accent-blue)', fontWeight: '800' }}>Command Center</div>
+        <div style={{ padding: '18px 16px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ fontSize: '0.78rem', fontWeight: '700', color: 'var(--text-main)', letterSpacing: '0.01em', lineHeight: 1.3 }}>
+              Job Search
+              <div style={{ color: 'var(--accent-blue)', fontWeight: '800' }}>Command Center</div>
+            </div>
+            <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: isLoading ? '#f59e0b' : '#10B981', display: 'inline-block', flexShrink: 0, boxShadow: isLoading ? 'none' : '0 0 4px #10B981' }}></span>
+              <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: '500' }}>{isLoading ? 'Syncing...' : 'Live'}</span>
+            </div>
           </div>
-          <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-            <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: isLoading ? '#f59e0b' : '#10B981', display: 'inline-block', flexShrink: 0, boxShadow: isLoading ? 'none' : '0 0 4px #10B981' }}></span>
-            <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: '500' }}>{isLoading ? 'Syncing...' : 'Live'}</span>
-          </div>
+          {isMobile && (
+            <button onClick={() => setSidebarOpen(false)} style={{
+              background: 'transparent', border: 'none', color: 'var(--text-muted)',
+              cursor: 'pointer', fontSize: '1.2rem', lineHeight: 1, padding: '2px 4px',
+            }}>✕</button>
+          )}
         </div>
 
         {/* Nav groups */}
@@ -311,7 +377,7 @@ function App() {
               {group.items.map(item => {
                 const active = activeTab === item.id;
                 return (
-                  <button key={item.id} onClick={() => setActiveTab(item.id)} style={{
+                  <button key={item.id} onClick={() => { setActiveTab(item.id); setSidebarOpen(false); }} style={{
                     display: 'flex', alignItems: 'center', gap: '8px', width: '100%',
                     padding: '7px 10px', borderRadius: '6px', border: 'none', cursor: 'pointer',
                     background: active ? `${group.color}18` : 'transparent',
@@ -347,7 +413,12 @@ function App() {
       </aside>
 
       {/* ── Main content ── */}
-      <main style={{ marginLeft: '200px', flex: 1, minWidth: 0, padding: '24px 28px', maxWidth: 'calc(100vw - 200px)' }}>
+      <main style={{
+        marginLeft: isMobile ? 0 : '200px',
+        flex: 1, minWidth: 0,
+        padding: isMobile ? '68px 16px 24px' : '24px 28px',
+        maxWidth: isMobile ? '100vw' : 'calc(100vw - 200px)',
+      }}>
         {renderContent()}
       </main>
 
