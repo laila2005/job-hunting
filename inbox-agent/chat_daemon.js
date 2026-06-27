@@ -129,6 +129,25 @@ Write a ${tone.toLowerCase()} cover letter (3-4 paragraphs, no placeholder brack
     }
   }
 
+  if (cmd === '/weekly-brief') {
+    console.log('📱 Weekly brief triggered — forwarding to WhatsApp...');
+    const briefBody = arg.trim();
+    // If a WhatsApp client is connected, send it; otherwise log and ack
+    try {
+      if (global.whatsappClient) {
+        const chatId = process.env.WHATSAPP_CHAT_ID || '';
+        if (chatId) {
+          await global.whatsappClient.sendMessage(chatId, briefBody);
+          return '✅ Weekly brief sent to WhatsApp successfully!';
+        }
+      }
+      console.log('📋 Weekly Brief (WhatsApp not connected):\n' + briefBody);
+      return `✅ Weekly brief received by daemon.\n\n${briefBody}\n\n_WhatsApp delivery: set WHATSAPP_CHAT_ID in your .env to enable direct delivery._`;
+    } catch (err) {
+      return `⚠️ Brief logged but WhatsApp delivery failed: ${err.message}`;
+    }
+  }
+
   if (cmd === '/logs') {
     return `📝 *Active Worker Logs:*
     
