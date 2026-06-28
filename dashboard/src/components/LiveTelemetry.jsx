@@ -13,9 +13,22 @@ const LiveTelemetry = () => {
 
   useEffect(() => {
     fetchTelemetry();
-    // Poll every 2 seconds (Supabase Realtime doesn't work on this project)
-    const interval = setInterval(fetchTelemetry, 2000);
-    return () => clearInterval(interval);
+
+    const channel = supabase
+      .channel('live-telemetry-watch')
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'jobs', filter: 'id=eq.telemetry_bot_status' },
+        () => fetchTelemetry()
+      )
+      .subscribe();
+
+    // Fallback: light 10s poll in case realtime misses an update
+    const fallback = setInterval(fetchTelemetry, 10000);
+
+    return () => {
+      supabase.removeChannel(channel);
+      clearInterval(fallback);
+    };
   }, []);
 
   useEffect(() => {

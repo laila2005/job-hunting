@@ -21,9 +21,10 @@ const CoverLetterGenerator = ({ supabase, jobs = [] }) => {
     };
   }, []);
 
-  const pipelineJobs = jobs.filter(j =>
-    j.status === 'Pending' || j.status === 'Queued for Bot' || j.status === 'Applied'
-  ).slice(0, 20);
+  const pipelineJobs = jobs.filter(j => {
+    const s = (j.status || '').toLowerCase();
+    return s !== 'rejected';
+  }).slice(0, 20);
 
   const handleJobSelect = (e) => {
     const id = e.target.value;

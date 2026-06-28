@@ -106,14 +106,14 @@ const NetworkingCRM = ({ supabase }) => {
       {/* Add form */}
       {showAdd && (
         <div className="glass-panel" style={{ padding: '20px', borderRadius: '16px', marginBottom: '20px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px', marginBottom: '12px' }}>
             {[['name','Name *'],['company','Company'],['role','Role']].map(([k,p]) => (
               <input key={k} value={addForm[k]} onChange={e => setAddForm(f => ({...f,[k]:e.target.value}))} placeholder={p} style={inputStyle} />
             ))}
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '12px' }}>
             <input value={addForm.linkedin_url} onChange={e => setAddForm(f => ({...f,linkedin_url:e.target.value}))} placeholder="LinkedIn URL" style={inputStyle} />
-            <input value={addForm.notes} onChange={e => setAddForm(f => ({...f,notes:e.target.value}))} placeholder="Notes (how you know them, mutual connection...)" style={inputStyle} />
+            <input value={addForm.notes} onChange={e => setAddForm(f => ({...f,notes:e.target.value}))} placeholder="Notes (mutual connection, how you know them...)" style={inputStyle} />
           </div>
           <div style={{ display: 'flex', gap: '10px' }}>
             <button className="btn btn-gradient" onClick={handleAddContact} disabled={!addForm.name.trim()}>Save Contact</button>
