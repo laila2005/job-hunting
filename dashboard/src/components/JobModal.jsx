@@ -22,7 +22,7 @@ const CANDIDATE_PROFILE = {
   ]
 };
 
-const JobModal = ({ job, initialTab = 'overview', onClose, onApprove, onDecline, onMarkApplied, onStartInterview }) => {
+const JobModal = ({ job, demo = false, initialTab = 'overview', onClose, onApprove, onDecline, onMarkApplied, onStartInterview }) => {
   const [activeTab, setActiveTab] = useState(initialTab);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [viewingResume, setViewingResume] = useState(false);
@@ -162,15 +162,19 @@ const JobModal = ({ job, initialTab = 'overview', onClose, onApprove, onDecline,
               </div>
             </>
           )}
-          <div className={`modal-tab ${activeTab === 'analysis' ? 'active' : ''}`} onClick={() => setActiveTab('analysis')}>
-            AI Analysis
-          </div>
-          <div className={`modal-tab ${activeTab === 'resume_tailor' ? 'active' : ''}`} onClick={() => setActiveTab('resume_tailor')}>
-            ATS & Resume Customizer
-          </div>
-          <div className={`modal-tab ${activeTab === 'outreach' ? 'active' : ''}`} onClick={() => setActiveTab('outreach')}>
-            Outreach Pitch
-          </div>
+          {!demo && (
+            <>
+              <div className={`modal-tab ${activeTab === 'analysis' ? 'active' : ''}`} onClick={() => setActiveTab('analysis')}>
+                AI Analysis
+              </div>
+              <div className={`modal-tab ${activeTab === 'resume_tailor' ? 'active' : ''}`} onClick={() => setActiveTab('resume_tailor')}>
+                ATS & Resume Customizer
+              </div>
+              <div className={`modal-tab ${activeTab === 'outreach' ? 'active' : ''}`} onClick={() => setActiveTab('outreach')}>
+                Outreach Pitch
+              </div>
+            </>
+          )}
           {job.status === 'Applied' && job.proof_url && (
             <div className={`modal-tab ${activeTab === 'proof' ? 'active' : ''}`} onClick={() => setActiveTab('proof')}>
               Application Proof

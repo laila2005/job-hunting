@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
 // Login wall. Nothing from the dashboard renders until Laila has signed in with her own Supabase account.
@@ -7,6 +7,7 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://wpxtstbquvbsiqgoqwma.supabase.co';
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_IwP7F-cxFhXEMwZCDOuyuw_-V33gBSh';
 const auth = createClient(supabaseUrl, supabaseKey).auth;
+const DemoApp = lazy(() => import('./demo/DemoApp'));
 
 const field = {
   background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8,
@@ -19,6 +20,7 @@ export default function AuthGate({ children }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [demo, setDemo] = useState(() => new URLSearchParams(window.location.search).has('demo'));
 
   useEffect(() => {
     auth.getSession().then(({ data }) => setSession(data.session || null));
@@ -35,6 +37,14 @@ export default function AuthGate({ children }) {
     setBusy(false);
   };
 
+  if (demo) {
+    return (
+      <Suspense fallback={<div style={{ minHeight: '100vh', background: '#0b1020' }} />}>
+        <DemoApp onExit={() => { setDemo(false); window.history.replaceState({}, '', window.location.pathname); }} />
+      </Suspense>
+    );
+  }
+
   if (session === undefined) {
     return <div style={{ minHeight: '100vh', background: '#0b1020' }} />;
   }
@@ -50,6 +60,9 @@ export default function AuthGate({ children }) {
           {error && <div style={{ color: '#F87171', fontSize: '0.88rem' }}>{error}</div>}
           <button type="submit" disabled={busy} className="btn btn-gradient" style={{ padding: '12px 16px', fontSize: '1rem' }}>
             {busy ? 'Signing in...' : 'Sign in'}
+          </button>
+          <button type="button" className="btn btn-secondary" onClick={() => setDemo(true)} style={{ padding: '10px 16px' }}>
+            👀 Recruiter? View the live demo
           </button>
         </form>
       </div>

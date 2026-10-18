@@ -50,10 +50,10 @@ const jobDate = job => {
   if (ms) return new Date(Number(ms[1])).toISOString().slice(0, 10);
   return job.appliedDate || null;
 };
-const sectionOf = job => {
+const sectionOf = (job, cutoff = ARCHIVE_BEFORE) => {
   // Old rows (found before ARCHIVE_BEFORE) were never applied to by hand, whatever their stored status says.
   const d = jobDate(job);
-  if (!d || d < ARCHIVE_BEFORE) return 'Archived';
+  if (!d || d < cutoff) return 'Archived';
   const st = (job.status || '').trim().toLowerCase();
   if (['applied', 'test', 'interview', 'offer'].includes(st)) return 'Applied';
   if (st === 'rejected' || st === 'archived') return 'Archived';
@@ -66,7 +66,7 @@ const dayLabel = d => {
   return dt.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 };
 
-const JobBoard = ({ jobs, onApprove, onDecline, onMarkApplied, onRestore, onStartInterview }) => {
+const JobBoard = ({ jobs, demo = false, onApprove, onDecline, onMarkApplied, onRestore, onStartInterview }) => {
   const [selectedJob, setSelectedJob] = useState(null);
   const [modalTab, setModalTab] = useState('overview');
   const openJob = (job, tab = 'overview') => { setModalTab(tab); setSelectedJob(job); };
@@ -85,14 +85,15 @@ const JobBoard = ({ jobs, onApprove, onDecline, onMarkApplied, onRestore, onStar
     }
   };
 
-  const counts = useMemo(() => jobs.reduce((acc, j) => { const k = sectionOf(j); acc[k] = (acc[k] || 0) + 1; return acc; }, {}), [jobs]);
+  const cutoff = demo ? '0000-00-00' : ARCHIVE_BEFORE; // the demo's sample jobs are relative to today, so never archive by date
+  const counts = useMemo(() => jobs.reduce((acc, j) => { const k = sectionOf(j, cutoff); acc[k] = (acc[k] || 0) + 1; return acc; }, {}), [jobs]);
   const newestDate = useMemo(() => jobs.map(jobDate).filter(Boolean).sort().pop() || null, [jobs]);
 
   // Filtered jobs, newest date first, best fit first inside a day
   const filteredJobs = useMemo(() => {
     return jobs
       .filter(job => {
-        if (activeFilter !== 'All' && sectionOf(job) !== activeFilter) return false;
+        if (activeFilter !== 'All' && sectionOf(job, cutoff) !== activeFilter) return false;
         const q = searchQuery.toLowerCase();
         if (q && !(job.company || '').toLowerCase().includes(q) && !(job.title || '').toLowerCase().includes(q)) return false;
         if (nearMeOnly && !isNearMe(job)) return false;
@@ -105,7 +106,7 @@ const JobBoard = ({ jobs, onApprove, onDecline, onMarkApplied, onRestore, onStar
         if (da !== db) return db.localeCompare(da);
         return (b.fitScore || 0) - (a.fitScore || 0);
       });
-  }, [jobs, activeFilter, searchQuery, nearMeOnly, hideUSOnly]);
+  }, [jobs, activeFilter, searchQuery, nearMeOnly, hideUSOnly, cutoff]);
 
   const groups = useMemo(() => {
     const map = new Map();
@@ -255,7 +256,7 @@ const JobBoard = ({ jobs, onApprove, onDecline, onMarkApplied, onRestore, onStar
                   </div>
                 </div>
                 
-                {sectionOf(job) === 'Active' && onMarkApplied && (
+                {sectionOf(job, cutoff) === 'Active' && onMarkApplied && (
                   <button className="btn" style={{ background: 'var(--accent-green)', padding: '6px 14px', fontSize: '0.8rem' }}
                     title="I applied to this job: move it out of the queue"
                     onClick={() => onMarkApplied(job.id)}>✅ Applied</button>
@@ -278,6 +279,7 @@ const JobBoard = ({ jobs, onApprove, onDecline, onMarkApplied, onRestore, onStar
         <JobModal 
           job={selectedJob}
           initialTab={modalTab}
+          demo={demo}
           onClose={() => setSelectedJob(null)} 
           onApprove={onApprove}
           onDecline={onDecline}
