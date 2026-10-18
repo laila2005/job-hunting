@@ -21,9 +21,24 @@ if (!fs.existsSync(DIGEST_FILE)) {
 }
 const text = fs.readFileSync(DIGEST_FILE, 'utf8').trim();
 
+// Use a browser that is already installed (the Chrome bundled with puppeteer fails to start on some Windows setups).
+const BROWSERS = [
+  process.env.CHROME_PATH,
+  'C:\Program Files\Google\Chrome\Application\chrome.exe',
+  'C:\Program Files (x86)\Google\Chrome\Application\chrome.exe',
+  'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe',
+  'C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe',
+].filter(Boolean);
+const executablePath = BROWSERS.find(p => fs.existsSync(p));
+if (!executablePath) {
+  console.error('No Chrome, Edge or Brave found. Set CHROME_PATH in .env to your browser .exe');
+  process.exit(1);
+}
+console.log(`Using browser: ${executablePath}`);
+
 const client = new Client({
   authStrategy: new LocalAuth({ dataPath: './.wwebjs_digest' }), // its own session, so it never fights the main daemon
-  puppeteer: { headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'] },
+  puppeteer: { executablePath, headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'] },
 });
 
 client.on('qr', qr => {
