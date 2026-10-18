@@ -183,7 +183,16 @@ function App() {
       console.error('Error marking job as applied in Supabase:', error);
       alert('Error updating Supabase database. See console.');
     } else {
-      alert("Job successfully marked as Applied!");
+    }
+  };
+
+  const handleRestore = async (id) => {
+    // Undo a mistaken "Applied" click: put the job back in the To Apply queue
+    setJobs(jobs.map(j => j.id === id ? { ...j, status: 'To Apply', appliedDate: null } : j));
+    const { error } = await supabase.from('jobs').update({ status: 'To Apply', appliedDate: null }).eq('id', id);
+    if (error) {
+      console.error('Error restoring job in Supabase:', error);
+      alert('Error updating Supabase database. See console.');
     }
   };
 
@@ -252,7 +261,7 @@ function App() {
           <h2 className="section-title" style={{ fontSize: '24px', color: 'var(--accent-blue)', marginBottom: '8px' }}>💼 Full-Time Engineering Jobs</h2>
           <p className="section-subtitle" style={{ color: 'var(--text-secondary)' }}>Direct application streams for full-time software engineering roles.</p>
         </div>
-        <JobBoard jobs={jobs.filter(j => !isIntern(j) && !isPart(j))} onApprove={handleApprove} onDecline={handleDecline} onMarkApplied={handleMarkApplied} onStartInterview={setInterviewJob} />
+        <JobBoard jobs={jobs.filter(j => !isIntern(j) && !isPart(j))} onApprove={handleApprove} onDecline={handleDecline} onMarkApplied={handleMarkApplied} onRestore={handleRestore} onStartInterview={setInterviewJob} />
       </div>
     );
     if (activeTab === 'parttime') return (
@@ -261,7 +270,7 @@ function App() {
           <h2 className="section-title" style={{ fontSize: '24px', color: 'var(--accent-yellow)', marginBottom: '8px' }}>⏳ Part-Time & Contract Jobs</h2>
           <p className="section-subtitle" style={{ color: 'var(--text-secondary)' }}>Part-time or contract software engineering opportunities.</p>
         </div>
-        <JobBoard jobs={jobs.filter(j => !isIntern(j) && isPart(j))} onApprove={handleApprove} onDecline={handleDecline} onMarkApplied={handleMarkApplied} onStartInterview={setInterviewJob} />
+        <JobBoard jobs={jobs.filter(j => !isIntern(j) && isPart(j))} onApprove={handleApprove} onDecline={handleDecline} onMarkApplied={handleMarkApplied} onRestore={handleRestore} onStartInterview={setInterviewJob} />
       </div>
     );
     if (activeTab === 'internships') return (
@@ -270,7 +279,7 @@ function App() {
           <h2 className="section-title" style={{ fontSize: '24px', color: 'var(--accent-purple)', marginBottom: '8px' }}>🎓 Student & Senior Internships</h2>
           <p className="section-subtitle" style={{ color: 'var(--text-secondary)' }}>Paid Software Engineering opportunities in Egypt/Cairo tailored for Year 3 CS students.</p>
         </div>
-        <JobBoard jobs={jobs.filter(isIntern)} onApprove={handleApprove} onDecline={handleDecline} onMarkApplied={handleMarkApplied} onStartInterview={setInterviewJob} />
+        <JobBoard jobs={jobs.filter(isIntern)} onApprove={handleApprove} onDecline={handleDecline} onMarkApplied={handleMarkApplied} onRestore={handleRestore} onStartInterview={setInterviewJob} />
       </div>
     );
 

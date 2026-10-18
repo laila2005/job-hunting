@@ -66,7 +66,7 @@ const dayLabel = d => {
   return dt.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 };
 
-const JobBoard = ({ jobs, onApprove, onDecline, onMarkApplied, onStartInterview }) => {
+const JobBoard = ({ jobs, onApprove, onDecline, onMarkApplied, onRestore, onStartInterview }) => {
   const [selectedJob, setSelectedJob] = useState(null);
   const [modalTab, setModalTab] = useState('overview');
   const openJob = (job, tab = 'overview') => { setModalTab(tab); setSelectedJob(job); };
@@ -251,6 +251,16 @@ const JobBoard = ({ jobs, onApprove, onDecline, onMarkApplied, onStartInterview 
                   </div>
                 </div>
                 
+                {sectionOf(job) === 'Active' && onMarkApplied && (
+                  <button className="btn" style={{ background: 'var(--accent-green)', padding: '6px 14px', fontSize: '0.8rem' }}
+                    title="I applied to this job: move it out of the queue"
+                    onClick={() => onMarkApplied(job.id)}>✅ Applied</button>
+                )}
+                {(job.status === 'Applied') && (job.id || '').startsWith('trk-') && onRestore && (
+                  <button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: '0.75rem' }}
+                    title="Clicked by mistake? Put it back in the queue"
+                    onClick={() => onRestore(job.id)}>↩ Undo</button>
+                )}
                 <button className="btn btn-secondary review-btn" onClick={() => openJob(job)}>Review Details</button>
               </div>
             </div>

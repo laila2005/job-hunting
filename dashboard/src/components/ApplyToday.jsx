@@ -24,6 +24,19 @@ export const scoreJob = job => {
   return { score, reasons };
 };
 
+const followDue = j => {
+  const x = extrasOf(j) || {};
+  if (x.followup_due) return x.followup_due;
+  if (j.status !== 'Applied' || !j.appliedDate) return null;
+  return new Date(new Date(`${j.appliedDate}T12:00:00Z`).getTime() + 7 * DAY).toISOString().slice(0, 10);
+};
+const followMsg = j => {
+  const x = extrasOf(j) || {};
+  if (x.followup_msg) return x.followup_msg;
+  const short = (j.company || '').split('(')[0].split('/')[0].trim();
+  return `Hi ${short} team, I applied for the ${j.title} role on ${j.appliedDate} and wanted to follow up. I'm still very interested and happy to share more about LM-MS or my recent projects. Thank you for your time. Laila`;
+};
+
 const chip = { fontSize: '0.7rem', padding: '1px 8px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.15)', color: 'var(--text-muted)' };
 
 const ApplyToday = ({ jobs, onOpen }) => {
@@ -38,7 +51,7 @@ const ApplyToday = ({ jobs, onOpen }) => {
     const today = todayStr();
     return {
       top: ranked,
-      followUps: trk.filter(j => j.status === 'Applied' && (extrasOf(j) || {}).followup_due && extrasOf(j).followup_due <= today),
+      followUps: trk.filter(j => j.status === 'Applied' && followDue(j) && followDue(j) <= today),
       inProcess: trk.filter(j => ['Test', 'Interview', 'Offer'].includes(j.status)),
     };
   }, [jobs]);
@@ -68,7 +81,7 @@ const ApplyToday = ({ jobs, onOpen }) => {
             <div key={j.id} style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', padding: '4px 0' }}>
               <strong>{j.company}</strong>
               <span style={{ color: 'var(--text-muted)' }}>{j.title}</span>
-              <CopyButton small text={extrasOf(j).followup_msg} />
+              <CopyButton small text={followMsg(j)} />
             </div>
           ))}
         </div>
