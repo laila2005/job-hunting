@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { safeUrl } from '../safeUrl';
 
 const STATUS_OPTIONS = ['To Contact', 'Reached Out', 'Coffee Chat Scheduled', 'Connected', 'Referred Me'];
 const STATUS_COLORS = {
@@ -156,7 +157,7 @@ const NetworkingCRM = ({ supabase }) => {
                   {/* Right: actions */}
                   <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                     {contact.linkedin_url && (
-                      <a href={contact.linkedin_url} target="_blank" rel="noopener noreferrer" style={{ padding: '5px 12px', borderRadius: '8px', fontSize: '0.78rem', background: 'rgba(0,119,181,0.12)', color: '#0077b5', border: '1px solid rgba(0,119,181,0.3)', textDecoration: 'none' }}>🔗 LinkedIn</a>
+                      <a href={safeUrl(contact.linkedin_url)} target="_blank" rel="noopener noreferrer" style={{ padding: '5px 12px', borderRadius: '8px', fontSize: '0.78rem', background: 'rgba(0,119,181,0.12)', color: '#0077b5', border: '1px solid rgba(0,119,181,0.3)', textDecoration: 'none' }}>🔗 LinkedIn</a>
                     )}
                     <button onClick={() => generateLinkedInMsg(contact)} disabled={isGenerating} style={{ padding: '5px 12px', borderRadius: '8px', fontSize: '0.78rem', cursor: 'pointer', background: 'rgba(59,130,246,0.12)', color: 'var(--accent-blue)', border: '1px solid rgba(59,130,246,0.3)', opacity: isGenerating ? 0.6 : 1 }}>
                       {isGenerating ? '⟳ Generating...' : '✉️ Generate Message'}

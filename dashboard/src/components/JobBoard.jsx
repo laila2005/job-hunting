@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import JobModal from './JobModal';
 import ApplyToday from './ApplyToday';
+import { safeUrl } from '../safeUrl';
 
 // Locations within Laila's commute range (East / North Cairo)
 const NEAR_ME_KEYWORDS = [
@@ -59,7 +60,6 @@ const sectionOf = job => {
   return 'Active';
 };
 // companyLink comes from scraped / user-submitted rows, so only allow http(s) URLs in hrefs
-const safeUrl = u => { try { const p = new URL(u); return ['http:', 'https:'].includes(p.protocol) ? p.href : null; } catch { return null; } };
 const dayLabel = d => {
   if (!d) return 'Undated';
   const dt = new Date(`${d}T12:00:00Z`);

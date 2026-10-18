@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { safeUrl } from '../safeUrl';
 
 const STAGES = ['Applied', 'HR Screen', 'Technical', 'Final Round', 'Offer', 'Rejected'];
 
@@ -291,7 +292,7 @@ const ApplicationTracker = ({ supabase, jobs }) => {
                   {/* Right: Actions */}
                   <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                     {app.job_url && (
-                      <a href={app.job_url} target="_blank" rel="noopener noreferrer" style={{
+                      <a href={safeUrl(app.job_url)} target="_blank" rel="noopener noreferrer" style={{
                         padding: '5px 12px', borderRadius: '8px', fontSize: '0.78rem',
                         background: 'rgba(59,130,246,0.15)', color: 'var(--accent-blue)',
                         border: '1px solid rgba(59,130,246,0.3)', textDecoration: 'none'

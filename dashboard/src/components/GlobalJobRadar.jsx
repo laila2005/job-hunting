@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { safeUrl } from '../safeUrl';
 
 const REGIONS = ['All', 'Egypt / Cairo', 'Remote (Global)', 'Europe', 'UAE / Gulf', 'US / Canada'];
 
@@ -84,7 +85,7 @@ const GlobalJobRadar = ({ jobs = [], onApprove, onDecline, onMarkApplied }) => {
                   )}
                 </div>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  {job.url && <a href={job.url} target="_blank" rel="noopener noreferrer" style={{ padding: '5px 12px', borderRadius: '8px', fontSize: '0.78rem', background: 'rgba(59,130,246,0.1)', color: 'var(--accent-blue)', border: '1px solid rgba(59,130,246,0.3)', textDecoration: 'none' }}>View</a>}
+                  {job.url && <a href={safeUrl(job.url)} target="_blank" rel="noopener noreferrer" style={{ padding: '5px 12px', borderRadius: '8px', fontSize: '0.78rem', background: 'rgba(59,130,246,0.1)', color: 'var(--accent-blue)', border: '1px solid rgba(59,130,246,0.3)', textDecoration: 'none' }}>View</a>}
                   {job.status === 'Pending' && onApprove && (
                     <button onClick={() => onApprove(job.id)} style={{ padding: '5px 12px', borderRadius: '8px', fontSize: '0.78rem', cursor: 'pointer', background: 'rgba(16,185,129,0.1)', color: 'var(--accent-green)', border: '1px solid rgba(16,185,129,0.3)' }}>✓ Approve</button>
                   )}

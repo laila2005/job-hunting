@@ -1,7 +1,7 @@
 require('dotenv').config();
 const { createClient } = require('@supabase/supabase-js');
 const { GoogleGenAI } = require('@google/genai');
-const { exec } = require('child_process');
+const { exec, execFile } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
@@ -81,17 +81,20 @@ _Diagnostics complete._`);
   }
   
   if (cmd === '/search') {
-    const keyword = arg || 'backend';
+    // SECURITY: the text after /search comes from a database row that anyone holding the public key could write.
+    // Never put it in a shell string: validate it and pass it as a plain argument (no shell involved).
+    const keyword = (arg || 'backend').trim();
+    if (!/^[A-Za-z0-9 .+#\-]{1,40}$/.test(keyword)) {
+      return '⚠️ Search keyword rejected: use only letters, numbers, spaces and . + # - (max 40 characters).';
+    }
     console.log(`▶️ Triggering scraper run for keyword: ${keyword}...`);
-    
-    // Trigger in background and return immediate confirmation
-    exec(`node G:\\lolo\\job_search\\inbox-agent\\live_scraper.js --keyword="${keyword}"`);
-    
-    return `🐍 *Scraper Triggered!* I have launched \`live_scraper.js\` in the background to fetch new high-salary positions matching *"${keyword}"*. 
+    execFile('node', [path.join(__dirname, 'live_scraper.js'), `--keyword=${keyword}`], { windowsHide: true }, err => {
+      if (err) console.error('Scraper run failed:', err.message);
+    });
 
-I will evaluate matches using your profile context and alert you on WhatsApp the moment new recommendations are inserted!`;
+    return `🐍 *Scraper Triggered!* I have launched \`live_scraper.js\` in the background to fetch new positions matching *"${keyword}"*.`;
   }
-  
+
   if (cmd === '/cover-letter') {
     // Parse inline params: [tone=X] [company=X] [title=X]
     const toneMatch = arg.match(/\[tone=([^\]]+)\]/);
@@ -193,22 +196,9 @@ QUESTION: <next interview question on the same topic>`;
   }
 
   if (cmd === '/weekly-brief') {
-    console.log('📱 Weekly brief triggered — forwarding to WhatsApp...');
-    const briefBody = arg.trim();
-    // If a WhatsApp client is connected, send it; otherwise log and ack
-    try {
-      if (global.whatsappClient) {
-        const chatId = process.env.WHATSAPP_CHAT_ID || '';
-        if (chatId) {
-          await global.whatsappClient.sendMessage(chatId, briefBody);
-          return '✅ Weekly brief sent to WhatsApp successfully!';
-        }
-      }
-      console.log('📋 Weekly Brief (WhatsApp not connected):\n' + briefBody);
-      return `✅ Weekly brief received by daemon.\n\n${briefBody}\n\n_WhatsApp delivery: set WHATSAPP_CHAT_ID in your .env to enable direct delivery._`;
-    } catch (err) {
-      return `⚠️ Brief logged but WhatsApp delivery failed: ${err.message}`;
-    }
+    // SECURITY: this used to relay any text from the chat table to WhatsApp, which would let a stranger message your phone.
+    // It now only reports that the feature is off. The daily digest is sent by whatsapp_digest.js from a local file.
+    return '🔒 /weekly-brief is disabled for safety. Your daily digest is sent by whatsapp_digest.js from a local file.';
   }
 
   if (cmd === '/logs') {

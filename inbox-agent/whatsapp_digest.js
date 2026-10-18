@@ -19,7 +19,12 @@ if (!fs.existsSync(DIGEST_FILE)) {
   console.error(`No digest at ${DIGEST_FILE}. Run: python -I G:\\job-finder\\coaching\\push_jobs_to_site.py`);
   process.exit(1);
 }
-const text = fs.readFileSync(DIGEST_FILE, 'utf8').trim();
+// SECURITY: send only plain text. Strip control characters and links, and cap the length.
+const text = fs.readFileSync(DIGEST_FILE, 'utf8')
+  .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
+  .replace(/https?:\/\/\S+|www\.\S+/gi, '[link removed]')
+  .trim()
+  .slice(0, 1800);
 
 // Use a browser that is already installed (the Chrome bundled with puppeteer fails to start on some Windows setups).
 const BROWSERS = [

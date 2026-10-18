@@ -4,6 +4,7 @@ import { ApplyPackPanel, PrepPanel, extrasOf } from './JobPack';
 import ResumeTailor from './ResumeTailor';
 import { GoogleGenAI } from '@google/genai';
 import { createClient } from '@supabase/supabase-js';
+import { safeUrl } from '../safeUrl';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://wpxtstbquvbsiqgoqwma.supabase.co';
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_IwP7F-cxFhXEMwZCDOuyuw_-V33gBSh';
@@ -488,7 +489,7 @@ const JobModal = ({ job, initialTab = 'overview', onClose, onApprove, onDecline,
 
         {/* Footer buttons */}
         <div className="modal-footer">
-          <a href={/^https?:\/\//i.test(job.companyLink || '') ? job.companyLink : undefined} target="_blank" rel="noopener noreferrer" className="btn btn-secondary modal-source-btn">
+          <a href={safeUrl(job.companyLink)} target="_blank" rel="noopener noreferrer" className="btn btn-secondary modal-source-btn">
             🔗 View Source Posting
           </a>
           

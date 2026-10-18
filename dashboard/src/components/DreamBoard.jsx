@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { safeUrl } from '../safeUrl';
 
 const STATUSES = ['Targeted', 'Researching', 'Applied', 'Networking', 'Offer'];
 
@@ -213,7 +214,7 @@ const DreamBoard = ({ supabase, jobs = [] }) => {
                       <div style={{ display: 'flex', gap: '16px', fontSize: '0.78rem', color: 'var(--text-muted)', flexWrap: 'wrap' }}>
                         {c.created_at && <span>📅 Added {formatDate(c.created_at)}</span>}
                         {c.linkedin_url && (
-                          <a href={c.linkedin_url} target="_blank" rel="noopener noreferrer" style={{ color: '#0077b5', textDecoration: 'none' }}>
+                          <a href={safeUrl(c.linkedin_url)} target="_blank" rel="noopener noreferrer" style={{ color: '#0077b5', textDecoration: 'none' }}>
                             🔗 LinkedIn
                           </a>
                         )}
