@@ -37,9 +37,35 @@ const isNearMe     = job => {
   return false;
 };
 
+// ── Date handling: the jobs table has no date column, so the found-date lives inside the id
+//    (trk-YYYY-MM-DD-… from the tracker sync, or job-…-<epoch ms> from the scraper / manual add).
+const ARCHIVE_BEFORE = '2026-10-16'; // anything found before this date is "old" unless it was applied to
+const jobDate = job => {
+  const id = job.id || '';
+  const iso = id.match(/(\d{4}-\d{2}-\d{2})/);
+  if (iso) return iso[1];
+  const ms = id.match(/(\d{13})/);
+  if (ms) return new Date(Number(ms[1])).toISOString().slice(0, 10);
+  return job.appliedDate || null;
+};
+const sectionOf = job => {
+  // Old rows (found before ARCHIVE_BEFORE) were never applied to by hand, whatever their stored status says.
+  const d = jobDate(job);
+  if (!d || d < ARCHIVE_BEFORE) return 'Archived';
+  const st = (job.status || '').trim().toLowerCase();
+  if (st === 'applied') return 'Applied';
+  if (st === 'rejected' || st === 'archived') return 'Archived';
+  return 'Active';
+};
+const dayLabel = d => {
+  if (!d) return 'Undated';
+  const dt = new Date(`${d}T12:00:00Z`);
+  return dt.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+};
+
 const JobBoard = ({ jobs, onApprove, onDecline, onMarkApplied, onStartInterview }) => {
   const [selectedJob, setSelectedJob] = useState(null);
-  const [activeFilter, setActiveFilter] = useState('All');
+  const [activeFilter, setActiveFilter] = useState('Active');
   const [searchQuery, setSearchQuery] = useState('');
   const [nearMeOnly, setNearMeOnly] = useState(false);
   const [hideUSOnly, setHideUSOnly] = useState(true);
@@ -54,31 +80,37 @@ const JobBoard = ({ jobs, onApprove, onDecline, onMarkApplied, onStartInterview 
     }
   };
 
-  // Derived filtered jobs
+  const counts = useMemo(() => jobs.reduce((acc, j) => { const k = sectionOf(j); acc[k] = (acc[k] || 0) + 1; return acc; }, {}), [jobs]);
+  const newestDate = useMemo(() => jobs.map(jobDate).filter(Boolean).sort().pop() || null, [jobs]);
+
+  // Filtered jobs, newest date first, best fit first inside a day
   const filteredJobs = useMemo(() => {
     return jobs
       .filter(job => {
-        const normStatus = (job.status || '').trim().toLowerCase();
-        const normFilter = activeFilter.trim().toLowerCase();
-
-        if (normFilter === 'all') {
-          if (normStatus === 'applied' || normStatus === 'rejected') return false;
-        } else {
-          if (normStatus !== normFilter) return false;
-        }
-
-        if (searchQuery && !job.company.toLowerCase().includes(searchQuery.toLowerCase()) && !job.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+        if (activeFilter !== 'All' && sectionOf(job) !== activeFilter) return false;
+        const q = searchQuery.toLowerCase();
+        if (q && !(job.company || '').toLowerCase().includes(q) && !(job.title || '').toLowerCase().includes(q)) return false;
         if (nearMeOnly && !isNearMe(job)) return false;
         if (hideUSOnly && isUSOnly(job)) return false;
         return true;
       })
       .sort((a, b) => {
-        const dateA = new Date(a.created_at || a.appliedDate || 0);
-        const dateB = new Date(b.created_at || b.appliedDate || 0);
-        if (dateB - dateA !== 0) return dateB - dateA;
+        const da = (activeFilter === 'Applied' ? (a.appliedDate || jobDate(a)) : jobDate(a)) || '';
+        const db = (activeFilter === 'Applied' ? (b.appliedDate || jobDate(b)) : jobDate(b)) || '';
+        if (da !== db) return db.localeCompare(da);
         return (b.fitScore || 0) - (a.fitScore || 0);
       });
   }, [jobs, activeFilter, searchQuery, nearMeOnly, hideUSOnly]);
+
+  const groups = useMemo(() => {
+    const map = new Map();
+    filteredJobs.forEach(j => {
+      const d = (activeFilter === 'Applied' ? (j.appliedDate || jobDate(j)) : jobDate(j)) || '';
+      if (!map.has(d)) map.set(d, []);
+      map.get(d).push(j);
+    });
+    return [...map.entries()];
+  }, [filteredJobs, activeFilter]);
 
   const usOnlyCount  = useMemo(() => jobs.filter(isUSOnly).length, [jobs]);
   const nearMeCount  = useMemo(() => jobs.filter(isNearMe).length, [jobs]);
@@ -123,19 +155,20 @@ const JobBoard = ({ jobs, onApprove, onDecline, onMarkApplied, onStartInterview 
 
           {(nearMeOnly || hideUSOnly) && (
             <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-              Showing {filteredJobs.length} of {jobs.filter(j => !['applied','rejected'].includes((j.status||'').toLowerCase())).length} active jobs
+              Showing {filteredJobs.length} jobs
             </span>
           )}
         </div>
 
         <div className="tabs-container">
-          {['All', 'Pending Review', 'Apply Manually', 'Applied', 'Rejected'].map(tab => (
+          {['Active', 'Applied', 'Archived', 'All'].map(tab => (
             <button
               key={tab}
               className={`tab-btn ${activeFilter === tab ? 'active' : ''}`}
               onClick={() => setActiveFilter(tab)}
             >
-              {tab}
+              {tab === 'Active' ? '🆕 Active' : tab === 'Applied' ? '✅ Applied' : tab === 'Archived' ? '🗄️ Archived' : tab}
+              {tab !== 'All' && <span style={{ opacity: 0.7, marginLeft: 6 }}>({counts[tab] || 0})</span>}
             </button>
           ))}
         </div>
@@ -144,9 +177,17 @@ const JobBoard = ({ jobs, onApprove, onDecline, onMarkApplied, onStartInterview 
       <div className="list-grid">
         {filteredJobs.length === 0 ? (
           <div className="empty-state">No jobs found matching your filters.</div>
-        ) : (
-          filteredJobs.map(job => {
+        ) : groups.map(([day, dayJobs]) => (
+          <React.Fragment key={day || 'undated'}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '14px 0 2px', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.06em', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+              <span>📅 {dayLabel(day)}</span>
+              {day && day === newestDate && activeFilter !== 'Archived' && <span style={{ background: '#10b981', color: '#fff', borderRadius: 10, padding: '1px 8px', fontSize: '0.68rem' }}>NEWEST</span>}
+              <span style={{ fontWeight: 400, opacity: 0.7 }}>{dayJobs.length} job{dayJobs.length === 1 ? '' : 's'}</span>
+              <span style={{ flex: 1, height: 1, background: 'var(--border-color)' }} />
+            </div>
+            {dayJobs.map(job => {
             const isManual = (job.id || '').includes('manual') || (job.source || '') === 'Manual';
+            const isTracker = (job.id || '').startsWith('trk-');
             return (
             <div key={job.id} className="job-card">
               <div className="job-card-main">
@@ -156,11 +197,11 @@ const JobBoard = ({ jobs, onApprove, onDecline, onMarkApplied, onStartInterview 
                 <div className="item-details">
                   <h3 className="job-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                     {job.title}
-                    <span className={`status-badge badge-${job.status.toLowerCase().replace(' ', '-')}`}>
+                    <span className={`status-badge badge-${(job.status || '').toLowerCase().replace(/\s+/g, '-')}`}>
                       {job.status}
                     </span>
-                    <span className="status-badge" style={{ backgroundColor: isManual ? 'var(--accent-purple)' : 'var(--accent-blue)', color: '#fff', fontSize: '11px', opacity: 0.9 }}>
-                      {isManual ? '👤 Manual Add' : '⚡ Auto-Scraped'}
+                    <span className="status-badge" style={{ backgroundColor: isTracker ? '#0d9488' : isManual ? 'var(--accent-purple)' : 'var(--accent-blue)', color: '#fff', fontSize: '11px', opacity: 0.9 }}>
+                      {isTracker ? '🔎 Curated' : isManual ? '👤 Manual Add' : '⚡ Auto-Scraped'}
                     </span>
                   </h3>
                   <div className="job-meta">
@@ -173,15 +214,15 @@ const JobBoard = ({ jobs, onApprove, onDecline, onMarkApplied, onStartInterview 
                         AQS: {job.aqs_score}
                       </span>
                     )}
-                    {job.status === 'Applied' && (job.appliedDate || job.created_at) && (
+                    {job.status === 'Applied' && job.appliedDate && (
                       <span className="meta-item" style={{ color: 'var(--accent-green)', fontWeight: '600' }}>
-                        ✅ Applied: {formatDate(job.appliedDate || job.created_at)}
+                        ✅ Applied: {formatDate(job.appliedDate)}
                       </span>
                     )}
-                    {job.status !== 'Applied' && job.created_at && (
-                      <span className="meta-item" style={{ color: 'var(--accent-purple)', fontWeight: '500' }}>
-                        📅 Scraped: {formatDate(job.created_at)}
-                      </span>
+                    {job.companyLink && (
+                      <a className="meta-item" href={job.companyLink} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()} style={{ color: 'var(--accent-blue)', fontWeight: 600 }}>
+                        🔗 Open posting
+                      </a>
                     )}
                     <ResumeTag title={job.title} resumeVersion={job.resumeVersion} />
                   </div>
@@ -207,8 +248,9 @@ const JobBoard = ({ jobs, onApprove, onDecline, onMarkApplied, onStartInterview 
               </div>
             </div>
             );
-          })
-        )}
+            })}
+          </React.Fragment>
+        ))}
       </div>
 
       {selectedJob && (
