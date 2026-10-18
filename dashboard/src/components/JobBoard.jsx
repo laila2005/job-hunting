@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import JobModal from './JobModal';
+import ApplyToday from './ApplyToday';
 
 // Locations within Laila's commute range (East / North Cairo)
 const NEAR_ME_KEYWORDS = [
@@ -53,7 +54,7 @@ const sectionOf = job => {
   const d = jobDate(job);
   if (!d || d < ARCHIVE_BEFORE) return 'Archived';
   const st = (job.status || '').trim().toLowerCase();
-  if (st === 'applied') return 'Applied';
+  if (['applied', 'test', 'interview', 'offer'].includes(st)) return 'Applied';
   if (st === 'rejected' || st === 'archived') return 'Archived';
   return 'Active';
 };
@@ -67,6 +68,8 @@ const dayLabel = d => {
 
 const JobBoard = ({ jobs, onApprove, onDecline, onMarkApplied, onStartInterview }) => {
   const [selectedJob, setSelectedJob] = useState(null);
+  const [modalTab, setModalTab] = useState('overview');
+  const openJob = (job, tab = 'overview') => { setModalTab(tab); setSelectedJob(job); };
   const [activeFilter, setActiveFilter] = useState('Active');
   const [searchQuery, setSearchQuery] = useState('');
   const [nearMeOnly, setNearMeOnly] = useState(false);
@@ -119,6 +122,8 @@ const JobBoard = ({ jobs, onApprove, onDecline, onMarkApplied, onStartInterview 
 
   return (
     <div>
+      {activeFilter === 'Active' && !searchQuery && <ApplyToday jobs={jobs} onOpen={openJob} />}
+
       <div className="job-board-header">
         <div className="search-wrapper">
           <svg className="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -233,7 +238,7 @@ const JobBoard = ({ jobs, onApprove, onDecline, onMarkApplied, onStartInterview 
               
               <div className="job-actions-container">
                 {job.status === 'Applied' && job.proof_url && (
-                  <div className="proof-indicator" onClick={() => setSelectedJob(job)}>
+                  <div className="proof-indicator" onClick={() => openJob(job)}>
                     <span className="proof-label">Proof</span>
                     <img src={job.proof_url} alt="Proof" className="proof-thumbnail" />
                   </div>
@@ -246,7 +251,7 @@ const JobBoard = ({ jobs, onApprove, onDecline, onMarkApplied, onStartInterview 
                   </div>
                 </div>
                 
-                <button className="btn btn-secondary review-btn" onClick={() => setSelectedJob(job)}>Review Details</button>
+                <button className="btn btn-secondary review-btn" onClick={() => openJob(job)}>Review Details</button>
               </div>
             </div>
             );
@@ -257,7 +262,8 @@ const JobBoard = ({ jobs, onApprove, onDecline, onMarkApplied, onStartInterview 
 
       {selectedJob && (
         <JobModal 
-          job={selectedJob} 
+          job={selectedJob}
+          initialTab={modalTab}
           onClose={() => setSelectedJob(null)} 
           onApprove={onApprove}
           onDecline={onDecline}

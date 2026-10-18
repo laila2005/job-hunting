@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ResumeViewer from './ResumeViewer';
+import { ApplyPackPanel, PrepPanel, extrasOf } from './JobPack';
 import ResumeTailor from './ResumeTailor';
 import { GoogleGenAI } from '@google/genai';
 import { createClient } from '@supabase/supabase-js';
@@ -20,8 +21,8 @@ const CANDIDATE_PROFILE = {
   ]
 };
 
-const JobModal = ({ job, onClose, onApprove, onDecline, onMarkApplied, onStartInterview }) => {
-  const [activeTab, setActiveTab] = useState('overview');
+const JobModal = ({ job, initialTab = 'overview', onClose, onApprove, onDecline, onMarkApplied, onStartInterview }) => {
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [viewingResume, setViewingResume] = useState(false);
 
@@ -35,7 +36,7 @@ const JobModal = ({ job, onClose, onApprove, onDecline, onMarkApplied, onStartIn
 
   useEffect(() => {
     // Reset tabs and state when job changes
-    setActiveTab('overview');
+    setActiveTab(initialTab);
     setOutreachDraft(job.outreach_draft || '');
     setFinalResponses(job.draft_responses || {});
   }, [job]);
@@ -150,6 +151,16 @@ const JobModal = ({ job, onClose, onApprove, onDecline, onMarkApplied, onStartIn
           <div className={`modal-tab ${activeTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveTab('overview')}>
             Overview
           </div>
+          {extrasOf(job) && (
+            <>
+              <div className={`modal-tab ${activeTab === 'pack' ? 'active' : ''}`} onClick={() => setActiveTab('pack')}>
+                🎒 Apply Pack
+              </div>
+              <div className={`modal-tab ${activeTab === 'prep' ? 'active' : ''}`} onClick={() => setActiveTab('prep')}>
+                🎯 Interview Prep
+              </div>
+            </>
+          )}
           <div className={`modal-tab ${activeTab === 'analysis' ? 'active' : ''}`} onClick={() => setActiveTab('analysis')}>
             AI Analysis
           </div>
@@ -169,6 +180,9 @@ const JobModal = ({ job, onClose, onApprove, onDecline, onMarkApplied, onStartIn
         {/* Body content based on tab */}
         <div className="modal-body" style={{ maxHeight: '60vh' }}>
           
+          {activeTab === 'pack' && <ApplyPackPanel job={job} />}
+          {activeTab === 'prep' && <PrepPanel job={job} />}
+
           {activeTab === 'overview' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
               
@@ -474,7 +488,7 @@ const JobModal = ({ job, onClose, onApprove, onDecline, onMarkApplied, onStartIn
 
         {/* Footer buttons */}
         <div className="modal-footer">
-          <a href={job.companyLink} target="_blank" rel="noreferrer" className="btn btn-secondary modal-source-btn">
+          <a href={/^https?:\/\//i.test(job.companyLink || '') ? job.companyLink : undefined} target="_blank" rel="noopener noreferrer" className="btn btn-secondary modal-source-btn">
             🔗 View Source Posting
           </a>
           
@@ -485,7 +499,7 @@ const JobModal = ({ job, onClose, onApprove, onDecline, onMarkApplied, onStartIn
               <button className="btn" style={{ background: 'var(--accent-green)' }} onClick={() => { onApprove(job.id); onClose(); }}>Auto-Apply Now</button>
             </>
           )}
-          {job.status === 'Apply Manually' && (
+          {(job.status === 'Apply Manually' || job.status === 'To Apply') && (
             <button className="btn btn-secondary" style={{ color: 'var(--accent-blue)', marginRight: '10px' }} onClick={() => { onMarkApplied(job.id); onClose(); }}>✅ Mark as Applied</button>
           )}
           

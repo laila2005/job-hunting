@@ -2231,3 +2231,4 @@ h1, h2, h3, h4 {
   border-color: rgba(16, 185, 129, 0.35);
 }
 .badge-archived { background: var(--bg-hover); color: var(--text-muted); border-color: var(--border-color); }
+.badge-test, .badge-interview, .badge-offer { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border-color: rgba(245, 158, 11, 0.4); }
