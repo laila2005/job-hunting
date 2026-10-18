@@ -57,6 +57,8 @@ const sectionOf = job => {
   if (st === 'rejected' || st === 'archived') return 'Archived';
   return 'Active';
 };
+// companyLink comes from scraped / user-submitted rows, so only allow http(s) URLs in hrefs
+const safeUrl = u => { try { const p = new URL(u); return ['http:', 'https:'].includes(p.protocol) ? p.href : null; } catch { return null; } };
 const dayLabel = d => {
   if (!d) return 'Undated';
   const dt = new Date(`${d}T12:00:00Z`);
@@ -219,8 +221,8 @@ const JobBoard = ({ jobs, onApprove, onDecline, onMarkApplied, onStartInterview 
                         ✅ Applied: {formatDate(job.appliedDate)}
                       </span>
                     )}
-                    {job.companyLink && (
-                      <a className="meta-item" href={job.companyLink} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()} style={{ color: 'var(--accent-blue)', fontWeight: 600 }}>
+                    {safeUrl(job.companyLink) && (
+                      <a className="meta-item" href={safeUrl(job.companyLink)} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ color: 'var(--accent-blue)', fontWeight: 600 }}>
                         🔗 Open posting
                       </a>
                     )}
