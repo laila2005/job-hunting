@@ -226,6 +226,10 @@ const JobBoard = ({ jobs, onApprove, onDecline, onMarkApplied, onRestore, onStar
                         ✅ Applied: {formatDate(job.appliedDate)}
                       </span>
                     )}
+                    {(() => {
+                      const ev = ((job.responsibilities && !Array.isArray(job.responsibilities) && job.responsibilities.email_events) || []).filter(e => e.kind !== 'applied')[0];
+                      return ev ? <span className="meta-item" style={{ color: '#8b5cf6', fontWeight: 600 }}>📬 {ev.kind} · {ev.date}</span> : null;
+                    })()}
                     {safeUrl(job.companyLink) && (
                       <a className="meta-item" href={safeUrl(job.companyLink)} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ color: 'var(--accent-blue)', fontWeight: 600 }}>
                         🔗 Open posting

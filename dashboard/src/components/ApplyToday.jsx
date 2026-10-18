@@ -40,7 +40,7 @@ const followMsg = j => {
 const chip = { fontSize: '0.7rem', padding: '1px 8px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.15)', color: 'var(--text-muted)' };
 
 const ApplyToday = ({ jobs, onOpen }) => {
-  const { top, followUps, inProcess } = useMemo(() => {
+  const { top, followUps, inProcess, closing, replies } = useMemo(() => {
     const trk = jobs.filter(j => (j.id || '').startsWith('trk-'));
     const ranked = trk
       .filter(j => j.status === 'To Apply')
@@ -49,14 +49,26 @@ const ApplyToday = ({ jobs, onOpen }) => {
       .sort((a, b) => b.score - a.score)
       .slice(0, 5);
     const today = todayStr();
+    const closing = trk
+      .filter(j => j.status === 'To Apply' && (extrasOf(j) || {}).deadline)
+      .map(j => ({ job: j, d: daysUntil(extrasOf(j).deadline) }))
+      .filter(r => r.d >= 0 && r.d <= 7)
+      .sort((a, b) => a.d - b.d);
+    const replies = trk
+      .flatMap(j => ((extrasOf(j) || {}).email_events || []).map(e => ({ job: j, e })))
+      .filter(r => r.e.kind !== 'applied')
+      .sort((a, b) => b.e.date.localeCompare(a.e.date))
+      .slice(0, 4);
     return {
+      closing,
+      replies,
       top: ranked,
       followUps: trk.filter(j => j.status === 'Applied' && followDue(j) && followDue(j) <= today),
       inProcess: trk.filter(j => ['Test', 'Interview', 'Offer'].includes(j.status)),
     };
   }, [jobs]);
 
-  if (!top.length && !followUps.length && !inProcess.length) return null;
+  if (!top.length && !followUps.length && !inProcess.length && !closing.length && !replies.length) return null;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 16 }}>
@@ -69,6 +81,33 @@ const ApplyToday = ({ jobs, onOpen }) => {
               <strong>{j.company}</strong>
               <span style={{ color: 'var(--text-muted)' }}>{j.title}</span>
               <button className="btn btn-secondary" style={{ padding: '2px 10px', fontSize: '0.75rem' }} onClick={() => onOpen(j, 'prep')}>Open prep</button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {replies.length > 0 && (
+        <div className="glass-panel" style={{ padding: 14, borderRadius: 14, border: '1px solid rgba(139,92,246,0.4)' }}>
+          <div style={{ fontWeight: 700, marginBottom: 8 }}>📬 Latest replies from your inbox</div>
+          {replies.map(({ job, e }) => (
+            <div key={job.id + e.date + e.kind} style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', padding: '4px 0' }}>
+              <span style={chip}>{e.kind}</span>
+              <strong>{job.company}</strong>
+              <span style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>{e.note || e.subject} · {e.date}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {closing.length > 0 && (
+        <div className="glass-panel" style={{ padding: 14, borderRadius: 14, border: '1px solid rgba(239,68,68,0.4)' }}>
+          <div style={{ fontWeight: 700, marginBottom: 8 }}>⏰ Closing this week</div>
+          {closing.map(({ job, d }) => (
+            <div key={job.id} style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', padding: '4px 0' }}>
+              <strong>{job.company}</strong>
+              <span style={{ color: 'var(--text-muted)' }}>{job.title}</span>
+              <span style={{ ...chip, color: '#ef4444' }}>{d === 0 ? 'closes today' : `${d} day${d === 1 ? '' : 's'} left`}</span>
+              <button className="btn btn-secondary" style={{ padding: '2px 10px', fontSize: '0.75rem' }} onClick={() => onOpen(job, 'pack')}>Open pack</button>
             </div>
           ))}
         </div>
