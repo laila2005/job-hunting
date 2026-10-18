@@ -24,10 +24,10 @@ const text = fs.readFileSync(DIGEST_FILE, 'utf8').trim();
 // Use a browser that is already installed (the Chrome bundled with puppeteer fails to start on some Windows setups).
 const BROWSERS = [
   process.env.CHROME_PATH,
-  'C:\Program Files\Google\Chrome\Application\chrome.exe',
-  'C:\Program Files (x86)\Google\Chrome\Application\chrome.exe',
-  'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe',
-  'C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe',
+  'C:/Program Files/Google/Chrome/Application/chrome.exe',
+  'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
+  'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',
+  'C:/Program Files/BraveSoftware/Brave-Browser/Application/brave.exe',
 ].filter(Boolean);
 const executablePath = BROWSERS.find(p => fs.existsSync(p));
 if (!executablePath) {
