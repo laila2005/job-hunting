@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import JobModal from './JobModal';
 import ApplyToday from './ApplyToday';
+import { isDemo } from '../supabaseClient';
 import { safeUrl } from '../safeUrl';
 
 // Locations within Laila's commute range (East / North Cairo)
@@ -66,7 +67,7 @@ const dayLabel = d => {
   return dt.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 };
 
-const JobBoard = ({ jobs, demo = false, onApprove, onDecline, onMarkApplied, onRestore, onStartInterview }) => {
+const JobBoard = ({ jobs, onApprove, onDecline, onMarkApplied, onRestore, onStartInterview }) => {
   const [selectedJob, setSelectedJob] = useState(null);
   const [modalTab, setModalTab] = useState('overview');
   const openJob = (job, tab = 'overview') => { setModalTab(tab); setSelectedJob(job); };
@@ -85,7 +86,7 @@ const JobBoard = ({ jobs, demo = false, onApprove, onDecline, onMarkApplied, onR
     }
   };
 
-  const cutoff = demo ? '0000-00-00' : ARCHIVE_BEFORE; // the demo's sample jobs are relative to today, so never archive by date
+  const cutoff = isDemo() ? '0000-00-00' : ARCHIVE_BEFORE; // the demo's sample jobs are relative to today, so never archive by date
   const counts = useMemo(() => jobs.reduce((acc, j) => { const k = sectionOf(j, cutoff); acc[k] = (acc[k] || 0) + 1; return acc; }, {}), [jobs]);
   const newestDate = useMemo(() => jobs.map(jobDate).filter(Boolean).sort().pop() || null, [jobs]);
 
@@ -279,7 +280,6 @@ const JobBoard = ({ jobs, demo = false, onApprove, onDecline, onMarkApplied, onR
         <JobModal 
           job={selectedJob}
           initialTab={modalTab}
-          demo={demo}
           onClose={() => setSelectedJob(null)} 
           onApprove={onApprove}
           onDecline={onDecline}

@@ -1,12 +1,10 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from './supabaseClient';
 
 // Login wall. Nothing from the dashboard renders until Laila has signed in with her own Supabase account.
 // The database enforces the same rule (see supabase/migrations/20261018000000_lock_down.sql), so even someone
 // who copies the public key out of this page cannot read or change any data.
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://wpxtstbquvbsiqgoqwma.supabase.co';
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_IwP7F-cxFhXEMwZCDOuyuw_-V33gBSh';
-const auth = createClient(supabaseUrl, supabaseKey).auth;
+const auth = supabase.auth; // the real client, captured before the demo (if any) swaps in its fake one
 const DemoApp = lazy(() => import('./demo/DemoApp'));
 
 const field = {
@@ -40,7 +38,7 @@ export default function AuthGate({ children }) {
   if (demo) {
     return (
       <Suspense fallback={<div style={{ minHeight: '100vh', background: '#0b1020' }} />}>
-        <DemoApp onExit={() => { setDemo(false); window.history.replaceState({}, '', window.location.pathname); }} />
+        <DemoApp />
       </Suspense>
     );
   }

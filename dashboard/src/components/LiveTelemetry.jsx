@@ -1,9 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../supabaseClient';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://wpxtstbquvbsiqgoqwma.supabase.co';
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_IwP7F-cxFhXEMwZCDOuyuw_-V33gBSh';
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 const LiveTelemetry = () => {
   const [telemetry, setTelemetry] = useState({ status: 'Connecting...', current_task: 'Initializing...' });

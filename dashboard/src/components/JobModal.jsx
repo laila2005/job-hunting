@@ -3,12 +3,9 @@ import ResumeViewer from './ResumeViewer';
 import { ApplyPackPanel, PrepPanel, extrasOf } from './JobPack';
 import ResumeTailor from './ResumeTailor';
 import { GoogleGenAI } from '@google/genai';
-import { createClient } from '@supabase/supabase-js';
+import { supabase, isDemo } from '../supabaseClient';
 import { safeUrl } from '../safeUrl';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://wpxtstbquvbsiqgoqwma.supabase.co';
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_IwP7F-cxFhXEMwZCDOuyuw_-V33gBSh';
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 const CANDIDATE_PROFILE = {
   name: "Laila Mohamed Fikry",
@@ -22,7 +19,7 @@ const CANDIDATE_PROFILE = {
   ]
 };
 
-const JobModal = ({ job, demo = false, initialTab = 'overview', onClose, onApprove, onDecline, onMarkApplied, onStartInterview }) => {
+const JobModal = ({ job, initialTab = 'overview', onClose, onApprove, onDecline, onMarkApplied, onStartInterview }) => {
   const [activeTab, setActiveTab] = useState(initialTab);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [viewingResume, setViewingResume] = useState(false);
@@ -162,7 +159,7 @@ const JobModal = ({ job, demo = false, initialTab = 'overview', onClose, onAppro
               </div>
             </>
           )}
-          {!demo && (
+          {!isDemo() && (
             <>
               <div className={`modal-tab ${activeTab === 'analysis' ? 'active' : ''}`} onClick={() => setActiveTab('analysis')}>
                 AI Analysis

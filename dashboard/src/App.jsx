@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from './supabaseClient'
 import './index.css'
 import StatCards from './components/StatCards'
 import JobBoard from './components/JobBoard'
@@ -62,9 +62,6 @@ const NAV_GROUPS = [
 ]
 
 // Initialize Supabase Client
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://wpxtstbquvbsiqgoqwma.supabase.co'
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_IwP7F-cxFhXEMwZCDOuyuw_-V33gBSh'
-const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 function App() {
   const [jobs, setJobs] = useState([]);
