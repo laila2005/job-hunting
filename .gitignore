@@ -6,3 +6,7 @@ dist/
 .wwebjs_cache/
 
 .vercel
+
+# personal job data exports: never commit
+supabase/setup_new_project.sql
+supabase/migrations/*_import_jobs.sql
