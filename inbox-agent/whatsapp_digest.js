@@ -49,8 +49,20 @@ client.on('qr', qr => {
 client.on('ready', async () => {
   try {
     const id = await client.getNumberId(phone);
-    await client.sendMessage(id ? id._serialized : `${phone}@c.us`, text);
-    console.log(`Digest sent to ${phone}`);
+    const target = id ? id._serialized : `${phone}@c.us`;
+    console.log(`Sending to ${target} ...`);
+    const msg = await client.sendMessage(target, text);
+    // Closing the browser right after sendMessage can leave the message undelivered, so wait for WhatsApp's confirmation.
+    const acked = await new Promise(resolve => {
+      const timer = setTimeout(() => resolve(false), 25000);
+      client.on('message_ack', (m, ack) => {
+        if (m.id._serialized === msg.id._serialized && ack >= 1) { clearTimeout(timer); resolve(true); }
+      });
+      if (msg.ack >= 1) { clearTimeout(timer); resolve(true); }
+    });
+    await new Promise(r => setTimeout(r, 5000)); // let it finish syncing
+    console.log(acked ? `Digest delivered to ${phone}. Check "Message yourself" / your own chat.`
+                      : `Digest sent to ${phone} but WhatsApp did not confirm delivery within 25s.`);
   } catch (err) {
     console.error('Failed to send digest:', err.message);
     process.exitCode = 1;
