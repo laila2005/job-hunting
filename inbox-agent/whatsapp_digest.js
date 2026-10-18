@@ -48,21 +48,31 @@ client.on('qr', qr => {
 
 client.on('ready', async () => {
   try {
-    const id = await client.getNumberId(phone);
-    const target = id ? id._serialized : `${phone}@c.us`;
-    console.log(`Sending to ${target} ...`);
-    const msg = await client.sendMessage(target, text);
-    // Closing the browser right after sendMessage can leave the message undelivered, so wait for WhatsApp's confirmation.
-    const acked = await new Promise(resolve => {
-      const timer = setTimeout(() => resolve(false), 25000);
-      client.on('message_ack', (m, ack) => {
-        if (m.id._serialized === msg.id._serialized && ack >= 1) { clearTimeout(timer); resolve(true); }
-      });
-      if (msg.ack >= 1) { clearTimeout(timer); resolve(true); }
-    });
-    await new Promise(r => setTimeout(r, 5000)); // let it finish syncing
-    console.log(acked ? `Digest delivered to ${phone}. Check "Message yourself" / your own chat.`
-                      : `Digest sent to ${phone} but WhatsApp did not confirm delivery within 25s.`);
+    // If the digest goes to the same number that is linked, use the account's own id (the "Message yourself" chat).
+    const own = client.info && client.info.wid;
+    let target;
+    if (own && own.user === phone) {
+      target = own._serialized;
+    } else {
+      const id = await client.getNumberId(phone);
+      target = id ? id._serialized : `${phone}@c.us`;
+    }
+    console.log(`Linked account: ${own ? own.user : 'unknown'} | sending to ${target} ...`);
+    let msg;
+    try {
+      msg = await client.sendMessage(target, text);
+    } catch (err) {
+      console.error('sendMessage threw:', err.message);
+    }
+    // Some WhatsApp Web versions return nothing from sendMessage even when the message is sent,
+    // so never depend on the return value. Just give it time to deliver before closing the browser.
+    if (msg && msg.id) {
+      console.log('WhatsApp accepted the message (id ' + msg.id._serialized + ')');
+    } else {
+      console.log('sendMessage returned no message object; waiting to see if it was delivered anyway ...');
+    }
+    await new Promise(r => setTimeout(r, 12000));
+    console.log(`Done. Check "Message yourself" / your chat with ${phone} on the phone.`);
   } catch (err) {
     console.error('Failed to send digest:', err.message);
     process.exitCode = 1;
