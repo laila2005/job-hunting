@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import JobModal from './JobModal';
 import ApplyToday from './ApplyToday';
-import { isDemo } from '../supabaseClient';
+import { jobDate, sectionOf } from '../jobDates';
 import { safeUrl } from '../safeUrl';
 
 // Locations within Laila's commute range (East / North Cairo)
@@ -40,26 +40,6 @@ const isNearMe     = job => {
   return false;
 };
 
-// ── Date handling: the jobs table has no date column, so the found-date lives inside the id
-//    (trk-YYYY-MM-DD-… from the tracker sync, or job-…-<epoch ms> from the scraper / manual add).
-const ARCHIVE_BEFORE = '2026-10-16'; // anything found before this date is "old" unless it was applied to
-const jobDate = job => {
-  const id = job.id || '';
-  const iso = id.match(/(\d{4}-\d{2}-\d{2})/);
-  if (iso) return iso[1];
-  const ms = id.match(/(\d{13})/);
-  if (ms) return new Date(Number(ms[1])).toISOString().slice(0, 10);
-  return job.appliedDate || null;
-};
-const sectionOf = (job, cutoff = ARCHIVE_BEFORE) => {
-  // Old rows (found before ARCHIVE_BEFORE) were never applied to by hand, whatever their stored status says.
-  const d = jobDate(job);
-  if (!d || d < cutoff) return 'Archived';
-  const st = (job.status || '').trim().toLowerCase();
-  if (['applied', 'test', 'interview', 'offer'].includes(st)) return 'Applied';
-  if (st === 'rejected' || st === 'archived') return 'Archived';
-  return 'Active';
-};
 // companyLink comes from scraped / user-submitted rows, so only allow http(s) URLs in hrefs
 const dayLabel = d => {
   if (!d) return 'Undated';
@@ -86,15 +66,14 @@ const JobBoard = ({ jobs, onApprove, onDecline, onMarkApplied, onRestore, onStar
     }
   };
 
-  const cutoff = isDemo() ? '0000-00-00' : ARCHIVE_BEFORE; // the demo's sample jobs are relative to today, so never archive by date
-  const counts = useMemo(() => jobs.reduce((acc, j) => { const k = sectionOf(j, cutoff); acc[k] = (acc[k] || 0) + 1; return acc; }, {}), [jobs]);
+  const counts = useMemo(() => jobs.reduce((acc, j) => { const k = sectionOf(j); acc[k] = (acc[k] || 0) + 1; return acc; }, {}), [jobs]);
   const newestDate = useMemo(() => jobs.map(jobDate).filter(Boolean).sort().pop() || null, [jobs]);
 
   // Filtered jobs, newest date first, best fit first inside a day
   const filteredJobs = useMemo(() => {
     return jobs
       .filter(job => {
-        if (activeFilter !== 'All' && sectionOf(job, cutoff) !== activeFilter) return false;
+        if (activeFilter !== 'All' && sectionOf(job) !== activeFilter) return false;
         const q = searchQuery.toLowerCase();
         if (q && !(job.company || '').toLowerCase().includes(q) && !(job.title || '').toLowerCase().includes(q)) return false;
         if (nearMeOnly && !isNearMe(job)) return false;
@@ -107,7 +86,7 @@ const JobBoard = ({ jobs, onApprove, onDecline, onMarkApplied, onRestore, onStar
         if (da !== db) return db.localeCompare(da);
         return (b.fitScore || 0) - (a.fitScore || 0);
       });
-  }, [jobs, activeFilter, searchQuery, nearMeOnly, hideUSOnly, cutoff]);
+  }, [jobs, activeFilter, searchQuery, nearMeOnly, hideUSOnly]);
 
   const groups = useMemo(() => {
     const map = new Map();
@@ -257,7 +236,7 @@ const JobBoard = ({ jobs, onApprove, onDecline, onMarkApplied, onRestore, onStar
                   </div>
                 </div>
                 
-                {sectionOf(job, cutoff) === 'Active' && onMarkApplied && (
+                {sectionOf(job) === 'Active' && onMarkApplied && (
                   <button className="btn" style={{ background: 'var(--accent-green)', padding: '6px 14px', fontSize: '0.8rem' }}
                     title="I applied to this job: move it out of the queue"
                     onClick={() => onMarkApplied(job.id)}>✅ Applied</button>

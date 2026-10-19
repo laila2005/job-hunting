@@ -154,15 +154,32 @@ export default function QuickAgent({ jobs, onJobUpdated }) {
 
   if (!open) {
     return (
-      <button type="button" onClick={() => setOpen(true)} title="Tell the dashboard what happened, or paste a form question"
-        style={{ position: 'fixed', right: 16, bottom: 56, zIndex: 700, background: 'var(--accent-blue, #3b82f6)', color: '#fff', border: 'none', borderRadius: 28, padding: '12px 18px', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer', boxShadow: '0 8px 24px rgba(0,0,0,0.4)' }}>
-        💬 Update / ask
-      </button>
+      <>
+        <style>{`
+          @keyframes qaPulse { 0% { box-shadow: 0 0 0 0 rgba(99,102,241,0.55); } 70% { box-shadow: 0 0 0 16px rgba(99,102,241,0); } 100% { box-shadow: 0 0 0 0 rgba(99,102,241,0); } }
+          .qa-bubble:hover { transform: scale(1.08); }
+        `}</style>
+        <button
+          type="button"
+          className="qa-bubble"
+          onClick={() => setOpen(true)}
+          title="Chat: tell me what happened or paste a form question"
+          aria-label="Open the update and ask chat"
+          style={{
+            position: 'fixed', right: 20, bottom: 60, zIndex: 700, width: 62, height: 62, borderRadius: '50%', border: 'none',
+            background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)', color: '#fff', fontSize: '1.7rem', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'qaPulse 2.4s infinite',
+            transition: 'transform 0.15s ease', boxShadow: '0 8px 24px rgba(0,0,0,0.45)',
+          }}
+        >
+          💬
+        </button>
+      </>
     );
   }
 
   return (
-    <div style={{ position: 'fixed', right: 16, bottom: 56, zIndex: 700, width: 'min(400px, calc(100vw - 32px))', maxHeight: 'min(560px, calc(100vh - 90px))', display: 'flex', flexDirection: 'column', background: 'rgba(17,24,39,0.98)', color: '#fff', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 16, boxShadow: '0 16px 48px rgba(0,0,0,0.55)', overflow: 'hidden' }}>
+    <div style={{ position: 'fixed', right: 20, bottom: 60, zIndex: 700, width: 'min(400px, calc(100vw - 32px))', maxHeight: 'min(560px, calc(100vh - 90px))', display: 'flex', flexDirection: 'column', background: 'rgba(17,24,39,0.98)', color: '#fff', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 16, boxShadow: '0 16px 48px rgba(0,0,0,0.55)', overflow: 'hidden' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
         <div>
           <div style={{ fontWeight: 700 }}>💬 Update / ask</div>

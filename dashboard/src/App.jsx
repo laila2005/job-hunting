@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './supabaseClient'
 import QuickAgent from './components/QuickAgent'
+import { isLegacy } from './jobDates'
 import './index.css'
 import StatCards from './components/StatCards'
 import JobBoard from './components/JobBoard'
@@ -285,12 +286,12 @@ function App() {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
         <DaemonHealthBanner supabase={supabase} />
-        <DailyBriefing supabase={supabase} jobs={jobs} />
+        <DailyBriefing supabase={supabase} jobs={jobs.filter(j => !isLegacy(j))} />
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '20px' }}>
           <LiveTelemetry />
-          <ActionCenter jobs={jobs} />
+          <ActionCenter jobs={jobs.filter(j => !isLegacy(j))} />
         </div>
-        <StatCards jobs={jobs} />
+        <StatCards jobs={jobs.filter(j => !isLegacy(j))} />
         <NetworkingCRM supabase={supabase} />
       </div>
     );
