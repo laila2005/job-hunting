@@ -42,10 +42,13 @@ const Section = ({ title, children, action }) => (
 );
 
 // Opens a private file with a short-lived signed link (works only while signed in; there is no public link).
+const SAFE_PATH = /^[\w\-./]+\.pdf$/;  // a bucket path we wrote ourselves: letters, digits, - _ . / and a .pdf ending
+
 const KitButton = ({ path, label, name }) => {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
-  if (!path) {
+  const blocked = !path || isDemo() || !SAFE_PATH.test(path) || path.includes('..');
+  if (blocked) {
     return (
       <button type="button" className="btn btn-secondary" disabled style={{ opacity: 0.55, padding: '8px 14px' }}
         title={isDemo() ? 'Downloads are switched off in the demo' : 'Not generated yet. It appears after the next nightly run.'}>
@@ -54,9 +57,11 @@ const KitButton = ({ path, label, name }) => {
     );
   }
   const open = async () => {
+    if (isDemo()) return; // belt and braces: never request a file in the demo, whatever the client is
     setBusy(true);
     setErr('');
-    const { data, error } = await supabase.storage.from('kit').createSignedUrl(path, 120, { download: name || true });
+    const safeName = (name || '').replace(/[^\w.\-]/g, '_').slice(0, 128) || true;
+    const { data, error } = await supabase.storage.from('kit').createSignedUrl(path, 120, { download: safeName });
     setBusy(false);
     if (error || !data || !data.signedUrl) { setErr('Could not open the file. Sign in again.'); return; }
     window.open(data.signedUrl, '_blank', 'noopener');

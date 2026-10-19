@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
-import { isDemo } from '../supabaseClient';
+import { identity } from '../identity';
 
 const CareerPartner = ({ supabase }) => {
   const [skillData, setSkillData] = useState([]);
@@ -78,7 +78,7 @@ const CareerPartner = ({ supabase }) => {
         <div className="glass-panel" style={{ padding: '24px', borderRadius: '16px', display: 'flex', flexDirection: 'column' }}>
           <h3 style={{ marginBottom: '8px', color: 'var(--text-main)' }}>🎯 Market Fit vs. Current Skills</h3>
           <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '20px' }}>
-            <span style={{ color: '#8884d8' }}>● {isDemo() ? 'Sample profile' : "Laila's Profile"}</span> &nbsp;&nbsp; 
+            <span style={{ color: '#8884d8' }}>● {identity().profile}</span> &nbsp;&nbsp; 
             <span style={{ color: '#82ca9d' }}>● Market Demand (2026)</span>
           </p>
           <div style={{ flex: 1, minHeight: '300px', width: '100%' }}>
@@ -87,7 +87,7 @@ const CareerPartner = ({ supabase }) => {
                 <PolarGrid stroke="rgba(255,255,255,0.1)" />
                 <PolarAngleAxis dataKey="subject" tick={{ fill: 'var(--text-muted)', fontSize: 12 }} />
                 <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
-                <Radar name={isDemo() ? 'Sample' : 'Laila'} dataKey="laila_score" stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />
+                <Radar name={identity().radar} dataKey="laila_score" stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />
                 <Radar name="Market" dataKey="market_score" stroke="#82ca9d" fill="#82ca9d" fillOpacity={0.3} />
               </RadarChart>
             </ResponsiveContainer>

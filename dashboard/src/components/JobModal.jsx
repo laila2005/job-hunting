@@ -124,7 +124,7 @@ const JobModal = ({ job, initialTab = 'overview', onClose, onApprove, onDecline,
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '780px', width: '90%' }}>
+      <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '980px', width: '94%' }}>
         
         {/* Header */}
         <div className="modal-header">
@@ -147,7 +147,7 @@ const JobModal = ({ job, initialTab = 'overview', onClose, onApprove, onDecline,
         {/* Tab Selection */}
         <div className="modal-tabs">
           <div className={`modal-tab ${activeTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveTab('overview')}>
-            Overview
+            📋 Overview
           </div>
           {extrasOf(job) && (
             <>
@@ -162,19 +162,19 @@ const JobModal = ({ job, initialTab = 'overview', onClose, onApprove, onDecline,
           {!isDemo() && (
             <>
               <div className={`modal-tab ${activeTab === 'analysis' ? 'active' : ''}`} onClick={() => setActiveTab('analysis')}>
-                AI Analysis
+                🧠 AI Analysis
               </div>
               <div className={`modal-tab ${activeTab === 'resume_tailor' ? 'active' : ''}`} onClick={() => setActiveTab('resume_tailor')}>
-                ATS & Resume Customizer
+                📄 Resume Tailor
               </div>
               <div className={`modal-tab ${activeTab === 'outreach' ? 'active' : ''}`} onClick={() => setActiveTab('outreach')}>
-                Outreach Pitch
+                ✉️ Outreach
               </div>
             </>
           )}
           {job.status === 'Applied' && job.proof_url && (
             <div className={`modal-tab ${activeTab === 'proof' ? 'active' : ''}`} onClick={() => setActiveTab('proof')}>
-              Application Proof
+              📸 Proof
             </div>
           )}
         </div>

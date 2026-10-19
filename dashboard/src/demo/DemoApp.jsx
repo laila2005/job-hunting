@@ -17,7 +17,7 @@ export default function DemoApp() {
       </Suspense>
       <div
         style={{
-          position: 'fixed', left: 12, bottom: 12, zIndex: 1000, maxWidth: 'calc(100vw - 24px)',
+          position: 'fixed', left: 12, bottom: 12, zIndex: 900, maxWidth: 'calc(100vw - 24px)',
           background: 'rgba(17,24,39,0.95)', color: '#fff', border: '1px solid rgba(245,158,11,0.6)', borderRadius: 12,
           padding: '8px 12px', fontSize: '0.78rem', display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap',
         }}

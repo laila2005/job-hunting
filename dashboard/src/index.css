@@ -495,11 +495,11 @@ h1, h2, h3, h4 {
 
 .modal-tabs {
   display: flex;
-  gap: 12px;
-  padding: 16px 32px;
+  flex-wrap: wrap;            /* desktop: tabs wrap instead of being cut off */
+  gap: 8px;
+  padding: 14px 28px;
   border-bottom: 1px solid var(--border-color);
   background: rgba(12, 15, 34, 0.8);
-  overflow-x: auto;
   scrollbar-width: none; /* Firefox */
 }
 .modal-tabs::-webkit-scrollbar {
@@ -507,10 +507,10 @@ h1, h2, h3, h4 {
 }
 
 .modal-tab {
-  padding: 8px 16px;
+  padding: 8px 14px;
   color: var(--text-muted);
   font-weight: 500;
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   cursor: pointer;
   border-radius: 8px;
   background: transparent;
@@ -530,9 +530,10 @@ h1, h2, h3, h4 {
 }
 
 .modal-body {
-  padding: 32px;
+  padding: 28px 32px;
   overflow-y: auto;
   flex: 1;
+  min-height: 0;
 }
 
 .modal-grid-2col {
@@ -646,10 +647,13 @@ h1, h2, h3, h4 {
   .modal-tabs {
     padding: 0 20px;
     gap: 16px;
+    flex-wrap: nowrap;        /* phones: one scrolling row, with a fade on the right edge to show there is more */
     overflow-x: auto;
     white-space: nowrap;
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
+    -webkit-mask-image: linear-gradient(to right, #000 88%, transparent);
+    mask-image: linear-gradient(to right, #000 88%, transparent);
   }
   .modal-tabs::-webkit-scrollbar {
     height: 0px;

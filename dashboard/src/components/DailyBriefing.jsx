@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { isDemo } from '../supabaseClient';
+import { identity } from '../identity';
 
 const INTERVIEW_TIPS = [
   'Lead with MOI + GASCO in your intro: "I built an IoT platform in production for two government clients." That sentence alone separates you from 99% of student candidates.',
@@ -139,7 +139,7 @@ const DailyBriefing = ({ supabase, jobs = [] }) => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
         <div>
           <h2 style={{ margin: 0, fontSize: '1.3rem', color: 'var(--text-main)', fontWeight: '700' }}>
-            {getGreeting()}, {isDemo() ? 'Guest' : 'Laila'}. ☀️
+            {getGreeting()}, {identity().name}. ☀️
           </h2>
           <p style={{ margin: '4px 0 0', color: 'var(--text-muted)', fontSize: '0.82rem' }}>{dateStr}</p>
         </div>

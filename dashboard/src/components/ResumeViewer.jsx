@@ -1,4 +1,5 @@
 import React from 'react';
+import { identity } from '../identity';
 
 const ResumeViewer = ({ onClose }) => {
   return (
@@ -14,9 +15,9 @@ const ResumeViewer = ({ onClose }) => {
           <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', color: '#4b5563', fontSize: '0.95rem', flexWrap: 'wrap' }}>
             <span>📍 Badr City, Cairo, Egypt</span>
             <span>|</span>
-            <span>✉️ laila.mohamed.fikry@gmail.com</span>
+            <span>✉️ {identity().email}</span>
             <span>|</span>
-            <span>📞 +20 121 021 2792</span>
+            <span>📞 {identity().phone}</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', color: '#2563eb', fontSize: '0.95rem', marginTop: '8px' }}>
             <a href="https://linkedin.com/in/laila-mohamed23" target="_blank" rel="noreferrer" style={{ color: '#2563eb', textDecoration: 'none' }}>LinkedIn</a>
