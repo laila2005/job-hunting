@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './supabaseClient'
+import QuickAgent from './components/QuickAgent'
 import './index.css'
 import StatCards from './components/StatCards'
 import JobBoard from './components/JobBoard'
@@ -429,6 +430,7 @@ function App() {
       </main>
 
       <NotificationManager supabase={supabase} />
+      <QuickAgent jobs={jobs} onJobUpdated={(id, patch) => setJobs(js => js.map(j => (j.id === id ? { ...j, ...patch } : j)))} />
       {showAddModal && (
         <ManualAddModal
           onClose={() => setShowAddModal(false)}

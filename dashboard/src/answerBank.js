@@ -86,6 +86,12 @@ export function techAnswer(question) {
 }
 
 const RULES = [
+  { keys: ['annual gross', 'gross salary', 'annual salary', 'yearly salary', 'salary per year', 'per year', 'annual compensation'],
+    answer: () => '30000 (EUR, annual gross). That is about EUR 2,500 a month and negotiable. If the field is a number, enter 30000.' },
+  { keys: ['preferred work location', 'work location', 'preferred location', 'where would you like to work', 'office location'],
+    answer: () => 'Remote. I live in Cairo, Egypt and work remotely. If the form lists only cities, pick the remote option, or a city only if you would really relocate.' },
+  { keys: ['currently located', 'currently based', 'current location', 'country of residence', 'where do you live'],
+    answer: () => 'Cairo, Egypt. (If Egypt is not in the list, choose "Other".)' },
   { keys: ['salary', 'compensation', 'pay expectation', 'desired pay', 'expected pay', 'hourly rate'], answer: ctx => ctx.salary },
   { keys: ['notice period', 'when can you start', 'start date', 'available to start', 'availability', 'earliest start'],
     answer: () => 'I can start on 10/26/2026. Remote, 30 hours per week (happy to discuss hours on a first call).' },
@@ -121,6 +127,9 @@ const RULES = [
 export function answerQuestion(question, ctx) {
   const q = (question || '').trim();
   if (!q) return null;
+  if (/working knowledge|programming language|modern programming|coding language/i.test(q) && !/how long|years/i.test(q)) {
+    return { kind: 'bank', text: 'Yes: Python, JavaScript/TypeScript, C# and C. (Python and TypeScript for web back ends and front ends, C# for ASP.NET Core, C from the ALX program.)' };
+  }
   if (/how long|how many years|years of/i.test(q) && /node/i.test(q)) {
     return { kind: 'bank', text: 'About 1 year professionally with Node.js (freelance, Aug 2025 to Feb 2026, including NestJS on bagijob.com and an Express API for a school-management client), plus about 3 years building software that includes Node/Express projects from my ALX program. (Do not say "2+ years of Node" unless you can name paid work before Aug 2025.)' };
   }
